@@ -1,4 +1,4 @@
-# THIS FILE IS GENERATED FROM TBRF SETUP.PY
+# THIS FILE IS GENERATED FROM FLUIDML SETUP.PY
 short_version = '0.9.0'
 version = '0.9.0'
 full_version = '0.9.0.dev'

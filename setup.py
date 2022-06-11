@@ -33,7 +33,7 @@ def get_version_info():
 
 
 def write_version_py(filename="fluidml/version.py"):
-    cnt = """# THIS FILE IS GENERATED FROM TBRF SETUP.PY
+    cnt = """# THIS FILE IS GENERATED FROM FLUIDML SETUP.PY
 short_version = '%(version)s'
 version = '%(version)s'
 full_version = '%(full_version)s'
