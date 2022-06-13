@@ -4,7 +4,7 @@
 # @Email: alix.bernard9@gmail.com
 # @Date: 2022-03-24 15:58:14
 # @Last modified by: AlixBernard
-# @Last modified time: 2022-06-09 02:49:43
+# @Last modified time: 2022-06-13 01:08:56
 
 """Classes for the Tensor Basis Decision Tree (TBDT) and the Tensor
 Basis Random Forest (TBRF).
@@ -71,13 +71,13 @@ def fit_tensor(
 
     Returns
     -------
-    g_hat : np.ndarray
+    ghat : np.ndarray
         Optimum value for the tensor basis coefficients with shape
         `(m,)`.
-    b_hat : np.ndarray
+    bhat : np.ndarray
         Anysotropy tensor with shape `(n, 9)`.
     diff : np.ndarray
-        The difference between `b_hat` and the target `y` with shape
+        The difference between `bhat` and the target `y` with shape
         `(n, 9)`.
 
     """
@@ -86,13 +86,13 @@ def fit_tensor(
     rhs = Ty.sum(axis=0)
 
     # Solve Eq. 3.25
-    g_hat, _, _, _ = np.linalg.lstsq(lhs, rhs, rcond=None)
-    b_hat = np.zeros([n, 9])
+    ghat, _, _, _ = np.linalg.lstsq(lhs, rhs, rcond=None)
+    bhat = np.zeros([n, 9])
     for i in range(m):
-        b_hat += g_hat[i] * tb[:, i]
-    diff = y - b_hat
+        bhat += ghat[i] * tb[:, i]
+    diff = y - bhat
 
-    return g_hat, b_hat, diff
+    return ghat, bhat, diff
 
 
 def obj_func_J(
@@ -100,7 +100,7 @@ def obj_func_J(
     tb_sorted: np.ndarray,
     TT_sorted: np.ndarray,
     Ty_sorted: np.ndarray,
-    i_float: "float | None" = None,
+    i_float: float | None = None,
 ) -> float:
     """Objective function which minimize the RMSE difference w.r.t. the
     target `y`.
@@ -110,11 +110,11 @@ def obj_func_J(
     y_sorted : np.ndarray
         Sorted output features.
     tb_sorted : np.ndarray
-        Sorted tensor basis.
+        Sorted tensor basess.
     TT_sorted : np.ndarray
-        Sorted preconstructed matrix $transpose(T)*T$.
+        Sorted preconstructed matrices $transpose(T)*T$.
     Ty_sorted : np.ndarray
-        Sorted preconstructed matrix $transpose(T)*f$.
+        Sorted preconstructed matrices $transpose(T)*f$.
     i_float : float | None
         If not None, index which value will be turned to an int to use
         when splitting the data.
@@ -167,15 +167,15 @@ def find_Jmin_sorted(
     Parameters
     ----------
     feat_i : int
-        Index of the feature on which to find the optimum
-        splitting point.
+        Index of the feature on which to find the optimum splitting
+        point.
     x : np.ndarray
         Input features with shape `(n, p)`.
     y : np.ndarray
-        Anisotropy tensor `b` (target) on which to fit the
-        tree with shape `(n, 9)`.
+        Anisotropy tensor `b` (target) on which to fit the tree with
+        shape `(n, 9)`.
     tb : np.ndarray
-        Tensor basis with shape `(n, m, 9)`.
+        Tensor basess with shape `(n, m, 9)`.
     TT : np.ndarray
         Preconstructed matrix $transpose(T)*T$.
     Ty : np.ndarray
@@ -199,11 +199,11 @@ def find_Jmin_sorted(
 
     # Flag which activates when all features are the same
     # e.g. due to feature capping
-    obs_identic = True if np.all(x == x[0]) else False
+    obs_identical = True if np.all(x == x[0]) else False
 
     results = {"J": 1e10}  # Initial cost set really large
 
-    if obs_identic:
+    if obs_identical:
         # Exception: all observations are equal
         # Terminate further splitting of the node
         J, extra = obj_func_J(y_sorted, tb_sorted, TT_sorted, Ty_sorted)
@@ -294,7 +294,7 @@ def find_Jmin_opt(
     TT_sorted = TT[asort]
     Ty_sorted = Ty[asort]
 
-    obs_identic = True if np.all(x == x[0]) else False
+    obs_identical = True if np.all(x == x[0]) else False
 
     res = opt.minimize_scalar(
         obj_func_J,
@@ -336,7 +336,7 @@ def find_Jmin_opt(
         "n_r": n - i_split,
     }
 
-    if obs_identic:
+    if obs_identical:
         # Right and left splits are made equal. This leads to
         # termination of the branch later on in `self.fit()`
         results["g_l"] = extra["g_r"]
@@ -460,13 +460,13 @@ class TBDT:
             n_split_feats = p
         elif isinstance(self.max_features, str):
             if self.max_features == "sqrt":
-                n_split_feats = round(np.sqrt(m))
+                n_split_feats = int(np.ceil(np.sqrt(m)))
             elif self.max_features == "log2":
-                n_split_feats = round(np.log2(m))
+                n_split_feats = int(np.ceil(np.log2(m)))
             else:
                 raise ValueError(
-                    f"The attribute `max_features` must be"
-                    f" 'sqrt' or 'log2' when it is a str"
+                    f"The attribute `max_features` must be 'sqrt' or "
+                    f"'log2' when it is a str"
                 )
         elif isinstance(self.max_features, int):
             if 0 <= self.max_features <= m:
@@ -534,7 +534,6 @@ class TBDT:
         if self.logger is not None:
             self.logger.info(f"Loaded '{self}' from: '{path}'")
 
-    @_timer_func
     def create_split(
         self,
         x: np.ndarray,
@@ -552,10 +551,10 @@ class TBDT:
         x : np.ndarray
             Input features with shape `(n, p)`.
         y : np.ndarray
-            Anisotropy tensor `b` (target) on which to fit the tree with
-            shape `(n, 9)`.
+            Anisotropy tensors `b` (target) on which to fit the tree,
+            with shape `(n, 9)`.
         tb : np.ndarray
-            Tensor basis with shape `(n, m, 9)`.
+            Tensor bases with shape `(n, m, 9)`.
         TT : np.ndarray
             Preconstructed matrix $transpose(T)*T$.
         Ty : np.ndarray
@@ -674,17 +673,17 @@ class TBDT:
         x : np.ndarray
             Input features with shape `(n, p)`.
         y : np.ndarray
-            Anisotropy tensor `b` with shape `(n, 9)` on which to fit
+            Anisotropy tensors `b` with shape `(n, 9)` on which to fit
             the TBDT.
         tb : np.ndarray
-            Tensor basis with shape `(n, m, 9)`.
+            Tensor bases with shape `(n, m, 9)`.
 
         Returns
         -------
         fitted_params : dict
             Dictionary containing lists of node paths, tensor basis
-            coefficients `g`, splitting variables and values, `b_hat`,
-            fitted values for `b_hat`. This dictionary is also assigned
+            coefficients `g`, splitting variables and values, `bhat`,
+            fitted values for `bhat`. This dictionary is also assigned
             to the TBDT.
             Keys: node_paths, g, split_var, split_val, N_data, n_data,
             MSE, n
@@ -693,16 +692,13 @@ class TBDT:
         if self.logger is not None:
             self.logger.info(f"Fitting '{self.name}'")
 
-        tb = tb.copy()
-        y = y.copy()
-        n, d, _ = tb.shape
-
+        n, m, _ = tb.shape
         # Preconstruct the N_obs matrices for the lhs and rhs terms in
         # the least squares problem
-        TT = np.zeros([n, d, d])
-        Ty = np.zeros([n, d])
+        TT = np.zeros([n, m, m])
+        Ty = np.zeros([n, m])
         for i in range(n):
-            TT[i] = tb[i] @ tb[i].T + self.gamma * np.eye(d)  # Eq. 3.25 TT
+            TT[i] = tb[i] @ tb[i].T + self.gamma * np.eye(m)  # Eq. 3.25 TT
             Ty[i] = tb[i] @ y[i]  # Eq. 3.25 Tb
 
         # Create fitted_params dict, which contains the nodes and
@@ -906,27 +902,21 @@ class TBDT:
         x : np.ndarray
             Input features with shape `(n, p)`.
         tb : np.ndarray
-            Tensor basis with shape `(n, m, 9)`.
+            Tensor basess with shape `(n, m, 9)`.
 
         Returns
         -------
-        b_hat : np.ndarray
-            Anisotropy tensor with shape `(n, 9)`.
-        g_hat : np.ndarray
+        bhat : np.ndarray
+            Anisotropy tensors with shape `(n, 9)`.
+        ghat : np.ndarray
             Tensor basis coefficients with shape `(n, m,)`.
 
         """
-        tb = tb.copy()
-        if len(tb.shape) == 4:
-            n, d, _, _ = tb.shape
-            tb = tb.reshape(n, d, -1)
-
-        n, d, _ = tb.shape
-        b_hat = np.zeros([n, 9])
-        g_hat = np.zeros([n, d])
+        n, m, _ = tb.shape
+        bhat = np.zeros([n, 9])
+        ghat = np.zeros([n, m])
 
         params = self.fitted_params
-        self.logger.info(f"{self.name}: {params['node_paths'] = }")
         for i in range(n):
             node_path = []
             # Start at root, add 0 or 1 to input feature node_path
@@ -954,8 +944,6 @@ class TBDT:
             # for prediction
             last_split = node_path[-1]
             node_path = node_path[:-1]
-            if self.logger is not None:
-                self.logger.debug(f"{node_path=}")
 
             # Get index prediction giving corresponding values for `g`
             i_pred = params["node_paths"].index(node_path)
@@ -966,13 +954,13 @@ class TBDT:
                 g = params["g"][2 * (i_pred + 1) + 1]
 
             tmp_b = np.zeros(9)
-            for j in range(d):
+            for j in range(m):
                 tmp_b += g[j] * tb[i, j]
-                g_hat[i, j] = g[j]
+                ghat[i, j] = g[j]
 
-            b_hat[i] = tmp_b
+            bhat[i] = tmp_b
 
-        return g_hat, b_hat
+        return ghat, bhat
 
 
 class TBRF:
@@ -989,8 +977,8 @@ class TBRF:
         Number of features to consider when looking for the best split:
             - if int then consider `max_features`
             - if float then consider `round(max_features * m)`
-            - if 'sqrt' then consider `srqt(m)`
-            - if 'log2' then consider `log2(m)`
+            - if 'sqrt' then consider `ceil(srqt(m))`
+            - if 'log2' then consider `ceil(log2(m))`
             - if None then consider `m`
         where `m` is the total number of features.
         Default is 'sqrt'.
@@ -1209,10 +1197,10 @@ class TBRF:
         x : np.ndarray
             Input features with shape `(n, p)`.
         y : np.ndarray
-            Anisotropy tensor `b` with shape `(n, 9)` on which to fit
+            Anisotropy tensors `b` with shape `(n, 9)` on which to fit
             the tree.
         tb : np.ndarray
-            Tensor basis with shape `(n, m, 9)`.
+            Tensor bases with shape `(n, m, 9)`.
 
         """
         if self.logger is not None:
@@ -1232,26 +1220,20 @@ class TBRF:
     def _fit_tree(
         self, i_tree: int, x: np.ndarray, y: np.ndarray, tb: np.ndarray
     ) -> None:
-        """Fit the tree specified.
-
-        Parameters
-        ----------
-        i_tree : int
-        x, y, tb : np.ndarray
-        random_state : int | None
-
-        """
-        n_samples = self._get_n_samples(len(x))
-        seed = self.trees[i_tree].rng.choice(1000)
+        """Fit the specified tree."""
+        n = len(x)
+        n_samples = self._get_n_samples(n)
+        rng = self.trees[i_tree].rng
         if self.bootstrap:
-            x_sampled, y_sampled, tb_sampled = utils.random_sampling(
-                x, y, tb, size=n_samples, replace=True, seed=seed
-            )
+            idx_sampled = rng.choice(n, size=n_sampled, replace=True)
         else:
-            x_sampled, y_sampled, tb_sampled = x, y, tb
+            idx_sampled = np.arange(n)
 
+        x_sampled = x[idx_sampled]
+        y_sampled = y[idx_sampled]
+        tb_sampled = tb[idx_sampled]
         self.trees[i_tree].fit(x_sampled, y_sampled, tb_sampled)
-
+        
         return self.trees[i_tree]
 
     @_timer_func
@@ -1265,15 +1247,15 @@ class TBRF:
         x : np.ndarray
             Input features with shape `(n, p)`.
         tb : np.ndarray
-            Tensor basis with shape `(n, m, 9)`.
+            Tensor bases with shape `(n, m, 9)`.
         method : str
             How to compute the TBRF prediction from all the TBDT
-            predictions.
+            predictions, possible values are 'mean' and 'median'.
 
         Returns
         -------
-        b_hat : np.ndarray
-            Anisotropy tensor with shape `(n, 9)`.
+        bhat : np.ndarray
+            Anisotropy tensors with shape `(n, 9)`.
         b : np.ndarray
             Anisotropy tensors for each TBDT in the TBRF with shape
             `(s, n, 9)`.
@@ -1282,11 +1264,11 @@ class TBRF:
             shape `(s, n, 10)`.
 
         """
-        n, p = x.shape
+        n, m, _ = tb.shape
 
         # Initialize predictions
         b_trees = np.zeros([len(self), n, 9])
-        g_trees = np.zeros([len(self), n, 10])
+        g_trees = np.zeros([len(self), n, m])
 
         jobs = (self.n_jobs,) if self.n_jobs != -1 else ()
         with mp.Pool(*jobs) as pool:
@@ -1297,7 +1279,7 @@ class TBRF:
             data = [r.get() for r in res]
 
         # Go through the TBDTs of the TBRF to make predictions
-        for i, tbdt in enumerate(self.trees):
+        for i in range(len(self)):
             g_trees[i], b_trees[i] = data[i]
 
         if method == "mean":
@@ -1315,20 +1297,8 @@ class TBRF:
         return g_trees, b_trees, b
 
     def _predict_tree(self, i_tree: int, x: np.ndarray, tb: np.ndarray):
-        """Predict from the tree specified.
-
-        Parameters
-        ----------
-        i_tree : int
-        x, tb : np.ndarray
-
-        Returns
-        -------
-        b, g : np.ndarray
-
-        """
+        """Predict from the tree specified."""
         g, b = self.trees[i_tree].predict(x, tb)
-
         return g, b
 
 
