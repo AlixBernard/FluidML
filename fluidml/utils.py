@@ -4,7 +4,7 @@
 # @Email: alix.bernard9@gmail.com
 # @Date: 2022-01-29 16:30:32
 # @Last modified by: AlixBernard
-# @Last modified time: 2022-06-13 01:09:32
+# @Last modified time: 2022-10-06 18:16:12
 
 """Utilities for the tbrf package.
 
@@ -25,6 +25,7 @@ from numpy.random import default_rng
 # Local packages
 
 __all__ = [
+    "log_info",
     "jsonify",
     "get_S",
     "get_R",
@@ -43,6 +44,20 @@ __all__ = [
     "get_Inv43to47",
     "get_Inv1to47",
 ]
+
+
+def log_info(logger: logging.Logger, msg: str) -> None:
+    """Log the message `msg` as info using `logger` if it is provided,
+    otherwise do nothing.
+
+    Parameters
+    ----------
+    logger: logging.Logger
+    msg: str
+
+    """
+    if logger is not None:
+        logger.info(msg)
 
 
 def jsonify(x):
@@ -73,6 +88,7 @@ def jsonify(x):
     else:
         y = x
     return y
+
 
 def get_S(
     gradU: np.ndarray, scale_factors: np.ndarray | None = None
@@ -461,6 +477,7 @@ def get_b_BM(k: np.ndarray, nut: np.ndarray, S: np.ndarray) -> np.ndarray:
 
     return b_BM
 
+
 def get_tau_BM(k: np.ndarray, nut: np.ndarray, S: np.ndarray) -> np.ndarray:
     r"""Compute Reynolds-stress tensors from the Boussinesq model:
     $\tau = \frac{2}{3} k I - 2 \nu_t S$.
@@ -489,6 +506,7 @@ def get_tau_BM(k: np.ndarray, nut: np.ndarray, S: np.ndarray) -> np.ndarray:
 
     return tau_BM
 
+
 def get_Inv1to2(S: np.ndarray) -> np.ndarray:
     """Compute the invariants 1 to 2 from Wu et al. (2018). To get the
     normalized invariants the input should be normalized before.
@@ -513,9 +531,8 @@ def get_Inv1to2(S: np.ndarray) -> np.ndarray:
 
     return Inv
 
-def get_Inv3to5(
-    Ak: np.ndarray, Ap: np.ndarray, R: np.ndarray
-) -> np.ndarray:
+
+def get_Inv3to5(Ak: np.ndarray, Ap: np.ndarray, R: np.ndarray) -> np.ndarray:
     """Compute the invariants 3 to 5 from Wu et al. (2018). To get the
     normalized invariants the input should be normalized before.
 
@@ -528,7 +545,7 @@ def get_Inv3to5(
         Pressure gradient antisymmetric tensors with shape `(n, 3, 3)`.
     R : np.ndarray
         Mean rotation rate tensors with shape `(n, 3, 3)`.
-    
+
     Returns
     -------
     Inv : np.ndarray
@@ -544,6 +561,7 @@ def get_Inv3to5(
         Inv[i, 2] = np.trace(Ak[i] @ Ak[i])
 
     return Inv
+
 
 def get_Inv6to14(
     Ak: np.ndarray, Ap: np.ndarray, R: np.ndarray, S: np.ndarray
@@ -562,7 +580,7 @@ def get_Inv6to14(
         Mean rotation rate tensors with shape `(n, 3, 3)`.
     S : np.ndarray
         Mean strain rate tensors with shape `(n, 3, 3)`.
-    
+
     Returns
     -------
     Inv : np.ndarray
@@ -578,16 +596,19 @@ def get_Inv6to14(
         Inv[i, 2] = np.trace(R[i] @ (R[i] @ (S[i] @ (R[i] @ (S[i] @ S[i])))))
         Inv[i, 3] = np.trace(Ap[i] @ (Ap[i] @ S[i]))
         Inv[i, 4] = np.trace(Ap[i] @ (Ap[i] @ (S[i] @ S[i])))
-        Inv[i, 5] = np.trace(Ap[i] @ (Ap[i] @ (S[i] @ (Ap[i] @ (S[i] @ S[i])))))
+        Inv[i, 5] = np.trace(
+            Ap[i] @ (Ap[i] @ (S[i] @ (Ap[i] @ (S[i] @ S[i]))))
+        )
         Inv[i, 6] = np.trace(Ak[i] @ (Ak[i] @ S[i]))
         Inv[i, 7] = np.trace(Ak[i] @ (Ak[i] @ (S[i] @ S[i])))
-        Inv[i, 8] = np.trace(Ak[i] @ (Ak[i] @ (S[i] @ (Ak[i] @ (S[i] @ S[i])))))
+        Inv[i, 8] = np.trace(
+            Ak[i] @ (Ak[i] @ (S[i] @ (Ak[i] @ (S[i] @ S[i]))))
+        )
 
     return Inv
 
-def get_Inv15to17(
-    Ak: np.ndarray, Ap: np.ndarray, R: np.ndarray
-) -> np.ndarray:
+
+def get_Inv15to17(Ak: np.ndarray, Ap: np.ndarray, R: np.ndarray) -> np.ndarray:
     """Compute the invariants 15 to 17 from Wu et al. (2018). To get the
     normalized invariants the input should be normalized before.
 
@@ -600,7 +621,7 @@ def get_Inv15to17(
         Pressure gradient antisymmetric tensors with shape `(n, 3, 3)`.
     R : np.ndarray
         Mean rotation rate tensors with shape `(n, 3, 3)`.
-    
+
     Returns
     -------
     Inv : np.ndarray
@@ -616,6 +637,7 @@ def get_Inv15to17(
         Inv[i, 2] = np.trace(R[i] @ Ak[i])
 
     return Inv
+
 
 def get_Inv18to41(
     Ak: np.ndarray, Ap: np.ndarray, R: np.ndarray, S: np.ndarray
@@ -634,7 +656,7 @@ def get_Inv18to41(
         Mean rotation rate tensors with shape `(n, 3, 3)`.
     S : np.ndarray
         Mean strain rate tensors with shape `(n, 3, 3)`.
-    
+
     Returns
     -------
     Inv : np.ndarray
@@ -661,7 +683,9 @@ def get_Inv18to41(
         Inv[i, 12] = np.trace(R[i] @ (R[i] @ (Ak[i] @ (S[i] @ S[i]))))
         Inv[i, 13] = np.trace(Ak[i] @ (Ak[i] @ (R[i] @ (S[i] @ S[i]))))
         Inv[i, 14] = np.trace(R[i] @ (R[i] @ (S[i] @ (Ak[i] @ (S[i] @ S[i])))))
-        Inv[i, 15] = np.trace(Ak[i] @ (Ak[i] @ (S[i] @ (R[i] @ (S[i] @ S[i])))))
+        Inv[i, 15] = np.trace(
+            Ak[i] @ (Ak[i] @ (S[i] @ (R[i] @ (S[i] @ S[i]))))
+        )
 
         Inv[i, 16] = np.trace(Ap[i] @ (Ak[i] @ S[i]))
         Inv[i, 17] = np.trace(Ap[i] @ (Ak[i] @ (S[i] @ S[i])))
@@ -669,14 +693,17 @@ def get_Inv18to41(
         Inv[i, 19] = np.trace(Ak[i] @ (Ak[i] @ (Ap[i] @ S[i])))
         Inv[i, 20] = np.trace(Ap[i] @ (Ap[i] @ (Ak[i] @ (S[i] @ S[i]))))
         Inv[i, 21] = np.trace(Ak[i] @ (Ak[i] @ (Ap[i] @ (S[i] @ S[i]))))
-        Inv[i, 22] = np.trace(Ap[i] @ (Ap[i] @ (S[i] @ (Ak[i] @ (S[i] @ S[i])))))
-        Inv[i, 23] = np.trace(Ak[i] @ (Ak[i] @ (S[i] @ (Ap[i] @ (S[i] @ S[i])))))
+        Inv[i, 22] = np.trace(
+            Ap[i] @ (Ap[i] @ (S[i] @ (Ak[i] @ (S[i] @ S[i]))))
+        )
+        Inv[i, 23] = np.trace(
+            Ak[i] @ (Ak[i] @ (S[i] @ (Ap[i] @ (S[i] @ S[i]))))
+        )
 
     return Inv
 
-def get_Inv42(
-    Ak: np.ndarray, Ap: np.ndarray, R: np.ndarray
-) -> np.ndarray:
+
+def get_Inv42(Ak: np.ndarray, Ap: np.ndarray, R: np.ndarray) -> np.ndarray:
     """Compute the invariant 42 from Wu et al. (2018). To get the
     normalized invariants the input should be normalized before.
 
@@ -691,7 +718,7 @@ def get_Inv42(
         Mean rotation rate tensors with shape `(n, 3, 3)`.
     S : np.ndarray
         Mean strain rate tensors with shape `(n, 3, 3)`.
-    
+
     Returns
     -------
     Inv : np.ndarray
@@ -705,6 +732,7 @@ def get_Inv42(
         Inv[i] = np.trace(R[i] @ (Ap[i] @ Ak[i]))
 
     return Inv
+
 
 def get_Inv43to47(
     Ak: np.ndarray, Ap: np.ndarray, R: np.ndarray, S: np.ndarray
@@ -723,7 +751,7 @@ def get_Inv43to47(
         Mean rotation rate tensors with shape `(n, 3, 3)`.
     S : np.ndarray
         Mean strain rate tensors with shape `(n, 3, 3)`.
-    
+
     Returns
     -------
     Inv : np.ndarray
@@ -742,8 +770,9 @@ def get_Inv43to47(
 
     return Inv
 
+
 def get_Inv1to47(
-    Ak: np.ndarray, Ap: np.ndarray, R: np.ndarray,  S: np.ndarray
+    Ak: np.ndarray, Ap: np.ndarray, R: np.ndarray, S: np.ndarray
 ) -> np.ndarray:
     """Compute the 47 invariants from Wu et al. (2018). To get the
     normalized invariants the input should be normalized before.
@@ -774,7 +803,7 @@ def get_Inv1to47(
             get_Inv15to17(Ak, Ap, R),
             get_Inv18to41(Ak, Ap, R, S),
             get_Inv42(Ak, Ap, R).reshape(-1, 1),
-            get_Inv43to47(Ak, Ap, R, S)
+            get_Inv43to47(Ak, Ap, R, S),
         ]
     )
 
