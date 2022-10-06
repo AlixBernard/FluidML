@@ -4,7 +4,7 @@
 # @Email: alix.bernard9@gmail.com
 # @Date: 2022-03-24 15:58:14
 # @Last modified by: AlixBernard
-# @Last modified time: 2022-06-13 01:08:56
+# @Last modified time: 2022-10-06 18:24:16
 
 """Classes for the Tensor Basis Decision Tree (TBDT) and the Tensor
 Basis Random Forest (TBRF).
@@ -32,6 +32,7 @@ from numpy.random import default_rng
 
 # Local packages
 from fluidml import utils
+from utils import log_info
 
 __all__ = [
     "fit_tensor",
@@ -516,8 +517,7 @@ class TBDT:
                 f"Could not save '{self}' due to:\n\tTypeError: {exc}"
             )
             return
-        if self.logger is not None:
-            self.logger.info(f"Saved '{self}' as: '{path}'")
+        log_info(self.logger, f"Saved '{self}' as: '{path}'")
 
     def load(self, path: Path):
         """Load the TBDT from a JSON file containing its attributes.
@@ -531,8 +531,7 @@ class TBDT:
             json_attrs = json.load(file)
         for k, v in json_attrs:
             self.__setattr__(k, v)
-        if self.logger is not None:
-            self.logger.info(f"Loaded '{self}' from: '{path}'")
+        log_info(self.logger, f"Loaded '{self}' from: '{path}'")
 
     def create_split(
         self,
@@ -689,8 +688,7 @@ class TBDT:
             MSE, n
 
         """
-        if self.logger is not None:
-            self.logger.info(f"Fitting '{self.name}'")
+        log_info(self.logger, f"Fitting '{self.name}'")
 
         n, m, _ = tb.shape
         # Preconstruct the N_obs matrices for the lhs and rhs terms in
@@ -888,8 +886,7 @@ class TBDT:
 
         self.fitted_params = fitted_params
 
-        if self.logger is not None:
-            self.logger.info(f"Fitted '{self.name}'")
+        log_info(self.logger, f"Fitted '{self.name}'")
 
     @_timer_func
     def predict(self, x: np.ndarray, tb: np.ndarray) -> tuple:
@@ -1049,8 +1046,7 @@ class TBRF:
             )
             for i in range(self.n_estimators)
         ]
-        if self.logger is not None:
-            self.logger.info(f"Initialized {self.n_estimators} TBDTs")
+        log_info(self.logger, f"Initialized {self.n_estimators} TBDTs")
 
     def __len__(self):
         return len(self.trees)
@@ -1130,8 +1126,7 @@ class TBRF:
         """
         if not dir_path.exists():
             dir_path.mkdir()
-            if self.logger is not None:
-                self.logger.info(f"Created the folder: '{dir_path}'")
+            log_info(self.logger, f"Created the folder: '{dir_path}'")
 
         for tbdt in self.trees:
             tbdt_filename = f"{tbdt}.json"
@@ -1155,8 +1150,7 @@ class TBRF:
         with open(tbrf_path, "w") as file:
             # json.dump(json_attrs, file, indent=4)
             file.write("TBRF.save disabled")
-        if self.logger is not None:
-            self.logger.info(f"Saved '{self}' as: '{tbrf_path}'")
+        log_info(self.logger, f"Saved '{self}' as: '{tbrf_path}'")
 
     def load(self, dir_path: Path):
         """Load the TBRF as a folder containing the JSON files of its
@@ -1179,8 +1173,7 @@ class TBRF:
             if k == "trees":
                 tbdt_names.extend(v)
             self.__setattr__(k, v)
-        if self.logger is not None:
-            self.logger.info(f"Loaded '{self}' from: '{tbrf_path}'")
+        log_info(self.logger, f"Loaded '{self}' from: '{tbrf_path}'")
 
         for name in tbdt_names:
             tbdt_filename = f"{name}.json"
@@ -1203,8 +1196,7 @@ class TBRF:
             Tensor bases with shape `(n, m, 9)`.
 
         """
-        if self.logger is not None:
-            self.logger.info(f"Fitting all trees of '{self.name}'")
+        log_info(self.logger, f"Fitting all trees of '{self.name}'")
 
         jobs = (self.n_jobs,) if self.n_jobs != -1 else ()
         with mp.Pool(*jobs) as pool:
@@ -1214,8 +1206,7 @@ class TBRF:
             ]
             self.trees = [r.get() for r in res]
 
-        if self.logger is not None:
-            self.logger.info(f"Fitted all trees of '{self.name}'")
+        log_info(self.logger, f"Fitted all trees of '{self.name}'")
 
     def _fit_tree(
         self, i_tree: int, x: np.ndarray, y: np.ndarray, tb: np.ndarray
@@ -1233,7 +1224,7 @@ class TBRF:
         y_sampled = y[idx_sampled]
         tb_sampled = tb[idx_sampled]
         self.trees[i_tree].fit(x_sampled, y_sampled, tb_sampled)
-        
+
         return self.trees[i_tree]
 
     @_timer_func
@@ -1291,8 +1282,7 @@ class TBRF:
                 f"The `method` attribute must be 'mean' or 'median'"
             )
 
-        if self.logger is not None:
-            self.logger.info("Predicted the anysotropy tensor 'b'")
+        log_info(self.logger, "Predicted the anysotropy tensor 'b'")
 
         return g_trees, b_trees, b
 
