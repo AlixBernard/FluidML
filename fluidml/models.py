@@ -397,7 +397,7 @@ class TBDT:
         obj_repr = f"TBDT({', '.join(str_attrs)})"
         return obj_repr
 
-    def _log(level: int, message: str, *args, **kwargs) -> None:
+    def _log(self, level: int, message: str, *args, **kwargs) -> None:
         if self.logger is not None:
             self.logger.log(level, message, *args, **kwargs)
 
@@ -521,7 +521,7 @@ class TBDT:
                     )
 
     def to_graphviz(
-        self, dir_path: str | Path, shape="rectangle", graph="diagraph"
+        self, dir_path: Path, shape="rectangle", graph="diagraph"
     ) -> None:
         """Export the tree to the graphviz dot format.
 
@@ -881,7 +881,7 @@ class TBRF:
         obj_repr = f"TBRF({', '.join(str_attrs)})"
         return obj_repr
 
-    def _log(level: int, message: str, *args, **kwargs) -> None:
+    def _log(self, level: int, message: str, *args, **kwargs) -> None:
         if self.logger is not None:
             self.logger.log(level, message, *args, **kwargs)
 
