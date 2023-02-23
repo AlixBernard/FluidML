@@ -396,14 +396,19 @@ class TBDT:
         obj_repr = f"TBDT({', '.join(str_attrs)})"
         return obj_repr
 
+    def _log(level: int, message: str, *args, **kwargs) -> None:
+        if self.logger is not None:
+            self.logger.log(level, message, *args, **kwargs)
+
     def _timer_func(func):
         def wrap_func(self, *args, **kwargs):
             t1 = time()
             result = func(self, *args, **kwargs)
             t2 = time()
-            self.logger.debug(
+            self._log(
+                logging.DEBUG,
                 f"Method '{self.name}.{func.__name__}()' executed in "
-                f"{(t2-t1):.2f}s"
+                f"{(t2-t1):.2f}s",
             )
             return result
 
@@ -476,8 +481,7 @@ class TBDT:
         with open(path, "w") as file:
             json.dump(json_attrs, file, indent=2)
 
-        if self.logger is not None:
-            self.logger.info(f"Saved '{self}' as: '{path}'")
+        self._log(logging.INFO, f"Saved '{self}' as: '{path}'")
 
     def from_json(self, path: Path):
         """Load the TBDT from a JSON file containing its attributes.
@@ -496,8 +500,7 @@ class TBDT:
                 self.__setattr__(k, v)
         self.rng = default_rng(self.random_state)
 
-        if self.logger is not None:
-            self.logger.info(f"Loaded '{self}' from: '{path}'")
+        self._log(logging.INFO, f"Loaded '{self}' from: '{path}'")
 
     def _load_tree(self, tree_dict: dict) -> None:
         subtree = tree_dict
@@ -535,11 +538,11 @@ class TBDT:
             dir_path.mkdir(parents=True)
         self.tree.to_graphviz(Path(dir_path) / f"{self.name}.dot")
 
-        if self.logger is not None:
-            self.logger.info(
-                f"Exported '{self.name}' to graphviz as: "
-                f"'{dir_path / f'{self.name}.dot'}'"
-            )
+        self._log(
+            logging.INFO,
+            f"Exported '{self.name}' to graphviz as: "
+            f"'{dir_path / f'{self.name}.dot'}'",
+        )
 
     def create_split(
         self,
@@ -643,8 +646,7 @@ class TBDT:
             MSE, n
 
         """
-        if self.logger is not None:
-            self.logger.info(f"Fitting '{self.name}'")
+        self._log(logging.INFO, f"Fitting '{self.name}'")
 
         n, m, _ = tb.shape
         # Preconstruct the N_obs matrices for the lhs and rhs terms in
@@ -683,11 +685,11 @@ class TBDT:
                 }
                 self.tree.add_node(node, parent=parent)
 
-                if self.logger is not None:
-                    self.logger.debug(
-                        f"Fitted node '{node.identifier:<35}', "
-                        f"RMSE={rmse:.5e}, n_samples={n_samples:>6,}"
-                    )
+                self._log(
+                    logging.DEBUG,
+                    f"Fitted node '{node.identifier:<35}', "
+                    f"RMSE={rmse:.5e}, n_samples={n_samples:>6,}",
+                )
 
                 continue
 
@@ -719,14 +721,13 @@ class TBDT:
             }
             self.tree.add_node(node, parent=parent)
 
-            if self.logger is not None:
-                self.logger.debug(
-                    f"Fitted node '{node.identifier:<35}', "
-                    f"RMSE={rmse:.5e}, n_samples={n_samples:>6,}"
-                )
+            self._log(
+                logging.DEBUG,
+                f"Fitted node '{node.identifier:<35}', "
+                f"RMSE={rmse:.5e}, n_samples={n_samples:>6,}",
+            )
 
-        if self.logger is not None:
-            self.logger.info(f"Fitted '{self.name}'")
+        self._log(logging.INFO, f"Fitted '{self.name}'")
 
     @_timer_func
     def predict(self, x: np.ndarray, tb: np.ndarray) -> tuple:
@@ -851,8 +852,7 @@ class TBRF:
             )
             for i in range(self.n_estimators)
         ]
-        if self.logger is not None:
-            self.logger.info(f"Initialized {self.n_estimators} TBDTs")
+        self._log(logging.INFO, f"Initialized {self.n_estimators} TBDTs")
 
     def __len__(self):
         return len(self.trees)
@@ -878,14 +878,19 @@ class TBRF:
         obj_repr = f"TBRF({', '.join(str_attrs)})"
         return obj_repr
 
+    def _log(level: int, message: str, *args, **kwargs) -> None:
+        if self.logger is not None:
+            self.logger.log(level, message, *args, **kwargs)
+
     def _timer_func(func):
         def wrap_func(self, *args, **kwargs):
             t1 = time()
             result = func(self, *args, **kwargs)
             t2 = time()
-            self.logger.debug(
+            self._log(
+                logging.DEBUG,
                 f"Method '{self.name}.{func.__name__}()' executed in "
-                f"{(t2-t1):.2f}s"
+                f"{(t2-t1):.2f}s",
             )
             return result
 
@@ -939,8 +944,7 @@ class TBRF:
         """
         if not dir_path.exists():
             dir_path.mkdir(parents=True)
-            if self.logger is not None:
-                self.logger.info(f"Created the folder: '{dir_path}'")
+            s_elfilogging.INFO, nfo(f"Created the folder: '{dir_path}'")
 
         for tbdt in self.trees:
             tbdt_filename = f"{tbdt}.json"
@@ -962,8 +966,7 @@ class TBRF:
         with open(tbrf_path, "w") as file:
             json.dump(json_attrs, file, indent=4)
 
-        if self.logger is not None:
-            self.logger.info(f"Saved '{self}' as: '{tbrf_path}'")
+        self._log(logging.INFO, f"Saved '{self}' as: '{tbrf_path}'")
 
     def from_json(self, dir_path: Path):
         """Load the TBRF as a folder containing the JSON files of its
@@ -986,8 +989,7 @@ class TBRF:
             if k == "trees":
                 tbdt_names.extend(v)
             self.__setattr__(k, v)
-        if self.logger is not None:
-            self.logger.info(f"Loaded '{self}' from: '{tbrf_path}'")
+        self._log(logging.INFO, f"Loaded '{self}' from: '{tbrf_path}'")
 
         for name in tbdt_names:
             tbdt_filename = f"{name}.json"
@@ -1015,10 +1017,9 @@ class TBRF:
         for tree in self.trees:
             tree.to_graphviz(dir_path, shape=shape, graph=graph)
 
-        if self.logger is not None:
-            self.logger.info(
-                f"Exported '{self.name}' to graphviz in '{dir_path}'"
-            )
+        self._log(
+            logging.INFO, f"Exported '{self.name}' to graphviz in '{dir_path}'"
+        )
 
     @_timer_func
     def fit(
@@ -1041,8 +1042,7 @@ class TBRF:
             processors.
 
         """
-        if self.logger is not None:
-            self.logger.info(f"Fitting all trees of '{self.name}'")
+        self._log(logging.INFO, f"Fitting all trees of '{self.name}'")
 
         jobs = (n_jobs,) if n_jobs != -1 else ()
         with mp.Pool(*jobs) as pool:
@@ -1052,8 +1052,7 @@ class TBRF:
             ]
             self.trees = [r.get() for r in res]
 
-        if self.logger is not None:
-            self.logger.info(f"Fitted all trees of '{self.name}'")
+        self._log(logging.INFO, f"Fitted all trees of '{self.name}'")
 
     def _fit_tree(
         self, i_tree: int, x: np.ndarray, y: np.ndarray, tb: np.ndarray
@@ -1143,8 +1142,7 @@ class TBRF:
                 f"The `method` attribute must be 'mean' or 'median'"
             )
 
-        if self.logger is not None:
-            self.logger.info("Predicted the anysotropy tensor 'b'")
+        self._log(logging.INFO, "Predicted the anysotropy tensor 'b'")
 
         return g_trees, b_trees, b
 
