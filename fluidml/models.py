@@ -17,6 +17,16 @@ Glossary:
 
 """
 
+__all__ = [
+    "fit_tensor",
+    "obj_func_J",
+    "find_Jmin_sorted",
+    "find_Jmin_opt",
+    "TBDT",
+    "TBRF",
+]
+
+
 # Built-in packages
 import json
 import logging
@@ -35,22 +45,13 @@ from treelib import Tree, Node
 # Local packages
 from fluidml import utils
 
-__all__ = [
-    "fit_tensor",
-    "obj_func_J",
-    "find_Jmin_sorted",
-    "find_Jmin_opt",
-    "TBDT",
-    "TBRF",
-]
-
 
 def fit_tensor(
     TT: np.ndarray,
     Ty: np.ndarray,
     tb: np.ndarray,
     y: np.ndarray,
-) -> tuple:
+) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
     r"""Makes a least square fit on training data `y`, by using the
     preconstructed matrices $T^t T$ and $T^t y$.
     Used in the `create_split()` method. The least squares fit is
@@ -103,7 +104,7 @@ def obj_func_J(
     TT_sorted: np.ndarray,
     Ty_sorted: np.ndarray,
     i_float: float | None = None,
-) -> float:
+) -> tuple[float, dict]:
     """Objective function which minimize the RMSE difference w.r.t. the
     target `y`.
 
@@ -369,7 +370,7 @@ class TBDT:
         optim_threshold: int = 1_000,
         random_state: int | None = None,
         logger: logging.Logger | None = None,
-    ):
+    ) -> None:
         self.name = name
         self.tree = Tree()
         self.max_depth = max_depth
@@ -381,11 +382,11 @@ class TBDT:
         self.rng = default_rng(random_state)
         self.logger = logger
 
-    def __str__(self):
+    def __str__(self) -> str:
         s = f"{self.name}"
         return s
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         attrs2skip = ["logger"]
 
         str_attrs = []
@@ -455,12 +456,12 @@ class TBDT:
             f"incorrect value."
         )
 
-    def to_json(self, path: Path):
+    def to_json(self, path: Path | str) -> None:
         """Save the TBDT as a JSON file containing its attributes.
 
         Parameters
         ----------
-        path : Path
+        path : Path | str
 
         """
         attrs2skip = ["logger", "rng"]
@@ -483,7 +484,7 @@ class TBDT:
 
         self._log(logging.INFO, f"Saved '{self}' as: '{path}'")
 
-    def from_json(self, path: Path):
+    def from_json(self, path: Path) -> None:
         """Load the TBDT from a JSON file containing its attributes.
 
         Parameters
@@ -730,7 +731,9 @@ class TBDT:
         self._log(logging.INFO, f"Fitted '{self.name}'")
 
     @_timer_func
-    def predict(self, x: np.ndarray, tb: np.ndarray) -> tuple:
+    def predict(
+        self, x: np.ndarray, tb: np.ndarray
+    ) -> tuple[np.ndarray, np.ndarray]:
         """Predict the tensor basis coefficients `g` and use them to
         compute the anisotropy tensor, given the input features `x` and
         the tensor basis `tb`.
@@ -834,7 +837,7 @@ class TBRF:
         random_state: int | None = None,
         logger: logging.Logger | None = None,
         tbdt_kwargs: dict | None = None,
-    ):
+    ) -> None:
         self.name = name
         self.n_estimators = n_estimators
         self.bootstrap = bootstrap
@@ -854,14 +857,14 @@ class TBRF:
         ]
         self._log(logging.INFO, f"Initialized {self.n_estimators} TBDTs")
 
-    def __len__(self):
+    def __len__(self) -> int:
         return len(self.trees)
 
-    def __str__(self):
+    def __str__(self) -> str:
         s = f"{self.name}"
         return s
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         attrs2skip = ["logger"]
 
         str_attrs = []
@@ -944,7 +947,7 @@ class TBRF:
         """
         if not dir_path.exists():
             dir_path.mkdir(parents=True)
-            s_elfilogging.INFO, nfo(f"Created the folder: '{dir_path}'")
+            self._log(logging.INFO, f"Created the folder: '{dir_path}'")
 
         for tbdt in self.trees:
             tbdt_filename = f"{tbdt}.json"
@@ -1056,7 +1059,7 @@ class TBRF:
 
     def _fit_tree(
         self, i_tree: int, x: np.ndarray, y: np.ndarray, tb: np.ndarray
-    ) -> None:
+    ) -> list[Tree]:
         """Fit the specified tree."""
         n = len(x)
         n_samples = self._get_n_samples(n)
@@ -1080,7 +1083,7 @@ class TBRF:
         tb: np.ndarray,
         method: str = "mean",
         n_jobs: int = 1,
-    ):
+    ) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
         """Tensor Basis Random Forest predictions given input features
         `x_test` and tensor basis `tb_test`, make predictions for the
         anisotropy tensor `b` using its fitted trees.
@@ -1146,7 +1149,9 @@ class TBRF:
 
         return g_trees, b_trees, b
 
-    def _predict_tree(self, i_tree: int, x: np.ndarray, tb: np.ndarray):
+    def _predict_tree(
+        self, i_tree: int, x: np.ndarray, tb: np.ndarray
+    ) -> tuple[np.ndarray, np.ndarray]:
         """Predict from the tree specified."""
         g, b = self.trees[i_tree].predict(x, tb)
         return g, b
