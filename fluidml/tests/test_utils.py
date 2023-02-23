@@ -4,7 +4,7 @@
 # @Email: alix.bernard9@gmail.com
 # @Date: 2022-01-05 14:24:02
 # @Last modified by: AlixBernard
-# @Last modified time: 2022-06-10 13:42:52
+# @Last modified time: 2022-06-27 14:37:23
 
 """Tests of functions from the module tbrf.src.my_helpers
 
@@ -30,10 +30,10 @@ __all__ = [
 ]
 
 
-FICTURES_PATH = Path.home() / "TBRF_new/fluidml/fixtures"
-N = 3
-X = np.arange(N**2).reshape(1, N, N)
-SCALE_FACTORS = np.array([N])
+FIXTURES_PATH = Path(__file__).parents[1] / "TBRF_new/fluidml/fixtures"
+D = 3
+X = np.arange(D**2).reshape(1, D, D)
+SCALE_FACTORS = np.array([D])
 
 def test_get_SR():
     S, R = utils.get_SR(X)
@@ -41,12 +41,12 @@ def test_get_SR():
     assert np.all(R[0] == 0.5 * (X[0] - X[0].T))
     
     S, R = utils.get_SR(X, scale_factors=SCALE_FACTORS)
-    assert np.all(S[0] == 0.5 * (X[0] + X[0].T) * N)
-    assert np.all(R[0] == 0.5 * (X[0] - X[0].T) * N)
+    assert np.all(S[0] == 0.5 * (X[0] + X[0].T) * D)
+    assert np.all(R[0] == 0.5 * (X[0] - X[0].T) * D)
 
 def test_get_Ak():
     Ak = utils.get_Ak(X, scale_factors=SCALE_FACTORS)
-    assert np.all(Ak[0] == -np.cross(np.eye(N), X[0]) * SCALE_FACTORS[0])
+    assert np.all(Ak[0] == -np.cross(np.eye(D), X[0]) * SCALE_FACTORS[0])
 
 def test_get_invariants_FS1():
     ...
