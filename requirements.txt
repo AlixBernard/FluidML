@@ -18,3 +18,5 @@ scipy
 six
 threadpoolctl
 tomli
+mypy
+treelib
