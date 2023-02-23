@@ -15,7 +15,7 @@ Tensor basis [\[1\]][1]:
 Features sets:
 - Invariants FS1
 - Invariants FS2
-- Invariants FS2
+- Invariants FS3
 
 
 
