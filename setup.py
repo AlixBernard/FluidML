@@ -17,7 +17,7 @@ from setuptools import setup, find_packages
 
 
 MAJOR = 0
-MINOR = 10:
+MINOR = 10
 PATCH = 0
 ISRELEASED = False
 VERSION = f"{MAJOR}.{MINOR}.{PATCH}"
