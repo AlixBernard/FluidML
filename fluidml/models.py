@@ -351,6 +351,7 @@ class TBDT:
 
     Methods
     -------
+    to_dict
     to_json
     from_json
     to_graphviz
@@ -456,6 +457,24 @@ class TBDT:
             f"incorrect value."
         )
 
+    def to_dict(self) -> dict:
+        attrs2skip = ["logger", "rng"]
+        d = {}
+        for k, v in self.__dict__.items():
+            if k in attrs2skip:
+                continue
+            if k == "tree":
+                d["nodes"] = {
+                    node.identifier: {
+                        "tag": node.tag,
+                        "data": node.data,
+                    }
+                    for node in self.tree.all_nodes()
+                }
+                continue
+            d[k] = v
+        return d
+
     def to_json(self, path: Path | str) -> None:
         """Save the TBDT as a JSON file containing its attributes.
 
@@ -521,9 +540,10 @@ class TBDT:
                     )
 
     def to_graphviz(
-        self, dir_path: Path, shape="rectangle", graph="diagraph"
-    ) -> None:
-        """Export the tree to the graphviz dot format.
+        self, dir_path: Path | None = None, shape="rectangle", graph="digraph"
+    ) -> str:
+        """Export the tree to the graphviz dot format, returning it as
+        a str. If `dir_path` is specified, save it in this directory.
 
         Parameters
         ----------
@@ -531,19 +551,58 @@ class TBDT:
             Directory to which save the tree.
         shape : {'rectangle', 'circle'}, default='rectangle'
             Shape of the nodes.
-        graph : str, default='diagraph'
+        graph : str, default='digraph'
             Type of graph.
 
         """
-        if not dir_path.exists():
-            dir_path.mkdir(parents=True)
-        self.tree.to_graphviz(Path(dir_path) / f"{self.name}.dot")
 
-        self._log(
-            logging.INFO,
-            f"Exported '{self.name}' to graphviz as: "
-            f"'{dir_path / f'{self.name}.dot'}'",
+        def node_label(node: Node) -> str:
+            data = node.data
+            split_i, split_v = data["split_i"], data["split_v"]
+            split_i_str = f"{split_i:9<}" if split_i is not None else "None"
+            split_v_str = f"{split_v:1.3e}" if split_v is not None else "None"
+            label = (
+                f"split feat idx: {split_i_str}\\n"
+                f"value: {split_v_str}\\n"
+                f"nb samples: {data['n_samples']}\\n"
+                f"RMSE: {data['RMSE']:1.3e}"
+            )
+            return label
+
+        nodes, connections = [], []
+        if self.tree.nodes:
+            for n in self.tree.expand_tree(mode=self.tree.WIDTH):
+                nid = self.tree[n].identifier
+                state = f'"{nid}" [label="{node_label(self.tree[n])}", shape={shape}]'
+                nodes.append(state)
+                for c in self.tree.children(nid):
+                    cid = c.identifier
+                    connections.append(f'"{nid}" -> "{cid}"')
+
+        ret, tab = "\n", "\t"
+        dot_str = (
+            f"{graph} tree {{\n"
+            f'\tlabel="{self.name}";\n'
+            f"{ret if len(nodes) > 0 else ''}"
+            f"{f';{ret}'.join([f'{tab}{node}' for node in nodes])};\n"
+            f"{ret if len(connections) > 0 else ''}"
+            f"{f';{ret}'.join([f'{tab}{conn}' for conn in connections])};\n"
+            f"}}"
         )
+
+        if dir_path is not None:
+            if not dir_path.exists():
+                dir_path.mkdir(parents=True)
+            with open(dir_path / f"{self.name}.dot", "w") as file:
+                file.write(dot_str)
+
+            self._log(
+                logging.INFO,
+                f"Exported '{self.name}' to graphviz as: "
+                f"'{dir_path / f'{self.name}.dot'}'",
+            )
+
+        return dot_str
 
     def create_split(
         self,
@@ -666,59 +725,31 @@ class TBDT:
             rmse = np.sqrt(np.sum(diff**2))
             n_samples = len(idx)
 
-            if len(idx) <= self.min_samples_leaf:
-                # TODO: Integrate with the last part of the while loop
-                split_i = None
-                split_v = None
-                node.tag = node.identifier
-                node.data = {
-                    "split_i": split_i,
-                    "split_v": split_v,
-                    "g": list(map(float, g)),
-                    "n_samples": n_samples,
-                    "RMSE": rmse,
-                    "display": (
-                        f"feat idx: {split_i}\n"
-                        f"feat val: {split_v}\n"
-                        f"nb samples: {n_samples:,}\n"
-                        f"RMSE: {rmse:.5e}"
-                    ),
-                }
-                self.tree.add_node(node, parent=parent)
-
-                self._log(
-                    logging.DEBUG,
-                    f"Fitted node '{node.identifier:<35}', "
-                    f"RMSE={rmse:.5e}, n_samples={n_samples:>6,}",
+            split_i, split_v = None, None
+            if len(idx) > self.min_samples_leaf:
+                res = self.create_split(
+                    x[idx], y[idx], tb[idx], TT[idx], Ty[idx]
                 )
+                split_i = res["split_i"]
+                split_v = res["split_v"]
+                idx_l, idx_r = res["idx_l"], res["idx_r"]
 
-                continue
-
-            res = self.create_split(x[idx], y[idx], tb[idx], TT[idx], Ty[idx])
-            split_i = res["split_i"]
-            split_v = res["split_v"]
-            idx_l, idx_r = res["idx_l"], res["idx_r"]
-
-            if len(idx_l) == 0 or len(idx_r) == 0:
-                split_i = None
-                split_v = None
-            else:
-                node_l = Node(identifier=f"{node.identifier}0")
-                node_r = Node(identifier=f"{node.identifier}1")
-                nodes2add.append((node_l, node, idx_l))
-                nodes2add.append((node_r, node, idx_r))
+                if len(idx_l) == 0 or len(idx_r) == 0:
+                    split_i = None
+                    split_v = None
+                else:
+                    node_l = Node(identifier=f"{node.identifier}0")
+                    node_r = Node(identifier=f"{node.identifier}1")
+                    nodes2add.append((node_l, node, idx_l))
+                    nodes2add.append((node_r, node, idx_r))
 
             node.tag = node.identifier
             node.data = {
                 "split_i": split_i,
                 "split_v": split_v,
                 "g": list(map(float, g)),
-                "display": (
-                    f"feat idx: {split_i}\n"
-                    f"feat val: {split_v:.5e}\n"
-                    f"nb samples: {n_samples:,}\n"
-                    f"RMSE: {rmse:.5e}"
-                ),
+                "n_samples": n_samples,
+                "RMSE": rmse,
             }
             self.tree.add_node(node, parent=parent)
 
