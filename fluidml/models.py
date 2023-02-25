@@ -554,6 +554,11 @@ class TBDT:
         graph : str, default='digraph'
             Type of graph.
 
+        Returns
+        -------
+        dot_str : str
+            String of the graph in the dot format.
+
         """
 
         def node_label(node: Node) -> str:
