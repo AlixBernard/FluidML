@@ -475,31 +475,38 @@ class TBDT:
             d[k] = v
         return d
 
-    def to_json(self, path: Path | str) -> None:
+    @classmethod
+    def from_dict(cls, tbdt_dict: dict):
+        tbdt_kwargs = {
+            k: v for k, v in tbdt_dict.items() if k not in ["nodes"]
+        }
+        tbdt = TBDT(**tbdt_kwargs)
+        nodes2add = []
+        for k, v in tbdt_dict["nodes"].items():
+            identifier, tag, data = k, v["tag"], v["data"]
+            parent = identifier[:-1] if len(identifier) > 1 else None
+            nodes2add.append((Node(identifier, tag, data), parent))
+        nodes2add.sort(key=len)
+        for node, parent in nodes2add:
+            tbdt.tree.add_node(node, parent=parent)
+        return tbdt
+
+    def save_to_json(self, dir_path: Path) -> None:
         """Save the TBDT as a JSON file containing its attributes.
 
         Parameters
         ----------
-        path : Path | str
+        dir_path : Path
 
         """
-        attrs2skip = ["logger", "rng"]
-        json_attrs = {}
-        for k, v in self.__dict__.items():
-            if k in attrs2skip:
-                continue
-            elif k == "tree":
-                v_dict = OrderedDict(v.to_dict(with_data=True, sort=True))
-                if "children" in v_dict:
-                    v_dict.move_to_end("children")
-                json_attrs["tree"] = v_dict
-            else:
-                json_attrs[k] = v
-        json_attrs = OrderedDict(json_attrs)
-        json_attrs.move_to_end("tree")
+        tbdt_dict = OrderedDict(self.to_dict())
+        tbdt_dict.move_to_end("tree")
 
-        with open(path, "w") as file:
-            json.dump(json_attrs, file, indent=2)
+        if not dir_path.exists():
+            dir_path.mkdir(parents=True)
+
+        with open(dir_path / f"{self.name}.json", "w") as file:
+            json.dump(tbdt_dict, file, indent=2)
 
         self._log(logging.INFO, f"Saved '{self}' as: '{path}'")
 

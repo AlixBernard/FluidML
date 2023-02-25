@@ -179,6 +179,13 @@ class TestTBDT:
             json.dump(tbdt1_as_dict, file, indent=4)
         assert tbdt1.to_dict() == tbdt1_as_dict
 
+    def test_from_dict(self, tbdt1, features, targets, tb, tbdt1_as_dict):
+        tbdt1.fit(features, targets, tb)
+        tbdt = TBDT.from_dict(tbdt1_as_dict)
+        tbdt.rng = None
+        tbdt1.rng = None
+        assert tbdt == tbdt1
+
     def test_to_graphviz(
         self, tbdt1, features, targets, tb, tbdt1_as_graphviz
     ):
