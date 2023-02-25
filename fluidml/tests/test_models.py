@@ -168,19 +168,21 @@ def tbdt1_as_graphviz():
 }"""
 
 
-def test_TBDT_to_dict(tbdt1, features, targets, tb, tbdt1_as_dict):
-    tbdt1.fit(features, targets, tb)
-    import json
+class TestTBDT:
+    def test_to_dict(self, tbdt1, features, targets, tb, tbdt1_as_dict):
+        tbdt1.fit(features, targets, tb)
+        import json
 
-    with open("tmp1.json", "w") as file:
-        json.dump(tbdt1.to_dict(), file, indent=4)
-    with open("tmp2.json", "w") as file:
-        json.dump(tbdt1_as_dict, file, indent=4)
-    assert tbdt1.to_dict() == tbdt1_as_dict
+        with open("tmp1.json", "w") as file:
+            json.dump(tbdt1.to_dict(), file, indent=4)
+        with open("tmp2.json", "w") as file:
+            json.dump(tbdt1_as_dict, file, indent=4)
+        assert tbdt1.to_dict() == tbdt1_as_dict
 
-
-def test_TBDT_to_graphviz(tbdt1, features, targets, tb, tbdt1_as_graphviz):
-    tbdt1.fit(features, targets, tb)
-    with open("tmp.dot", "w") as file:
-        file.write(tbdt1.to_graphviz())
-    assert tbdt1.to_graphviz() == tbdt1_as_graphviz
+    def test_to_graphviz(
+        self, tbdt1, features, targets, tb, tbdt1_as_graphviz
+    ):
+        tbdt1.fit(features, targets, tb)
+        with open("tmp.dot", "w") as file:
+            file.write(tbdt1.to_graphviz())
+        assert tbdt1.to_graphviz() == tbdt1_as_graphviz
