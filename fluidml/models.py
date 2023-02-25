@@ -352,6 +352,7 @@ class TBDT:
     Methods
     -------
     to_dict
+    from_dict
     to_json
     from_json
     to_graphviz
