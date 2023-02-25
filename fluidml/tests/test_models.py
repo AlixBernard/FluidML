@@ -182,8 +182,8 @@ class TestTBDT:
     def test_from_dict(self, tbdt1, features, targets, tb, tbdt1_as_dict):
         tbdt1.fit(features, targets, tb)
         tbdt = TBDT.from_dict(tbdt1_as_dict)
-        tbdt.rng = None
-        tbdt1.rng = None
+        tbdt.rng, tbdt1.rng = None, None
+        tbdt.logger, tbdt1.logger == None, None
         assert tbdt == tbdt1
 
     def test_to_graphviz(

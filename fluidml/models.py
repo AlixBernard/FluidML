@@ -40,10 +40,10 @@ from pathlib import Path
 import numpy as np
 from scipy import optimize as opt
 from numpy.random import default_rng
-from treelib import Tree, Node
 
 # Local packages
 from fluidml import utils
+from fluidml.tree import Tree, Node
 
 
 def fit_tensor(
@@ -398,6 +398,16 @@ class TBDT:
         obj_repr = f"TBDT({', '.join(str_attrs)})"
         return obj_repr
 
+    def __eq__(self, tbdt2) -> bool:
+        for k, v in self.__dict__.items():
+            if k == "tree":
+                if self.tree != tbdt2.tree:
+                    return False
+                continue
+            if v != tbdt2.__dict__[k]:
+                return False
+        return True
+
     def _log(self, level: int, message: str, *args, **kwargs) -> None:
         if self.logger is not None:
             self.logger.log(level, message, *args, **kwargs)
@@ -484,8 +494,9 @@ class TBDT:
         nodes2add = []
         for k, v in tbdt_dict["nodes"].items():
             identifier, tag, data = k, v["tag"], v["data"]
+            node = Node(identifier, tag, data=data)
             parent = identifier[:-1] if len(identifier) > 1 else None
-            nodes2add.append((Node(identifier, tag, data), parent))
+            nodes2add.append((node, parent))
         nodes2add.sort(key=len)
         for node, parent in nodes2add:
             tbdt.tree.add_node(node, parent=parent)
