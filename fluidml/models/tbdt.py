@@ -343,8 +343,8 @@ class TBDT:
     -------
     to_dict
     from_dict
-    to_json
-    from_json
+    save_to_json
+    load_from_json
     to_graphviz
     create_split
     fit
@@ -459,6 +459,7 @@ class TBDT:
         )
 
     def to_dict(self) -> dict:
+        """Returns the TBDT as its dict representation."""
         attrs2skip = ["logger", "rng"]
         d = {}
         for k, v in self.__dict__.items():
@@ -478,6 +479,14 @@ class TBDT:
 
     @classmethod
     def from_dict(cls, tbdt_dict: dict):
+        """Create a `TBDT` from its dict representation.
+
+        Parameters
+        ----------
+        tbdt_dict : dict
+            The dict representation of the TBDT to create.
+
+        """
         tbdt_kwargs = {
             k: v for k, v in tbdt_dict.items() if k not in ["nodes"]
         }
@@ -495,7 +504,7 @@ class TBDT:
         return tbdt
 
     def save_to_json(self, path: Path) -> None:
-        """Save the TBDT as a JSON file containing its attributes.
+        """Save the TBDT as a JSON file containing its dict representation.
 
         Parameters
         ----------
@@ -510,7 +519,7 @@ class TBDT:
 
     @classmethod
     def load_from_json(cls, path: Path) -> None:
-        """Load the TBDT from a JSON file containing its attributes.
+        """Load the TBDT from a JSON file containing its dict representation.
 
         Parameters
         ----------
