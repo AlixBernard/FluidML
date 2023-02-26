@@ -501,6 +501,7 @@ class TBDT:
         nodes2add.sort(key=len)
         for node, parent in nodes2add:
             tbdt.tree.add_node(node, parent=parent)
+        tbdt.rng = default_rng(tbdt.random_state)
         return tbdt
 
     def save_to_json(self, dir_path: Path) -> None:
@@ -522,7 +523,7 @@ class TBDT:
 
         self._log(logging.INFO, f"Saved '{self}' as: '{path}'")
 
-    def from_json(self, path: Path) -> None:
+    def load_from_json(self, path: Path) -> None:
         """Load the TBDT from a JSON file containing its attributes.
 
         Parameters
