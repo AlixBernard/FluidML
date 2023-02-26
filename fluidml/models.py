@@ -504,26 +504,22 @@ class TBDT:
         tbdt.rng = default_rng(tbdt.random_state)
         return tbdt
 
-    def save_to_json(self, dir_path: Path) -> None:
+    def save_to_json(self, path: Path) -> None:
         """Save the TBDT as a JSON file containing its attributes.
 
         Parameters
         ----------
-        dir_path : Path
+        path : Path
 
         """
         tbdt_dict = OrderedDict(self.to_dict())
-        tbdt_dict.move_to_end("tree")
+        tbdt_dict.move_to_end("nodes")
 
-        if not dir_path.exists():
-            dir_path.mkdir(parents=True)
+        with open(path, "w") as file:
+            json.dump(tbdt_dict, file, indent=4)
 
-        with open(dir_path / f"{self.name}.json", "w") as file:
-            json.dump(tbdt_dict, file, indent=2)
-
-        self._log(logging.INFO, f"Saved '{self}' as: '{path}'")
-
-    def load_from_json(self, path: Path) -> None:
+    @classmethod
+    def load_from_json(cls, path: Path) -> None:
         """Load the TBDT from a JSON file containing its attributes.
 
         Parameters
@@ -532,15 +528,8 @@ class TBDT:
 
         """
         with open(path, "r") as file:
-            json_attrs = json.load(file)
-        for k, v in json_attrs:
-            if k == "tree":
-                self.tree = self._load_tree(v)
-            else:
-                self.__setattr__(k, v)
-        self.rng = default_rng(self.random_state)
-
-        self._log(logging.INFO, f"Loaded '{self}' from: '{path}'")
+            tbdt_dict = json.load(file)
+        return cls.from_dict(tbdt_dict)
 
     def _load_tree(self, tree_dict: dict) -> None:
         subtree = tree_dict

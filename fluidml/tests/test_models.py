@@ -1,4 +1,5 @@
 import pytest
+from pathlib import Path
 
 import numpy as np
 
@@ -181,10 +182,28 @@ class TestTBDT:
 
     def test_from_dict(self, tbdt1, features, targets, tb, tbdt1_as_dict):
         tbdt1.fit(features, targets, tb)
-        tbdt = TBDT.from_dict(tbdt1_as_dict)
-        tbdt.rng, tbdt1.rng = None, None
-        tbdt.logger, tbdt1.logger == None, None
-        assert tbdt == tbdt1
+        tbdt2 = TBDT.from_dict(tbdt1_as_dict)
+        tbdt1.rng, tbdt2.rng = None, None
+        tbdt1.logger, tbdt2.logger == None, None
+        assert tbdt2 == tbdt1
+
+    def test_save_to_json(self, tbdt1, features, targets, tb):
+        tbdt1.fit(features, targets, tb)
+        file_path = Path(__file__).parent / "test_tbdt1.json"
+        tbdt1.save_to_json(file_path)
+        tbdt2 = TBDT.load_from_json(file_path)
+        tbdt1.rng, tbdt2.rng = None, None
+        tbdt1.logger, tbdt2.logger == None, None
+        assert tbdt1 == tbdt2
+
+    def test_load_from_json(self, tbdt1, features, targets, tb):
+        tbdt1.fit(features, targets, tb)
+        file_path = Path(__file__).parent / "test_tbdt1.json"
+        tbdt1.save_to_json(file_path)
+        tbdt2 = TBDT.load_from_json(file_path)
+        tbdt1.rng, tbdt2.rng = None, None
+        tbdt1.logger, tbdt2.logger == None, None
+        assert tbdt1 == tbdt2
 
     def test_to_graphviz(
         self, tbdt1, features, targets, tb, tbdt1_as_graphviz
