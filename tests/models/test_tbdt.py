@@ -192,6 +192,7 @@ class TestTBDT:
         file_path = Path(__file__).parent / "test_tbdt1.json"
         tbdt1.save_to_json(file_path)
         tbdt2 = TBDT.load_from_json(file_path)
+        file_path.unlink()
         tbdt1.rng, tbdt2.rng = None, None
         tbdt1.logger, tbdt2.logger == None, None
         assert tbdt1 == tbdt2
@@ -201,6 +202,7 @@ class TestTBDT:
         file_path = Path(__file__).parent / "test_tbdt1.json"
         tbdt1.save_to_json(file_path)
         tbdt2 = TBDT.load_from_json(file_path)
+        file_path.unlink()
         tbdt1.rng, tbdt2.rng = None, None
         tbdt1.logger, tbdt2.logger == None, None
         assert tbdt1 == tbdt2
