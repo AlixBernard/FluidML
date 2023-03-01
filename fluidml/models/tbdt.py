@@ -196,7 +196,7 @@ def find_Jmin_sorted(
     results = {
         "J": best_J,
         "split_i": split_i,
-        "split_v": float(
+        "split_v": (
             0.5 * (x[asort][best_i - 1, split_i] + x[asort][best_i, split_i])
         ),
         "idx_l": asort[:best_i],
@@ -284,9 +284,7 @@ def find_Jmin_opt(
     results = {
         "J": J,
         "split_i": idx,
-        "split_v": (
-            0.5 * (x_sorted[i_split - 1, idx] + x_sorted[i_split, idx])
-        ),
+        "split_v": 0.5 * (x_sorted[i_split - 1, idx] + x_sorted[i_split, idx]),
         "i_l": i_l_sorted[asort_back],
         "i_r": i_r_sorted[asort_back],
         "g_l": extra["g_l"],
