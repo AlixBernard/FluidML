@@ -317,7 +317,9 @@ class TBDT:
         Name of the tree used as its string representation.
     max_depth : int, default=400
         The maximum depth of the tree.
-    min_sample_leaf : int
+    min_samples_split : int
+        Minimum number of samples required to consider to split a node.
+    min_samples_leaf : int
         Minimum number of samples required to be a leaf node.
     max_features : int or float or str or None, default='sqrt'
         Number of features to consider when looking for the best split:
@@ -356,6 +358,7 @@ class TBDT:
         self,
         name: str = "TBDT",
         max_depth: int = 400,
+        min_samples_split: int = 2,
         min_samples_leaf: int = 1,
         max_features: int | float | str | None = "sqrt",
         gamma: float = 1e0,
@@ -366,6 +369,7 @@ class TBDT:
         self.name = name
         self.tree = Tree()
         self.max_depth = max_depth
+        self.min_samples_split = min_samples_split
         self.min_samples_leaf = min_samples_leaf
         self.max_features = max_features
         self.gamma = gamma
@@ -741,20 +745,19 @@ class TBDT:
             split_i, split_v = None, None
             split_conditions = (
                 len(node.identifier) <= self.max_depth,
-                len(idx) > self.min_samples_leaf,
+                len(idx) > self.min_samples_split,
             )
             if all(split_conditions):
                 res = self.create_split(
                     x[idx], y[idx], tb[idx], TT[idx], Ty[idx]
                 )
-                split_i = res["split_i"]
-                split_v = res["split_v"]
                 idx_l, idx_r = res["idx_l"], res["idx_r"]
-
-                if len(idx_l) == 0 or len(idx_r) == 0:
-                    split_i = None
-                    split_v = None
-                else:
+                if not (
+                    len(idx_l) < self.min_samples_leaf
+                    or len(idx_r) < self.min_samples_leaf
+                ):
+                    split_i = res["split_i"]
+                    split_v = res["split_v"]
                     node_l = Node(identifier=f"{node.identifier}0")
                     node_r = Node(identifier=f"{node.identifier}1")
                     nodes2add.append((node_l, node, idx_l))
