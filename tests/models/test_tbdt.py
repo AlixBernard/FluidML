@@ -49,8 +49,8 @@ def tbdt1_as_dict():
         "optim_threshold": -1,
         "random_state": 42,
         "nodes": {
-            "0": {
-                "tag": "0",
+            "R": {
+                "tag": "R",
                 "data": {
                     "split_i": 0,
                     "split_v": -3.5,
@@ -59,8 +59,8 @@ def tbdt1_as_dict():
                     "RMSE": 8.616046224895372,
                 },
             },
-            "01": {
-                "tag": "01",
+            "R1": {
+                "tag": "R1",
                 "data": {
                     "split_i": 1,
                     "split_v": 1.5,
@@ -69,8 +69,8 @@ def tbdt1_as_dict():
                     "RMSE": 7.68299030900193,
                 },
             },
-            "011": {
-                "tag": "011",
+            "R11": {
+                "tag": "R11",
                 "data": {
                     "split_i": 2,
                     "split_v": 2.5,
@@ -79,8 +79,8 @@ def tbdt1_as_dict():
                     "RMSE": 6.607018587777909,
                 },
             },
-            "0111": {
-                "tag": "0111",
+            "R111": {
+                "tag": "R111",
                 "data": {
                     "split_i": None,
                     "split_v": None,
@@ -89,8 +89,8 @@ def tbdt1_as_dict():
                     "RMSE": 5.264848639164375,
                 },
             },
-            "0110": {
-                "tag": "0110",
+            "R110": {
+                "tag": "R110",
                 "data": {
                     "split_i": None,
                     "split_v": None,
@@ -99,8 +99,8 @@ def tbdt1_as_dict():
                     "RMSE": 0.00013616452239853343,
                 },
             },
-            "010": {
-                "tag": "010",
+            "R10": {
+                "tag": "R10",
                 "data": {
                     "split_i": None,
                     "split_v": None,
@@ -109,8 +109,8 @@ def tbdt1_as_dict():
                     "RMSE": 0.00013616452239853343,
                 },
             },
-            "00": {
-                "tag": "00",
+            "R0": {
+                "tag": "R0",
                 "data": {
                     "split_i": None,
                     "split_v": None,
@@ -128,20 +128,20 @@ def tbdt1_as_graphviz():
     return r"""digraph tree {
 	label="TBDT-1";
 
-	"0" [label="split feat idx: 0\nvalue: -3.500e+00\nnb samples: 5\nRMSE: 8.616e+00", shape=rectangle];
-	"00" [label="split feat idx: None\nvalue: None\nnb samples: 1\nRMSE: 1.362e-04", shape=rectangle];
-	"01" [label="split feat idx: 1\nvalue: 1.500e+00\nnb samples: 4\nRMSE: 7.683e+00", shape=rectangle];
-	"010" [label="split feat idx: None\nvalue: None\nnb samples: 1\nRMSE: 1.362e-04", shape=rectangle];
-	"011" [label="split feat idx: 2\nvalue: 2.500e+00\nnb samples: 3\nRMSE: 6.607e+00", shape=rectangle];
-	"0110" [label="split feat idx: None\nvalue: None\nnb samples: 1\nRMSE: 1.362e-04", shape=rectangle];
-	"0111" [label="split feat idx: None\nvalue: None\nnb samples: 2\nRMSE: 5.265e+00", shape=rectangle];
+	"R" [label="split feat idx: 0\nvalue: -3.500e+00\nnb samples: 5\nRMSE: 8.616e+00", shape=rectangle];
+	"R0" [label="split feat idx: None\nvalue: None\nnb samples: 1\nRMSE: 1.362e-04", shape=rectangle];
+	"R1" [label="split feat idx: 1\nvalue: 1.500e+00\nnb samples: 4\nRMSE: 7.683e+00", shape=rectangle];
+	"R10" [label="split feat idx: None\nvalue: None\nnb samples: 1\nRMSE: 1.362e-04", shape=rectangle];
+	"R11" [label="split feat idx: 2\nvalue: 2.500e+00\nnb samples: 3\nRMSE: 6.607e+00", shape=rectangle];
+	"R110" [label="split feat idx: None\nvalue: None\nnb samples: 1\nRMSE: 1.362e-04", shape=rectangle];
+	"R111" [label="split feat idx: None\nvalue: None\nnb samples: 2\nRMSE: 5.265e+00", shape=rectangle];
 
-	"0" -> "01";
-	"0" -> "00";
-	"01" -> "011";
-	"01" -> "010";
-	"011" -> "0111";
-	"011" -> "0110";
+	"R" -> "R1";
+	"R" -> "R0";
+	"R1" -> "R11";
+	"R1" -> "R10";
+	"R11" -> "R111";
+	"R11" -> "R110";
 }"""
 
 

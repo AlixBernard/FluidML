@@ -731,7 +731,7 @@ class TBDT:
             Ty[i] = tb[i] @ y[i]  # Eq. 3.25 Tb
 
         # Tree construction
-        nodes2add = [(Node(identifier="0"), None, np.arange(n))]
+        nodes2add = [(Node(identifier="R"), None, np.arange(n))]
         while nodes2add:
             node, parent, idx = nodes2add.pop()
             g, b, diff = fit_tensor(TT[idx], Ty[idx], tb[idx], y[idx])
