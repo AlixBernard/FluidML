@@ -374,14 +374,14 @@ class TBDT:
         self.optim_threshold = optim_threshold
         self.random_state = random_state
         self._rng = default_rng(random_state)
-        self.logger = logger
+        self._logger = logger
 
     def __str__(self) -> str:
         s = f"{self.name}"
         return s
 
     def __repr__(self) -> str:
-        attrs2skip = ["logger"]
+        attrs2skip = ["_logger", "_rng"]
 
         str_attrs = []
         for k, v in sorted(self.__dict__.items()):
@@ -402,8 +402,8 @@ class TBDT:
         return True
 
     def _log(self, level: int, message: str, *args, **kwargs) -> None:
-        if self.logger is not None:
-            self.logger.log(level, message, *args, **kwargs)
+        if self._logger is not None:
+            self._logger.log(level, message, *args, **kwargs)
 
     def _timer_func(func):
         def wrap_func(self, *args, **kwargs):
@@ -462,7 +462,7 @@ class TBDT:
 
     def to_dict(self) -> dict:
         """Returns the TBDT as its dict representation."""
-        attrs2skip = ["logger", "_rng"]
+        attrs2skip = ["_logger", "_rng"]
         d = {}
         for k, v in self.__dict__.items():
             if k in attrs2skip:

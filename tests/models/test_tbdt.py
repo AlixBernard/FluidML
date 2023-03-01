@@ -161,7 +161,7 @@ class TestTBDT:
         tbdt1.fit(features, targets, tb)
         tbdt2 = TBDT.from_dict(tbdt1_as_dict)
         tbdt1._rng, tbdt2._rng = None, None
-        tbdt1.logger, tbdt2.logger == None, None
+        tbdt1._logger, tbdt2._logger == None, None
         assert tbdt2 == tbdt1
 
     def test_save_to_json(self, tbdt1, features, targets, tb):
@@ -171,7 +171,7 @@ class TestTBDT:
         tbdt2 = TBDT.load_from_json(file_path)
         file_path.unlink()
         tbdt1._rng, tbdt2._rng = None, None
-        tbdt1.logger, tbdt2.logger == None, None
+        tbdt1._logger, tbdt2._logger == None, None
         assert tbdt1 == tbdt2
 
     def test_load_from_json(self, tbdt1, features, targets, tb):
@@ -181,7 +181,7 @@ class TestTBDT:
         tbdt2 = TBDT.load_from_json(file_path)
         file_path.unlink()
         tbdt1._rng, tbdt2._rng = None, None
-        tbdt1.logger, tbdt2.logger == None, None
+        tbdt1._logger, tbdt2._logger == None, None
         assert tbdt1 == tbdt2
 
     def test_to_graphviz(
