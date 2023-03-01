@@ -657,9 +657,8 @@ class TBDT:
         The preconstructed matrices are ``$T^t T$ and $T^t y$``.
 
         """
-        # Select from the available features a subset of features to
-        # decide splitting from
         n, p = x.shape
+        # Select from available features a subset to decide split from
         n_feats = self._get_n_feats(p)
 
         random_feats = self.rng.choice(p, size=n_feats, replace=False)
