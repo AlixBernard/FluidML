@@ -373,7 +373,7 @@ class TBDT:
         self.gamma = gamma
         self.optim_threshold = optim_threshold
         self.random_state = random_state
-        self.rng = default_rng(random_state)
+        self._rng = default_rng(random_state)
         self.logger = logger
 
     def __str__(self) -> str:
@@ -462,7 +462,7 @@ class TBDT:
 
     def to_dict(self) -> dict:
         """Returns the TBDT as its dict representation."""
-        attrs2skip = ["logger", "rng"]
+        attrs2skip = ["logger", "_rng"]
         d = {}
         for k, v in self.__dict__.items():
             if k in attrs2skip:
@@ -502,7 +502,7 @@ class TBDT:
         nodes2add.sort(key=len)
         for node, parent in nodes2add:
             tbdt.tree.add_node(node, parent=parent)
-        tbdt.rng = default_rng(tbdt.random_state)
+        tbdt._rng = default_rng(tbdt.random_state)
         return tbdt
 
     def save_to_json(self, path: Path) -> None:
@@ -661,7 +661,7 @@ class TBDT:
         # Select from available features a subset to decide split from
         n_feats = self._get_n_feats(p)
 
-        random_feats = self.rng.choice(p, size=n_feats, replace=False)
+        random_feats = self._rng.choice(p, size=n_feats, replace=False)
         x = x[:, random_feats]
 
         # If enabled, use optimization instead of brute force

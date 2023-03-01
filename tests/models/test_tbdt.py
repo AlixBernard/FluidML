@@ -160,7 +160,7 @@ class TestTBDT:
     def test_from_dict(self, tbdt1, features, targets, tb, tbdt1_as_dict):
         tbdt1.fit(features, targets, tb)
         tbdt2 = TBDT.from_dict(tbdt1_as_dict)
-        tbdt1.rng, tbdt2.rng = None, None
+        tbdt1._rng, tbdt2._rng = None, None
         tbdt1.logger, tbdt2.logger == None, None
         assert tbdt2 == tbdt1
 
@@ -170,7 +170,7 @@ class TestTBDT:
         tbdt1.save_to_json(file_path)
         tbdt2 = TBDT.load_from_json(file_path)
         file_path.unlink()
-        tbdt1.rng, tbdt2.rng = None, None
+        tbdt1._rng, tbdt2._rng = None, None
         tbdt1.logger, tbdt2.logger == None, None
         assert tbdt1 == tbdt2
 
@@ -180,7 +180,7 @@ class TestTBDT:
         tbdt1.save_to_json(file_path)
         tbdt2 = TBDT.load_from_json(file_path)
         file_path.unlink()
-        tbdt1.rng, tbdt2.rng = None, None
+        tbdt1._rng, tbdt2._rng = None, None
         tbdt1.logger, tbdt2.logger == None, None
         assert tbdt1 == tbdt2
 
