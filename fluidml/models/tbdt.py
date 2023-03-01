@@ -745,7 +745,7 @@ class TBDT:
             split_i, split_v = None, None
             split_conditions = (
                 len(node.identifier) <= self.max_depth,
-                len(idx) > self.min_samples_split,
+                len(idx) >= self.min_samples_split,
             )
             if all(split_conditions):
                 res = self.create_split(
