@@ -88,7 +88,7 @@ class TBRF:
         self.max_samples = max_samples
         self.random_state = random_state
         self._rng = default_rng(random_state)
-        self.logger = logger
+        self._logger = logger
         self.tbdt_kwargs = tbdt_kwargs if tbdt_kwargs is not None else {}
 
         self.trees = [
@@ -126,8 +126,8 @@ class TBRF:
         return obj_repr
 
     def _log(self, level: int, message: str, *args, **kwargs) -> None:
-        if self.logger is not None:
-            self.logger.log(level, message, *args, **kwargs)
+        if self._logger is not None:
+            self._logger.log(level, message, *args, **kwargs)
 
     def _timer_func(func):
         def wrap_func(self, *args, **kwargs):
