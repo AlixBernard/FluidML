@@ -185,12 +185,12 @@ def find_Jmin_sorted(
 
     obs_identical = True if np.all(x == x[0]) else False
 
-    best_J = None
+    best_J = 1e12
     for i in range(1, n):
         J, extra = obj_func_J(
             y[asort], tb[asort], TT[asort], Ty[asort], i_float=i
         )
-        if best_J is None or J < best_J:
+        if J < best_J:
             best_i, best_J, best_extra = i, J, extra
 
     results = {
