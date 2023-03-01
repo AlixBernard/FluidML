@@ -336,6 +336,9 @@ class TBDT:
         optimization is disabled.
     random_state : int or None, default=None
         Controls randomness when sampling the features.
+    _n_rng_calls : int
+        Number of times the rng has been called, should only be used
+        when loading an TBDT that has already called the rng.
     logger : logging.Logger or None, default=None
         Logger to output details.
 
