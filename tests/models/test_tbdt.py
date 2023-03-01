@@ -82,31 +82,11 @@ def tbdt1_as_dict():
             "0111": {
                 "tag": "0111",
                 "data": {
-                    "split_i": 0,
-                    "split_v": 0.5,
+                    "split_i": None,
+                    "split_v": None,
                     "g": [0.5554582251667012, -0.017438358337960452],
                     "n_samples": 2,
                     "RMSE": 5.264848639164375,
-                },
-            },
-            "01111": {
-                "tag": "01111",
-                "data": {
-                    "split_i": None,
-                    "split_v": None,
-                    "g": [1.9440298074400952, -0.9441627598264528],
-                    "n_samples": 1,
-                    "RMSE": 0.001035385350270451,
-                },
-            },
-            "01110": {
-                "tag": "01110",
-                "data": {
-                    "split_i": None,
-                    "split_v": None,
-                    "g": [0.9444246516991186, 0.055558291050967164],
-                    "n_samples": 1,
-                    "RMSE": 0.00013616452239853343,
                 },
             },
             "0110": {
@@ -154,9 +134,7 @@ def tbdt1_as_graphviz():
 	"010" [label="split feat idx: None\nvalue: None\nnb samples: 1\nRMSE: 1.362e-04", shape=rectangle];
 	"011" [label="split feat idx: 2\nvalue: 2.500e+00\nnb samples: 3\nRMSE: 6.607e+00", shape=rectangle];
 	"0110" [label="split feat idx: None\nvalue: None\nnb samples: 1\nRMSE: 1.362e-04", shape=rectangle];
-	"0111" [label="split feat idx: 0\nvalue: 5.000e-01\nnb samples: 2\nRMSE: 5.265e+00", shape=rectangle];
-	"01110" [label="split feat idx: None\nvalue: None\nnb samples: 1\nRMSE: 1.362e-04", shape=rectangle];
-	"01111" [label="split feat idx: None\nvalue: None\nnb samples: 1\nRMSE: 1.035e-03", shape=rectangle];
+	"0111" [label="split feat idx: None\nvalue: None\nnb samples: 2\nRMSE: 5.265e+00", shape=rectangle];
 
 	"0" -> "01";
 	"0" -> "00";
@@ -164,8 +142,6 @@ def tbdt1_as_graphviz():
 	"01" -> "010";
 	"011" -> "0111";
 	"011" -> "0110";
-	"0111" -> "01111";
-	"0111" -> "01110";
 }"""
 
 

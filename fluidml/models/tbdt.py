@@ -185,12 +185,12 @@ def find_Jmin_sorted(
 
     obs_identical = True if np.all(x == x[0]) else False
 
-    best_J = 1e12
+    best_J = None
     for i in range(1, n):
         J, extra = obj_func_J(
             y[asort], tb[asort], TT[asort], Ty[asort], i_float=i
         )
-        if J < best_J:
+        if best_J is None or J < best_J:
             best_i, best_J, best_extra = i, J, extra
 
     results = {
@@ -739,7 +739,11 @@ class TBDT:
             n_samples = len(idx)
 
             split_i, split_v = None, None
-            if len(idx) > self.min_samples_leaf:
+            split_conditions = (
+                len(node.identifier) <= self.max_depth,
+                len(idx) > self.min_samples_leaf,
+            )
+            if all(split_conditions):
                 res = self.create_split(
                     x[idx], y[idx], tb[idx], TT[idx], Ty[idx]
                 )
