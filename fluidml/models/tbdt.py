@@ -743,19 +743,20 @@ class TBDT:
             n_samples = len(idx)
 
             split_i, split_v = None, None
-            split_conditions = (
+            first_split_conditions = (
                 len(node.identifier) <= self.max_depth,
                 len(idx) >= self.min_samples_split,
             )
-            if all(split_conditions):
+            if all(first_split_conditions):
                 res = self.create_split(
                     x[idx], y[idx], tb[idx], TT[idx], Ty[idx]
                 )
                 idx_l, idx_r = res["idx_l"], res["idx_r"]
-                if not (
-                    len(idx_l) < self.min_samples_leaf
-                    or len(idx_r) < self.min_samples_leaf
-                ):
+                second_split_conditions = (
+                    len(idx_l) >= self.min_samples_leaf,
+                    len(idx_r) >= self.min_samples_leaf,
+                )
+                if all(second_split_conditions):
                     split_i = res["split_i"]
                     split_v = res["split_v"]
                     node_l = Node(identifier=f"{node.identifier}0")
