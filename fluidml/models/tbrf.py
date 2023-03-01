@@ -55,6 +55,9 @@ class TBRF:
         used when building trees (if `bootstrap == True`) and the
         sampling of the features to consider when looking for the best
         split at each node (if `max_features < m`).
+    _n_rng_calls : int
+        Number of times the rng has been called, should only be used
+        when loading an TBRF that has already called the rng.
     tbdt_kwargs : dict or None, default=None
         Keyword arguments for the TBDTs.
     logger : logging.Logger, default=None
@@ -79,6 +82,7 @@ class TBRF:
         bootstrap: bool = True,
         max_samples: int | float | None = None,
         random_state: int | None = None,
+        _n_rng_calls: int = 0,
         logger: logging.Logger | None = None,
         tbdt_kwargs: dict | None = None,
     ) -> None:
@@ -88,6 +92,7 @@ class TBRF:
         self.max_samples = max_samples
         self.random_state = random_state
         self._rng = default_rng(random_state)
+        self._n_rng_calls = _n_rng_calls
         self._logger = logger
         self.tbdt_kwargs = tbdt_kwargs if tbdt_kwargs is not None else {}
 
@@ -124,6 +129,10 @@ class TBRF:
 
         obj_repr = f"TBRF({', '.join(str_attrs)})"
         return obj_repr
+
+    def _rng_choice(a, **kwargs) -> np.ndarray:
+        self._n_rng_calls += 1
+        return self._rng.choice(a, **kwargs)
 
     def _log(self, level: int, message: str, *args, **kwargs) -> None:
         if self._logger is not None:
@@ -198,7 +207,7 @@ class TBRF:
             tbdt_path = dir_path / tbdt_filename
             tbdt.to_json(tbdt_path)
 
-        attrs2skip = ["logger", "rng"]
+        attrs2skip = ["_logger", "_rng"]
         json_attrs = {}
         for k, v in self.__dict__.items():
             if k in attrs2skip:
