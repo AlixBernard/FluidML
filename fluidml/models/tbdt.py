@@ -362,6 +362,7 @@ class TBDT:
         gamma: float = 1e0,
         optim_threshold: int = 1_000,
         random_state: int | None = None,
+        _n_rng_calls: int = 0,
         logger: logging.Logger | None = None,
     ) -> None:
         self.name = name
@@ -374,6 +375,7 @@ class TBDT:
         self.optim_threshold = optim_threshold
         self.random_state = random_state
         self._rng = default_rng(random_state)
+        self._n_rng_calls = _n_rng_calls
         self._logger = logger
 
     def __str__(self) -> str:
@@ -400,6 +402,10 @@ class TBDT:
             if v != tbdt2.__dict__[k]:
                 return False
         return True
+
+    def _rng_choice(self, a, **kwargs) -> np.ndarray:
+        self._n_rng_calls += 1
+        return self.rng.choice(a, **kwargs)
 
     def _log(self, level: int, message: str, *args, **kwargs) -> None:
         if self._logger is not None:
