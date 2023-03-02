@@ -508,7 +508,7 @@ class TBDT:
             node = Node(identifier, tag, data=data)
             parent = identifier[:-1] if len(identifier) > 1 else None
             nodes2add.append((node, parent))
-        nodes2add.sort(key=len)
+        nodes2add.sort(key=lambda node_tuple: len(node_tuple[0].identifier))
         for node, parent in nodes2add:
             tbdt.tree.add_node(node, parent=parent)
         tbdt._rng = default_rng(tbdt.random_state)
