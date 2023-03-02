@@ -172,7 +172,6 @@ class TestTBDT:
         tbdt2 = TBDT.load_from_json(file_path)
         file_path.unlink()
         tbdt1._rng, tbdt2._rng = None, None
-        tbdt1._logger, tbdt2._logger == None, None
         assert tbdt1 == tbdt2
 
     def test_load_from_json(self, tbdt1, features, targets, tb):
@@ -182,7 +181,6 @@ class TestTBDT:
         tbdt2 = TBDT.load_from_json(file_path)
         file_path.unlink()
         tbdt1._rng, tbdt2._rng = None, None
-        tbdt1._logger, tbdt2._logger == None, None
         assert tbdt1 == tbdt2
 
     def test_to_graphviz(
