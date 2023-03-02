@@ -130,7 +130,7 @@ class TBRF:
         obj_repr = f"TBRF({', '.join(str_attrs)})"
         return obj_repr
 
-    def _rng_choice(a, **kwargs) -> np.ndarray:
+    def _rng_choice(self, a, **kwargs) -> np.ndarray:
         self._n_rng_calls += 1
         return self._rng.choice(a, **kwargs)
 
