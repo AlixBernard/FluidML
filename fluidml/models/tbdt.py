@@ -408,7 +408,7 @@ class TBDT:
 
     def _rng_choice(self, a, **kwargs) -> np.ndarray:
         self._n_rng_calls += 1
-        return self.rng.choice(a, **kwargs)
+        return self._rng.choice(a, **kwargs)
 
     def _log(self, level: int, message: str, *args, **kwargs) -> None:
         if self._logger is not None:
@@ -670,7 +670,7 @@ class TBDT:
         # Select from available features a subset to decide split from
         n_feats = self._get_n_feats(p)
 
-        random_feats = self._rng.choice(p, size=n_feats, replace=False)
+        random_feats = self._rng_choice(p, size=n_feats, replace=False)
         x = x[:, random_feats]
 
         # If enabled, use optimization instead of brute force

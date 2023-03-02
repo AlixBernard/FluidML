@@ -49,7 +49,7 @@ def tbdt1_as_dict():
         "gamma": 0.001,
         "optim_threshold": -1,
         "random_state": 42,
-        "_n_rng_calls": 0,
+        "_n_rng_calls": 3,
         "nodes": {
             "R": {
                 "tag": "R",

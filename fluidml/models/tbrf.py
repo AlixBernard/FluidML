@@ -99,7 +99,7 @@ class TBRF:
         self.trees = [
             TBDT(
                 name=f"{self.name}_TBDT-{i}",
-                random_state=self._rng.choice(1000),
+                random_state=self._rng_choice(1_000_000),
                 **self.tbdt_kwargs,
             )
             for i in range(self.n_estimators)
@@ -316,9 +316,9 @@ class TBRF:
         """Fit the specified tree."""
         n = len(x)
         n_samples = self._get_n_samples(n)
-        rng = self.trees[i_tree]._rng
+        tbdt = self.trees[i_tree]
         if self.bootstrap:
-            idx_sampled = rng.choice(n, size=n_samples, replace=True)
+            idx_sampled = tbdt._rng_choice(n, size=n_samples, replace=True)
         else:
             idx_sampled = np.arange(n)
 
