@@ -186,6 +186,39 @@ class TBRF:
             )
         return n_samples
 
+    def to_dict(self) -> dict:
+        """Returns the TBRF as its dict representation."""
+        attrs2skip = ["_logger", "_rng"]
+        d = {}
+        for k, v in self.__dict__.items():
+            if k in attrs2skip:
+                continue
+            if k == "trees":
+                d[k] = [tbdt.to_dict()} for tbdt in v]
+                continue
+            d[k] = v
+        return d
+
+    @classmethod
+    def from_dict(cls, tbrf_dict: dict):
+        """Create a TBRF from its dict representation.
+
+        Parameters
+        ----------
+        tbrf_dict : dict
+            The dict representation of the TBDT to create.
+
+        """
+        tbrf_kwargs = {
+            k: v for k, v in tbrf_dict.items() if k not in ["trees"]
+        }
+        tbrf = TBRF(**tbrf_kwargs)
+        for tbdt_dict in tbrf_dict["trees"]:
+            tbdt = TBDT(**tbdt_dict)
+            tbrf.trees.append(tbdt)
+        tbrf._rng = default_rng(tbrf.random_state)
+        return tbrf
+
     def to_json(self, dir_path: Path):
         """Save the TBRF as a directory containing the JSON files of its
         attributes and the TBDTs' attributes. The TBRF JSON file only
@@ -216,7 +249,8 @@ class TBRF:
                 json_attrs[k] = [tree.name for tree in v]
             else:
                 json_attrs[k] = v
-        del json_attrs["tbdt_kwargs"]["logger"]
+        del json_attrs["tbdt_kwargs"]["_logger"]
+        del json_attrs["tbdt_kwargs"]["_rng"]
 
         tbrf_path = dir_path / f"{self}.json"
         with open(tbrf_path, "w") as file:
