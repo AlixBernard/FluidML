@@ -3,7 +3,7 @@ from pathlib import Path
 
 import numpy as np
 
-from fluidml.models import TBDT, TBRF
+from fluidml.models import TBDT
 
 
 @pytest.fixture
@@ -162,7 +162,6 @@ class TestTBDT:
         tbdt1.fit(features, targets, tb)
         tbdt2 = TBDT.from_dict(tbdt1_as_dict)
         tbdt1._rng, tbdt2._rng = None, None
-        tbdt1._logger, tbdt2._logger == None, None
         assert tbdt2 == tbdt1
 
     def test_save_to_json(self, tbdt1, features, targets, tb):
