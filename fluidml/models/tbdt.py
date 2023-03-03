@@ -1,5 +1,4 @@
-"""Classes for the Tensor Basis Decision Tree (TBDT) and the Tensor
-Basis Random Forest (TBRF).
+"""Classes for the Tensor Basis Decision Tree (TBDT).
 
 Glossary:
     - `n` is the total number of samples
