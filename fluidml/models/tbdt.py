@@ -396,13 +396,14 @@ class TBDT:
         return obj_repr
 
     def __eq__(self, tbdt2) -> bool:
+        attrs2skip = ["tree", "_rng", "_logger"]
         for k, v in self.__dict__.items():
-            if k == "tree":
-                if self.tree != tbdt2.tree:
-                    return False
+            if k in attrs2skip:
                 continue
             if v != tbdt2.__dict__[k]:
                 return False
+        if self.tree != tbdt2.tree:
+            return False
         return True
 
     def _rng_choice(self, a, **kwargs) -> np.ndarray:
