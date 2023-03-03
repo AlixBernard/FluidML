@@ -1,5 +1,4 @@
-"""Classes for the Tensor Basis Decision Tree (TBDT) and the Tensor
-Basis Random Forest (TBRF).
+"""Class for the Tensor Basis Random Forest (TBRF).
 
 Glossary:
     - `n` is the total number of samples
@@ -14,10 +13,12 @@ __all__ = ["TBRF"]
 
 import json
 import logging
-import time
+import multiprocessing as mp
+from time import time
 from pathlib import Path
 
 import numpy as np
+from numpy.random import default_rng
 
 
 from fluidml.models import Tree, TBDT
@@ -98,7 +99,7 @@ class TBRF:
 
         self.trees = [
             TBDT(
-                name=f"{self.name}_TBDT-{i}",
+                name=f"{self.name}_TBDT-{i+1}",
                 random_state=self._rng_choice(1_000_000),
                 **self.tbdt_kwargs,
             )
@@ -129,6 +130,21 @@ class TBRF:
 
         obj_repr = f"TBRF({', '.join(str_attrs)})"
         return obj_repr
+
+    def __eq__(self, tbrf) -> bool:
+        attrs2skip = ["trees", "_logger", "_rng"]
+        for k in self.__dict__:
+            if k in attrs2skip:
+                continue
+            if self.__dict__[k] != tbrf.__dict__[k]:
+                return False
+
+        if len(self.trees) != len(tbrf.trees):
+            return False
+        for tree1, tree2 in zip(self.trees, tbrf.trees):
+            if tree1 != tree2:
+                return False
+        return True
 
     def _rng_choice(self, a, **kwargs) -> np.ndarray:
         self._n_rng_calls += 1
@@ -194,7 +210,7 @@ class TBRF:
             if k in attrs2skip:
                 continue
             if k == "trees":
-                d[k] = [tbdt.to_dict()} for tbdt in v]
+                d[k] = [tbdt.to_dict() for tbdt in v]
                 continue
             d[k] = v
         return d
@@ -212,10 +228,14 @@ class TBRF:
         tbrf_kwargs = {
             k: v for k, v in tbrf_dict.items() if k not in ["trees"]
         }
+        tbrf_kwargs["_n_rng_calls"] -= len(tbrf_dict["trees"])
         tbrf = TBRF(**tbrf_kwargs)
+        trees = []
         for tbdt_dict in tbrf_dict["trees"]:
-            tbdt = TBDT(**tbdt_dict)
-            tbrf.trees.append(tbdt)
+            tbdt = TBDT.from_dict(tbdt_dict)
+            tbdt._rng = tbrf._rng.choice(1_000_000)
+            trees.append(tbdt)
+        tbrf.trees = trees
         tbrf._rng = default_rng(tbrf.random_state)
         return tbrf
 
