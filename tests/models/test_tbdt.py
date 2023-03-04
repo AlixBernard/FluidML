@@ -7,6 +7,11 @@ from fluidml.models import TBDT
 
 
 @pytest.fixture
+def random_state1():
+    return 47
+
+
+@pytest.fixture
 def features():
     n, p = 5, 4
     return np.arange(n * p).reshape(n, p) - 5.5
@@ -33,7 +38,6 @@ def tbdt1():
         "max_features": "sqrt",
         "gamma": 1e-3,
         "optim_threshold": -1,
-        "random_state": 42,
     }
     return TBDT(**kwargs)
 
@@ -42,14 +46,6 @@ def tbdt1():
 def tbdt1_as_dict():
     return {
         "name": "TBDT-1",
-        "max_depth": 3,
-        "min_samples_split": 2,
-        "min_samples_leaf": 1,
-        "max_features": "sqrt",
-        "gamma": 0.001,
-        "optim_threshold": -1,
-        "random_state": 42,
-        "_n_rng_calls": 3,
         "nodes": {
             "R": {
                 "tag": "R",
@@ -74,8 +70,8 @@ def tbdt1_as_dict():
             "R11": {
                 "tag": "R11",
                 "data": {
-                    "split_i": 2,
-                    "split_v": 2.5,
+                    "split_i": 3,
+                    "split_v": 3.5,
                     "g": [0.47617462083569206, 0.038794309017542904],
                     "n_samples": 3,
                     "RMSE": 6.607018587777909,
@@ -122,6 +118,12 @@ def tbdt1_as_dict():
                 },
             },
         },
+        "max_depth": 3,
+        "min_samples_split": 2,
+        "min_samples_leaf": 1,
+        "max_features": "sqrt",
+        "gamma": 0.001,
+        "optim_threshold": -1,
     }
 
 
@@ -134,7 +136,7 @@ def tbdt1_as_graphviz():
 	"R0" [label="split feat idx: None\nvalue: None\nnb samples: 1\nRMSE: 1.362e-04", shape=rectangle];
 	"R1" [label="split feat idx: 1\nvalue: 1.500e+00\nnb samples: 4\nRMSE: 7.683e+00", shape=rectangle];
 	"R10" [label="split feat idx: None\nvalue: None\nnb samples: 1\nRMSE: 1.362e-04", shape=rectangle];
-	"R11" [label="split feat idx: 2\nvalue: 2.500e+00\nnb samples: 3\nRMSE: 6.607e+00", shape=rectangle];
+	"R11" [label="split feat idx: 3\nvalue: 3.500e+00\nnb samples: 3\nRMSE: 6.607e+00", shape=rectangle];
 	"R110" [label="split feat idx: None\nvalue: None\nnb samples: 1\nRMSE: 1.362e-04", shape=rectangle];
 	"R111" [label="split feat idx: None\nvalue: None\nnb samples: 2\nRMSE: 5.265e+00", shape=rectangle];
 
@@ -148,8 +150,10 @@ def tbdt1_as_graphviz():
 
 
 class TestTBDT:
-    def test_to_dict(self, tbdt1, features, targets, tb, tbdt1_as_dict):
-        tbdt1.fit(features, targets, tb)
+    def test_to_dict(
+        self, tbdt1, features, targets, tb, tbdt1_as_dict, random_state1
+    ):
+        tbdt1.fit(features, targets, tb, random_state=random_state1)
         import json
 
         with open("tmp1.json", "w") as file:
@@ -158,34 +162,33 @@ class TestTBDT:
             json.dump(tbdt1_as_dict, file, indent=4)
         assert tbdt1.to_dict() == tbdt1_as_dict
 
-    def test_from_dict(self, tbdt1, features, targets, tb, tbdt1_as_dict):
-        tbdt1.fit(features, targets, tb)
+    def test_from_dict(
+        self, tbdt1, features, targets, tb, tbdt1_as_dict, random_state1
+    ):
+        tbdt1.fit(features, targets, tb, random_state=random_state1)
         tbdt2 = TBDT.from_dict(tbdt1_as_dict)
-        tbdt1._rng, tbdt2._rng = None, None
         assert tbdt2 == tbdt1
 
-    def test_save_to_json(self, tbdt1, features, targets, tb):
-        tbdt1.fit(features, targets, tb)
+    def test_save_to_json(self, tbdt1, features, targets, tb, random_state1):
+        tbdt1.fit(features, targets, tb, random_state=random_state1)
         file_path = Path(__file__).parent / "test_tbdt1.json"
         tbdt1.save_to_json(file_path)
         tbdt2 = TBDT.load_from_json(file_path)
         file_path.unlink()
-        tbdt1._rng, tbdt2._rng = None, None
         assert tbdt1 == tbdt2
 
-    def test_load_from_json(self, tbdt1, features, targets, tb):
-        tbdt1.fit(features, targets, tb)
+    def test_load_from_json(self, tbdt1, features, targets, tb, random_state1):
+        tbdt1.fit(features, targets, tb, random_state=random_state1)
         file_path = Path(__file__).parent / "test_tbdt1.json"
         tbdt1.save_to_json(file_path)
         tbdt2 = TBDT.load_from_json(file_path)
         file_path.unlink()
-        tbdt1._rng, tbdt2._rng = None, None
         assert tbdt1 == tbdt2
 
     def test_to_graphviz(
-        self, tbdt1, features, targets, tb, tbdt1_as_graphviz
+        self, tbdt1, features, targets, tb, tbdt1_as_graphviz, random_state1
     ):
-        tbdt1.fit(features, targets, tb)
+        tbdt1.fit(features, targets, tb, random_state=random_state1)
         with open("tmp.dot", "w") as file:
             file.write(tbdt1.to_graphviz())
         assert tbdt1.to_graphviz() == tbdt1_as_graphviz

@@ -407,11 +407,6 @@ class TBDT:
         Threshold for which if the number of points is below, brute
         force will be used and optim otherwise, if it is -1 then
         optimization is disabled.
-    random_state : int or None, default=None
-        Controls randomness when sampling the features.
-    _n_rng_calls : int
-        Number of times the rng has been called, should only be used
-        when loading an TBDT that has already called the rng.
     logger : logging.Logger or None, default=None
         Logger to output details.
 
@@ -436,8 +431,6 @@ class TBDT:
         max_features: int | float | str | None = "sqrt",
         gamma: float = 1e0,
         optim_threshold: int = 1_000,
-        random_state: int | None = None,
-        _n_rng_calls: int = 0,
         logger: logging.Logger | None = None,
     ) -> None:
         self.name = name
@@ -448,9 +441,6 @@ class TBDT:
         self.max_features = max_features
         self.gamma = gamma
         self.optim_threshold = optim_threshold
-        self.random_state = random_state
-        self._rng = default_rng(random_state)
-        self._n_rng_calls = _n_rng_calls
         self._logger = logger
 
     def __str__(self) -> str:
@@ -458,7 +448,7 @@ class TBDT:
         return s
 
     def __repr__(self) -> str:
-        attrs2skip = ["_logger", "_rng"]
+        attrs2skip = ["_logger"]
 
         str_attrs = []
         for k, v in sorted(self.__dict__.items()):
@@ -469,7 +459,7 @@ class TBDT:
         return obj_repr
 
     def __eq__(self, tbdt2) -> bool:
-        attrs2skip = ["tree", "_rng", "_logger"]
+        attrs2skip = ["tree", "_logger"]
         for k, v in self.__dict__.items():
             if k in attrs2skip:
                 continue
@@ -478,10 +468,6 @@ class TBDT:
         if self.tree != tbdt2.tree:
             return False
         return True
-
-    def _rng_choice(self, a, **kwargs) -> np.ndarray:
-        self._n_rng_calls += 1
-        return self._rng.choice(a, **kwargs)
 
     def _log(self, level: int, message: str, *args, **kwargs) -> None:
         if self._logger is not None:
@@ -544,7 +530,7 @@ class TBDT:
 
     def to_dict(self) -> dict:
         """Returns the TBDT as its dict representation."""
-        attrs2skip = ["_logger", "_rng"]
+        attrs2skip = ["_logger"]
         d = {}
         for k, v in self.__dict__.items():
             if k in attrs2skip:
@@ -584,7 +570,6 @@ class TBDT:
         nodes2add.sort(key=lambda node_tuple: len(node_tuple[0].identifier))
         for node, parent in nodes2add:
             tbdt.tree.add_node(node, parent=parent)
-        tbdt._rng = default_rng(tbdt.random_state)
         return tbdt
 
     def save_to_json(self, path: Path) -> None:
@@ -702,7 +687,13 @@ class TBDT:
         return dot_str
 
     @_timer_func
-    def fit(self, x: np.ndarray, y: np.ndarray, tb: np.ndarray) -> dict:
+    def fit(
+        self,
+        x: np.ndarray,
+        y: np.ndarray,
+        tb: np.ndarray,
+        random_state: int | None = None,
+    ) -> dict:
         """Fit the TBDT.
 
         Parameters
@@ -714,6 +705,8 @@ class TBDT:
             the TBDT.
         tb : np.ndarray
             Tensor bases with shape `(n, m, 9)`.
+        random_state : int | None
+            Random state to use to create the random number generator.
 
         Returns
         -------
@@ -728,6 +721,7 @@ class TBDT:
         """
         self._log(logging.INFO, f"Fitting '{self.name}'")
 
+        rng = default_rng(random_state)
         n, p = x.shape
         n, m, _ = tb.shape
         # Preconstruct the N_obs matrices for the lhs and rhs terms in
@@ -753,7 +747,7 @@ class TBDT:
             )
             if all(first_split_conditions):
                 n_feats = self._get_n_feats(p)
-                feats_idx = self._rng_choice(p, size=n_feats, replace=False)
+                feats_idx = rng.choice(p, size=n_feats, replace=False)
                 res = create_split(
                     x[idx], y[idx], tb[idx], TT[idx], Ty[idx], feats_idx
                 )
