@@ -93,7 +93,7 @@ def create_split(
     tb: np.ndarray,
     TT: np.ndarray,
     Ty: np.ndarray,
-    random_feats: np.ndarray,
+    feats_idx: np.ndarray,
 ) -> dict:
     r"""Creates a split at a node for given input features `x`,
     training output `y`, tensor basis `tb`, and the preconstruced
@@ -112,7 +112,7 @@ def create_split(
         Preconstructed matrix $transpose(T)*T$.
     Ty : np.ndarray
         Preconstructed matrix $transpose(T)*f$.
-    random_feats : np.ndarray
+    feats_idx : np.ndarray
         Indices of the features chosen to create the split from.
 
     Returns
@@ -128,8 +128,8 @@ def create_split(
 
     """
     n, p = x.shape
-    n_feats = len(random_feats)
-    x = x[:, random_feats]
+    n_feats = len(feats_idx)
+    x = x[:, feats_idx]
 
     # # If enabled, use optimization instead of brute force
     # if 0 <= self.optim_threshold <= n:
@@ -157,7 +157,7 @@ def create_split(
     # and return relevant parameters
     i_best = res_li["J"].index(min(res_li["J"]))
     best_res = {k: v[i_best] for k, v in res_li.items()}
-    chosen_split_i = int(random_feats[i_best])
+    chosen_split_i = int(feats_idx[i_best])
     best_res["split_i"] = chosen_split_i
 
     return best_res
@@ -741,31 +741,21 @@ class TBDT:
         # Tree construction
         nodes2add = [(Node(identifier="R"), None, np.arange(n))]
         while nodes2add:
-            node, parent, samples_idx = nodes2add.pop()
-            g, b, diff = fit_tensor(
-                TT[samples_idx],
-                Ty[samples_idx],
-                tb[samples_idx],
-                y[samples_idx],
-            )
+            node, parent, idx = nodes2add.pop()
+            g, b, diff = fit_tensor(TT[idx], Ty[idx], tb[idx], y[idx])
             rmse = np.sqrt(np.sum(diff**2))
-            n_samples = len(samples_idx)
+            n_samples = len(idx)
 
             split_i, split_v = None, None
             first_split_conditions = (
                 len(node.identifier) <= self.max_depth,
-                len(samples_idx) >= self.min_samples_split,
+                len(idx) >= self.min_samples_split,
             )
             if all(first_split_conditions):
                 n_feats = self._get_n_feats(p)
                 feats_idx = self._rng_choice(p, size=n_feats, replace=False)
                 res = create_split(
-                    x[samples_idx],
-                    y[samples_idx],
-                    tb[samples_idx],
-                    TT[samples_idx],
-                    Ty[samples_idx],
-                    feats_idx,
+                    x[idx], y[idx], tb[idx], TT[idx], Ty[idx], feats_idx
                 )
                 idx_l, idx_r = res["idx_l"], res["idx_r"]
                 second_split_conditions = (
