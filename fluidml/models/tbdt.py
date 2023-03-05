@@ -239,7 +239,7 @@ def find_Jmin_sorted(
     tb: np.ndarray,
     TT: np.ndarray,
     Ty: np.ndarray,
-) -> dict:
+) -> dict[str, int | float | np.ndarray]:
     """Find optimum splitting point for the feature with index
     `feat_i`. Data is pre-sorted to save computational costs($n log(n)$
     instead of $n^2$).
@@ -255,7 +255,7 @@ def find_Jmin_sorted(
         Anisotropy tensor `b` (target) on which to fit the tree with
         shape `(n, 9)`.
     tb : np.ndarray
-        Tensor basess with shape `(n, m, 9)`.
+        Tensor bases with shape `(n, m, 9)`.
     TT : np.ndarray
         Preconstructed matrix $transpose(T)*T$.
     Ty : np.ndarray
@@ -263,7 +263,7 @@ def find_Jmin_sorted(
 
     Returns
     -------
-    results : dict
+    results : dict[str, int | float | np.ndarray]
         Same as `best_res` in higher method.
 
     """
@@ -304,7 +304,7 @@ def find_Jmin_opt(
     tb: np.ndarray,
     TT: np.ndarray,
     Ty: np.ndarray,
-) -> dict:
+) -> dict[str, int | float | np.ndarray]:
     """Find optimum splitting point by using an optimization routine.
 
     Parameters
@@ -326,7 +326,7 @@ def find_Jmin_opt(
 
     Returns
     -------
-    results : dict
+    results : dict[str, int | float | None]
         Same as `best_res` in higher method.
 
     """
