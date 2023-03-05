@@ -9,6 +9,7 @@ Glossary:
 """
 
 __all__ = [
+    "_log",
     "fit_tensor",
     "obj_func_J",
     "find_Jmin_sorted",
@@ -33,6 +34,17 @@ from numpy.random import default_rng
 # Local packages
 from fluidml import utils
 from fluidml.models import Tree, Node
+
+
+def _log(
+    level: int,
+    message: str,
+    logger: logging.Logger | None = None,
+    *args,
+    **kwargs,
+) -> None:
+    if logger is not None:
+        logger.log(level, message, *args, **kwargs)
 
 
 def fit_tensor(
@@ -441,25 +453,18 @@ class TBDT:
         self.max_features = max_features
         self.gamma = gamma
         self.optim_threshold = optim_threshold
-        self._logger = logger
 
     def __str__(self) -> str:
         s = f"{self.name}"
         return s
 
     def __repr__(self) -> str:
-        attrs2skip = ["_logger"]
-
-        str_attrs = []
-        for k, v in sorted(self.__dict__.items()):
-            if k not in attrs2skip:
-                str_attrs.append(f"{k}: {v!r}")
-
+        str_attrs = [f"{k}: {v!r}" for k, v in sorted(self.__dict__.items())]
         obj_repr = f"TBDT({', '.join(str_attrs)})"
         return obj_repr
 
     def __eq__(self, tbdt2) -> bool:
-        attrs2skip = ["tree", "_logger"]
+        attrs2skip = ["tree"]
         for k, v in self.__dict__.items():
             if k in attrs2skip:
                 continue
@@ -469,19 +474,17 @@ class TBDT:
             return False
         return True
 
-    def _log(self, level: int, message: str, *args, **kwargs) -> None:
-        if self._logger is not None:
-            self._logger.log(level, message, *args, **kwargs)
-
     def _timer_func(func):
         def wrap_func(self, *args, **kwargs):
             t1 = time()
             result = func(self, *args, **kwargs)
             t2 = time()
-            self._log(
+            logger = kwargs.get("logger")
+            _log(
                 logging.DEBUG,
-                f"Method '{self.name}.{func.__name__}()' executed in "
+                f"Method '{self.name}.{func.__name__}' executed in "
                 f"{(t2-t1):.2f}s",
+                logger,
             )
             return result
 
@@ -530,21 +533,11 @@ class TBDT:
 
     def to_dict(self) -> dict:
         """Returns the TBDT as its dict representation."""
-        attrs2skip = ["_logger"]
-        d = {}
-        for k, v in self.__dict__.items():
-            if k in attrs2skip:
-                continue
-            if k == "tree":
-                d["nodes"] = {
-                    node.identifier: {
-                        "tag": node.tag,
-                        "data": node.data,
-                    }
-                    for node in self.tree.all_nodes()
-                }
-                continue
-            d[k] = v
+        d = {k: v for k, v in self.__dict__.items() if k != "tree"}
+        d["nodes"] = {
+            node.identifier: {"tag": node.tag, "data": node.data}
+            for node in self.tree.all_nodes()
+        }
         return d
 
     @classmethod
@@ -678,12 +671,6 @@ class TBDT:
             with open(dir_path / f"{self.name}.dot", "w") as file:
                 file.write(dot_str)
 
-            self._log(
-                logging.INFO,
-                f"Exported '{self.name}' to graphviz as: "
-                f"'{dir_path / f'{self.name}.dot'}'",
-            )
-
         return dot_str
 
     @_timer_func
@@ -693,6 +680,7 @@ class TBDT:
         y: np.ndarray,
         tb: np.ndarray,
         seed: int | None = None,
+        logger: logging.Logger | None = None,
     ) -> dict:
         """Fit the TBDT.
 
@@ -719,7 +707,7 @@ class TBDT:
             MSE, n
 
         """
-        self._log(logging.INFO, f"Fitting '{self.name}'")
+        _log(logging.INFO, f"Fitting '{self.name}'", logger)
 
         rng = default_rng(seed)
         n, p = x.shape
@@ -774,17 +762,21 @@ class TBDT:
             }
             self.tree.add_node(node, parent=parent)
 
-            self._log(
+            _log(
                 logging.DEBUG,
                 f"Fitted node '{node.identifier:<35}', "
                 f"RMSE={rmse:.5e}, n_samples={n_samples:>6,}",
+                logger,
             )
 
-        self._log(logging.INFO, f"Fitted '{self.name}'")
+        _log(logging.INFO, f"Fitted '{self.name}'", logger)
 
     @_timer_func
     def predict(
-        self, x: np.ndarray, tb: np.ndarray
+        self,
+        x: np.ndarray,
+        tb: np.ndarray,
+        logger: logging.Logger | None = None,
     ) -> tuple[np.ndarray, np.ndarray]:
         """Predict the tensor basis coefficients `g` and use them to
         compute the anisotropy tensor, given the input features `x` and
