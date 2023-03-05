@@ -8,7 +8,7 @@ Glossary:
 
 """
 
-__all__ = ["TBRF"]
+__all__ = ["_log", "TBRF"]
 
 
 import json
@@ -22,6 +22,17 @@ from numpy.random import default_rng
 
 
 from fluidml.models import Tree, TBDT
+
+
+def _log(
+    level: int,
+    message: str,
+    logger: logging.Logger | None = None,
+    *args,
+    **kwargs,
+) -> None:
+    if logger is not None:
+        logger.log(level, message, *args, **kwargs)
 
 
 class TBRF:
@@ -53,13 +64,11 @@ class TBRF:
         where `n` is the total number of sample.
     tbdt_kwargs : dict or None, default=None
         Keyword arguments for the TBDTs.
-    logger : logging.Logger, default=None
-        Logger to output details.
 
     Methods
     -------
-    to_json
-    from_json
+    to_dict
+    from_dict
     to_graphviz
     fit
     predict
@@ -74,14 +83,13 @@ class TBRF:
         n_estimators: int = 10,
         bootstrap: bool = True,
         max_samples: int | float | None = None,
-        logger: logging.Logger | None = None,
         tbdt_kwargs: dict | None = None,
+        logger: logging.Logger | None = None,
     ) -> None:
         self.name = name
         self.n_estimators = n_estimators
         self.bootstrap = bootstrap
         self.max_samples = max_samples
-        self._logger = logger
         self.tbdt_kwargs = tbdt_kwargs if tbdt_kwargs is not None else {}
 
         self.trees = [
@@ -91,7 +99,7 @@ class TBRF:
             )
             for i in range(self.n_estimators)
         ]
-        self._log(logging.INFO, f"Initialized {self.n_estimators} TBDTs")
+        _log(logging.INFO, f"Initialized {self.n_estimators} TBDTs", logger)
 
     def __len__(self) -> int:
         return len(self.trees)
@@ -118,7 +126,7 @@ class TBRF:
         return obj_repr
 
     def __eq__(self, tbrf) -> bool:
-        attrs2skip = ["trees", "_logger"]
+        attrs2skip = ["trees"]
         for k in self.__dict__:
             if k in attrs2skip:
                 continue
@@ -132,19 +140,17 @@ class TBRF:
                 return False
         return True
 
-    def _log(self, level: int, message: str, *args, **kwargs) -> None:
-        if self._logger is not None:
-            self._logger.log(level, message, *args, **kwargs)
-
     def _timer_func(func):
         def wrap_func(self, *args, **kwargs):
             t1 = time()
             result = func(self, *args, **kwargs)
             t2 = time()
-            self._log(
+            logger = kwargs.get("logger")
+            _log(
                 logging.DEBUG,
                 f"Method '{self.name}.{func.__name__}()' executed in "
                 f"{(t2-t1):.2f}s",
+                logger,
             )
             return result
 
@@ -186,15 +192,8 @@ class TBRF:
 
     def to_dict(self) -> dict:
         """Returns the TBRF as its dict representation."""
-        attrs2skip = ["_logger"]
-        d = {}
-        for k, v in self.__dict__.items():
-            if k in attrs2skip:
-                continue
-            if k == "trees":
-                d[k] = [tbdt.to_dict() for tbdt in v]
-                continue
-            d[k] = v
+        d = {k: v for k, v in self.__dict__.items() if k != "trees"}
+        d["trees"] = [tbdt.to_dict() for tbdt in self.trees]
         return d
 
     @classmethod
@@ -232,7 +231,6 @@ class TBRF:
         """
         if not dir_path.exists():
             dir_path.mkdir(parents=True)
-            self._log(logging.INFO, f"Created the folder: '{dir_path}'")
 
         for tbdt in self.trees:
             tbdt_filename = f"{tbdt}.json"
@@ -253,8 +251,6 @@ class TBRF:
         tbrf_path = dir_path / f"{self}.json"
         with open(tbrf_path, "w") as file:
             json.dump(json_attrs, file, indent=4)
-
-        self._log(logging.INFO, f"Saved '{self}' as: '{tbrf_path}'")
 
     def from_json(self, dir_path: Path):
         """Load the TBRF as a folder containing the JSON files of its
@@ -277,7 +273,6 @@ class TBRF:
             if k == "trees":
                 tbdt_names.extend(v)
             self.__setattr__(k, v)
-        self._log(logging.INFO, f"Loaded '{self}' from: '{tbrf_path}'")
 
         for name in tbdt_names:
             tbdt_filename = f"{name}.json"
@@ -305,10 +300,6 @@ class TBRF:
         for tree in self.trees:
             tree.to_graphviz(dir_path, shape=shape, graph=graph)
 
-        self._log(
-            logging.INFO, f"Exported '{self.name}' to graphviz in '{dir_path}'"
-        )
-
     @_timer_func
     def fit(
         self,
@@ -317,6 +308,7 @@ class TBRF:
         tb: np.ndarray,
         n_jobs: int = 1,
         seed: int | None = None,
+        logger: logging.Logger | None = None,
     ) -> dict:
         """Create the TBRF given input features `x`, true response `y`,
         and tensor basis `tb`.
@@ -336,7 +328,7 @@ class TBRF:
         seed : int | None
 
         """
-        self._log(logging.INFO, f"Fitting all trees of '{self.name}'")
+        _log(logging.INFO, f"Fitting all trees of '{self.name}'", logger)
 
         rng = default_rng(seed)
         tbdt_seeds = [rng.integers(int(1e1)) for _ in range(self.n_estimators)]
@@ -348,7 +340,7 @@ class TBRF:
             ]
             self.trees = [r.get() for r in res]
 
-        self._log(logging.INFO, f"Fitted all trees of '{self.name}'")
+        _log(logging.INFO, f"Fitted all trees of '{self.name}'", logger)
 
     def _fit_tree(
         self,
@@ -383,6 +375,7 @@ class TBRF:
         tb: np.ndarray,
         method: str = "mean",
         n_jobs: int = 1,
+        logger: logging.Logger | None = None,
     ) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
         """Tensor Basis Random Forest predictions given input features
         `x_test` and tensor basis `tb_test`, make predictions for the
@@ -442,10 +435,10 @@ class TBRF:
             b = np.median(b_trees, axis=0)
         else:
             raise ValueError(
-                f"The `method` attribute must be 'mean' or 'median'"
+                "The `method` attribute must be 'mean' or 'median'"
             )
 
-        self._log(logging.INFO, "Predicted the anysotropy tensor 'b'")
+        _log(logging.INFO, "Predicted the anysotropy tensor 'b'", logger)
 
         return g_trees, b_trees, b
 
