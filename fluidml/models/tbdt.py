@@ -501,7 +501,8 @@ class TBDT:
 
         Returns
         -------
-        n_feats : int
+        int
+            Number of features to consider for each split.
 
         Raises
         ------
@@ -512,21 +513,25 @@ class TBDT:
 
 
         """
-        if self.max_features is None:
-            return p
-        elif isinstance(self.max_features, str):
-            if self.max_features == "sqrt":
-                return int(np.ceil(np.sqrt(p)))
-            elif self.max_features == "log2":
-                return int(np.ceil(np.log2(p)))
-        elif isinstance(self.max_features, int):
+        FEAT_SUBSET_SIZES = {
+            None: lambda x: x,
+            "sqrt": lambda x: int(np.ceil(np.sqrt(x))),
+            "log": lambda x: int(np.ceil(np.log(x))),
+            "log2": lambda x: int(np.ceil(np.log2(x))),
+            "log10": lambda x: int(np.ceil(np.log10(x))),
+        }
+        if isinstance(self.max_features, int):
             if 1 <= self.max_features <= p:
                 return self.max_features
-        elif isinstance(self.max_features, float):
+        if isinstance(self.max_features, float):
             if 0.0 < self.max_features <= 1.0:
                 if round(self.max_features * p) >= 1:
                     return int(np.ceil((self.max_features * p)))
-        raise RuntimeError(
+        try:
+            return FEAT_SUBSET_SIZES[self.max_features](p)
+        except IndexError:
+            pass
+        raise ValueError(
             f"The attribute `max_features` (={self.max_features}) has an "
             f"incorrect value."
         )
