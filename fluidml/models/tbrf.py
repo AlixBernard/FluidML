@@ -340,7 +340,6 @@ class TBRF:
 
         rng = default_rng(seed)
         tbdt_seeds = [rng.integers(int(1e1)) for _ in range(self.n_estimators)]
-        print(tbdt_seeds)
         jobs = (n_jobs,) if n_jobs != -1 else ()
         with mp.Pool(*jobs) as pool:
             res = [
@@ -360,7 +359,6 @@ class TBRF:
         seed: int | None = None,
     ) -> list[Tree]:
         """Fit the specified tree."""
-        print(f"{i_tree=}, {seed=}")
         rng = default_rng(seed)
         n = len(x)
         n_samples = self._get_n_samples(n)
@@ -370,7 +368,6 @@ class TBRF:
             if self.bootstrap
             else np.arange(n)
         )
-        print(idx_sampled)
 
         x_sampled = x[idx_sampled]
         y_sampled = y[idx_sampled]
