@@ -51,14 +51,6 @@ class TBRF:
             - if int then draw `max_samples` samples
             - if float then draw `round(max_samples * n)` samples
         where `n` is the total number of sample.
-    random_state : int or None, default=None
-        Controls both the randomness of the bootstrapping of the samples
-        used when building trees (if `bootstrap == True`) and the
-        sampling of the features to consider when looking for the best
-        split at each node (if `max_features < m`).
-    _n_rng_calls : int
-        Number of times the rng has been called, should only be used
-        when loading an TBRF that has already called the rng.
     tbdt_kwargs : dict or None, default=None
         Keyword arguments for the TBDTs.
     logger : logging.Logger, default=None
@@ -82,8 +74,6 @@ class TBRF:
         n_estimators: int = 10,
         bootstrap: bool = True,
         max_samples: int | float | None = None,
-        random_state: int | None = None,
-        _n_rng_calls: int = 0,
         logger: logging.Logger | None = None,
         tbdt_kwargs: dict | None = None,
     ) -> None:
@@ -91,16 +81,12 @@ class TBRF:
         self.n_estimators = n_estimators
         self.bootstrap = bootstrap
         self.max_samples = max_samples
-        self.random_state = random_state
-        self._rng = default_rng(random_state)
-        self._n_rng_calls = _n_rng_calls
         self._logger = logger
         self.tbdt_kwargs = tbdt_kwargs if tbdt_kwargs is not None else {}
 
         self.trees = [
             TBDT(
                 name=f"{self.name}_TBDT-{i+1}",
-                random_state=self._rng_choice(1_000_000),
                 **self.tbdt_kwargs,
             )
             for i in range(self.n_estimators)
@@ -132,7 +118,7 @@ class TBRF:
         return obj_repr
 
     def __eq__(self, tbrf) -> bool:
-        attrs2skip = ["trees", "_logger", "_rng"]
+        attrs2skip = ["trees", "_logger"]
         for k in self.__dict__:
             if k in attrs2skip:
                 continue
@@ -145,10 +131,6 @@ class TBRF:
             if tree1 != tree2:
                 return False
         return True
-
-    def _rng_choice(self, a, **kwargs) -> np.ndarray:
-        self._n_rng_calls += 1
-        return self._rng.choice(a, **kwargs)
 
     def _log(self, level: int, message: str, *args, **kwargs) -> None:
         if self._logger is not None:
@@ -204,7 +186,7 @@ class TBRF:
 
     def to_dict(self) -> dict:
         """Returns the TBRF as its dict representation."""
-        attrs2skip = ["_logger", "_rng"]
+        attrs2skip = ["_logger"]
         d = {}
         for k, v in self.__dict__.items():
             if k in attrs2skip:
@@ -228,15 +210,12 @@ class TBRF:
         tbrf_kwargs = {
             k: v for k, v in tbrf_dict.items() if k not in ["trees"]
         }
-        tbrf_kwargs["_n_rng_calls"] -= len(tbrf_dict["trees"])
         tbrf = TBRF(**tbrf_kwargs)
         trees = []
         for tbdt_dict in tbrf_dict["trees"]:
             tbdt = TBDT.from_dict(tbdt_dict)
-            tbdt._rng = tbrf._rng.choice(1_000_000)
             trees.append(tbdt)
         tbrf.trees = trees
-        tbrf._rng = default_rng(tbrf.random_state)
         return tbrf
 
     def to_json(self, dir_path: Path):
@@ -260,7 +239,7 @@ class TBRF:
             tbdt_path = dir_path / tbdt_filename
             tbdt.to_json(tbdt_path)
 
-        attrs2skip = ["_logger", "_rng"]
+        attrs2skip = ["_logger"]
         json_attrs = {}
         for k, v in self.__dict__.items():
             if k in attrs2skip:
@@ -270,7 +249,6 @@ class TBRF:
             else:
                 json_attrs[k] = v
         del json_attrs["tbdt_kwargs"]["_logger"]
-        del json_attrs["tbdt_kwargs"]["_rng"]
 
         tbrf_path = dir_path / f"{self}.json"
         with open(tbrf_path, "w") as file:
@@ -333,7 +311,12 @@ class TBRF:
 
     @_timer_func
     def fit(
-        self, x: np.ndarray, y: np.ndarray, tb: np.ndarray, n_jobs: int = 1
+        self,
+        x: np.ndarray,
+        y: np.ndarray,
+        tb: np.ndarray,
+        n_jobs: int = 1,
+        seed: int | None = None,
     ) -> dict:
         """Create the TBRF given input features `x`, true response `y`,
         and tensor basis `tb`.
@@ -350,36 +333,49 @@ class TBRF:
         n_jobs : int, default=1
             The number of jobs to run in parallel, -1 means using all
             processors.
+        seed : int | None
 
         """
         self._log(logging.INFO, f"Fitting all trees of '{self.name}'")
 
+        rng = default_rng(seed)
+        tbdt_seeds = [rng.integers(int(1e1)) for _ in range(self.n_estimators)]
+        print(tbdt_seeds)
         jobs = (n_jobs,) if n_jobs != -1 else ()
         with mp.Pool(*jobs) as pool:
             res = [
-                pool.apply_async(self._fit_tree, (i, x, y, tb))
-                for i in range(len(self))
+                pool.apply_async(self._fit_tree, (i, x, y, tb, seed))
+                for i, seed in enumerate(tbdt_seeds)
             ]
             self.trees = [r.get() for r in res]
 
         self._log(logging.INFO, f"Fitted all trees of '{self.name}'")
 
     def _fit_tree(
-        self, i_tree: int, x: np.ndarray, y: np.ndarray, tb: np.ndarray
+        self,
+        i_tree: int,
+        x: np.ndarray,
+        y: np.ndarray,
+        tb: np.ndarray,
+        seed: int | None = None,
     ) -> list[Tree]:
         """Fit the specified tree."""
+        print(f"{i_tree=}, {seed=}")
+        rng = default_rng(seed)
         n = len(x)
         n_samples = self._get_n_samples(n)
         tbdt = self.trees[i_tree]
-        if self.bootstrap:
-            idx_sampled = tbdt._rng_choice(n, size=n_samples, replace=True)
-        else:
-            idx_sampled = np.arange(n)
+        idx_sampled = (
+            rng.choice(n, size=n_samples, replace=True)
+            if self.bootstrap
+            else np.arange(n)
+        )
+        print(idx_sampled)
 
         x_sampled = x[idx_sampled]
         y_sampled = y[idx_sampled]
         tb_sampled = tb[idx_sampled]
-        self.trees[i_tree].fit(x_sampled, y_sampled, tb_sampled)
+        tbdt.fit(x_sampled, y_sampled, tb_sampled, rng.integers(int(1e9)))
 
         return self.trees[i_tree]
 
