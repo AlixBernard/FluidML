@@ -217,68 +217,6 @@ class TBRF:
         tbrf.trees = trees
         return tbrf
 
-    def to_json(self, dir_path: Path):
-        """Save the TBRF as a directory containing the JSON files of its
-        attributes and the TBDTs' attributes. The TBRF JSON file only
-        has the list of names of the TBDTs in its field "trees".
-
-        Parameters
-        ----------
-        dir_path : Path
-            Path to the directory where to save the TBRF's and TBDTs'
-            files, the directory will be deleted and recreated.
-
-        """
-        if not dir_path.exists():
-            dir_path.mkdir(parents=True)
-
-        for tbdt in self.trees:
-            tbdt_filename = f"{tbdt}.json"
-            tbdt_path = dir_path / tbdt_filename
-            tbdt.to_json(tbdt_path)
-
-        attrs2skip = ["_logger"]
-        json_attrs = {}
-        for k, v in self.__dict__.items():
-            if k in attrs2skip:
-                continue
-            elif k == "trees":
-                json_attrs[k] = [tree.name for tree in v]
-            else:
-                json_attrs[k] = v
-        del json_attrs["tbdt_kwargs"]["_logger"]
-
-        tbrf_path = dir_path / f"{self}.json"
-        with open(tbrf_path, "w") as file:
-            json.dump(json_attrs, file, indent=4)
-
-    def from_json(self, dir_path: Path):
-        """Load the TBRF as a folder containing the JSON files of its
-        attributes and the TBDTs' attributes. The TBRF JSON file only
-        has the list of names of the TBDTs in its field "trees".
-
-        Parameters
-        ----------
-        dir_path : Path
-                Path to the folder containing the TBRF's and TBDTs' JSON
-                files.
-
-        """
-        tbrf_path = dir_path / f"{str(self)}.json"
-        with open(tbrf_path, "r") as file:
-            json_attrs = json.load(file)
-
-        tbdt_names = []
-        for k, v in json_attrs:
-            if k == "trees":
-                tbdt_names.extend(v)
-            self.__setattr__(k, v)
-
-        for name in tbdt_names:
-            tbdt_filename = f"{name}.json"
-            tbdt_path = dir_path / tbdt_filename
-            self.trees[k] = TBDT().load(tbdt_path)
-
     def to_graphviz(
         self,
         dir_path: str | Path,
