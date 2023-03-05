@@ -7,7 +7,7 @@ from fluidml.models import TBDT
 
 
 @pytest.fixture
-def random_state1():
+def seed1():
     return 47
 
 
@@ -150,10 +150,8 @@ def tbdt1_as_graphviz():
 
 
 class TestTBDT:
-    def test_to_dict(
-        self, tbdt1, features, targets, tb, tbdt1_as_dict, random_state1
-    ):
-        tbdt1.fit(features, targets, tb, random_state=random_state1)
+    def test_to_dict(self, tbdt1, features, targets, tb, tbdt1_as_dict, seed1):
+        tbdt1.fit(features, targets, tb, seed=seed1)
         import json
 
         with open("tmp1.json", "w") as file:
@@ -163,22 +161,22 @@ class TestTBDT:
         assert tbdt1.to_dict() == tbdt1_as_dict
 
     def test_from_dict(
-        self, tbdt1, features, targets, tb, tbdt1_as_dict, random_state1
+        self, tbdt1, features, targets, tb, tbdt1_as_dict, seed1
     ):
-        tbdt1.fit(features, targets, tb, random_state=random_state1)
+        tbdt1.fit(features, targets, tb, seed=seed1)
         tbdt2 = TBDT.from_dict(tbdt1_as_dict)
         assert tbdt2 == tbdt1
 
-    def test_save_to_json(self, tbdt1, features, targets, tb, random_state1):
-        tbdt1.fit(features, targets, tb, random_state=random_state1)
+    def test_save_to_json(self, tbdt1, features, targets, tb, seed1):
+        tbdt1.fit(features, targets, tb, seed=seed1)
         file_path = Path(__file__).parent / "test_tbdt1.json"
         tbdt1.save_to_json(file_path)
         tbdt2 = TBDT.load_from_json(file_path)
         file_path.unlink()
         assert tbdt1 == tbdt2
 
-    def test_load_from_json(self, tbdt1, features, targets, tb, random_state1):
-        tbdt1.fit(features, targets, tb, random_state=random_state1)
+    def test_load_from_json(self, tbdt1, features, targets, tb, seed1):
+        tbdt1.fit(features, targets, tb, seed=seed1)
         file_path = Path(__file__).parent / "test_tbdt1.json"
         tbdt1.save_to_json(file_path)
         tbdt2 = TBDT.load_from_json(file_path)
@@ -186,9 +184,9 @@ class TestTBDT:
         assert tbdt1 == tbdt2
 
     def test_to_graphviz(
-        self, tbdt1, features, targets, tb, tbdt1_as_graphviz, random_state1
+        self, tbdt1, features, targets, tb, tbdt1_as_graphviz, seed1
     ):
-        tbdt1.fit(features, targets, tb, random_state=random_state1)
+        tbdt1.fit(features, targets, tb, seed=seed1)
         with open("tmp.dot", "w") as file:
             file.write(tbdt1.to_graphviz())
         assert tbdt1.to_graphviz() == tbdt1_as_graphviz

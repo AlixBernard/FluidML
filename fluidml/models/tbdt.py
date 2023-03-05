@@ -692,7 +692,7 @@ class TBDT:
         x: np.ndarray,
         y: np.ndarray,
         tb: np.ndarray,
-        random_state: int | None = None,
+        seed: int | None = None,
     ) -> dict:
         """Fit the TBDT.
 
@@ -705,7 +705,7 @@ class TBDT:
             the TBDT.
         tb : np.ndarray
             Tensor bases with shape `(n, m, 9)`.
-        random_state : int | None
+        seed : int | None
             Random state to use to create the random number generator.
 
         Returns
@@ -721,7 +721,7 @@ class TBDT:
         """
         self._log(logging.INFO, f"Fitting '{self.name}'")
 
-        rng = default_rng(random_state)
+        rng = default_rng(seed)
         n, p = x.shape
         n, m, _ = tb.shape
         # Preconstruct the N_obs matrices for the lhs and rhs terms in
