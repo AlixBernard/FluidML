@@ -513,7 +513,7 @@ class TBDT:
 
         """
         if self.max_features is None:
-            n_split_feats = p
+            return p
         elif isinstance(self.max_features, str):
             if self.max_features == "sqrt":
                 return int(np.ceil(np.sqrt(p)))
