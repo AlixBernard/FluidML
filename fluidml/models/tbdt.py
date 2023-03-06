@@ -280,9 +280,8 @@ def find_Jmin_sorted(
     results = {
         "J": best_J,
         "split_i": split_i,
-        "split_v": (
-            0.5 * (x[asort][best_i - 1, split_i] + x[asort][best_i, split_i])
-        ),
+        "split_v": 0.5
+        * (x[asort][best_i - 1, split_i] + x[asort][best_i, split_i]),
         "idx_l": asort[:best_i],
         "idx_r": asort[best_i:],
         "g_l": best_extra["g_l"],
@@ -297,7 +296,7 @@ def find_Jmin_sorted(
 
 
 def find_Jmin_opt(
-    idx: int,
+    split_i: int,
     x: np.ndarray,
     y: np.ndarray,
     tb: np.ndarray,
@@ -308,7 +307,7 @@ def find_Jmin_opt(
 
     Parameters
     ----------
-    idx : int
+    split_i : int
         Index of the feature on which to find the optimum splitting
         point.
     x : np.ndarray
@@ -330,7 +329,7 @@ def find_Jmin_opt(
 
     """
     n, p = x.shape
-    asort = np.argsort(x[idx, :])
+    asort = np.argsort(x[:, split_i])
     asort_back = np.argsort(asort)
 
     x_sorted = x[asort]
@@ -349,34 +348,35 @@ def find_Jmin_opt(
         bounds=(1, n - 1),
         options={"xtol": 1e-8, "maxiter": 200},
     )
-    i_split = int(res.x)
+    best_i = int(res.x)
 
     # TODO: in case optimization algorithm does not work it
     # - returns 0, needs further testing
-    if i_split == 0:
-        i_split = 1
+    if best_i == 0:
+        best_i = 1
 
     # Find all relevant parameters for the minimum which was found
     # ? Maybe this can be improved as it is redundant
     J, extra = obj_func_J(
-        y_sorted, tb_sorted, TT_sorted, Ty_sorted, i_float=i_split
+        y_sorted, tb_sorted, TT_sorted, Ty_sorted, i_float=best_i
     )
     i_l_sorted = np.zeros(n, dtype=bool)
-    i_l_sorted[:i_split] = True
+    i_l_sorted[:best_i] = True
     i_r_sorted = ~i_l_sorted
 
     results = {
         "J": J,
-        "split_i": idx,
-        "split_v": 0.5 * (x_sorted[i_split - 1, idx] + x_sorted[i_split, idx]),
+        "split_i": split_i,
+        "split_v": 0.5
+        * (x_sorted[best_i - 1, split_i] + x_sorted[best_i, split_i]),
         "i_l": i_l_sorted[asort_back],
         "i_r": i_r_sorted[asort_back],
         "g_l": extra["g_l"],
         "g_r": extra["g_r"],
         "MSE_l": np.mean(extra["diff_l"] ** 2),
         "MSE_r": np.mean(extra["diff_r"] ** 2),
-        "n_l": i_split,
-        "n_r": n - i_split,
+        "n_l": best_i,
+        "n_r": n - best_i,
     }
 
     if obs_identical:
@@ -795,24 +795,24 @@ class TBDT:
 
         Returns
         -------
-        bhat : np.ndarray
-            Anisotropy tensors with shape `(n, 9)`.
         ghat : np.ndarray
             Tensor basis coefficients with shape `(n, m)`.
+        bhat : np.ndarray
+            Anisotropy tensors with shape `(n, 9)`.
 
         """
         n, m, _ = tb.shape
         bhat = np.zeros([n, 9])
         ghat = np.zeros([n, m])
 
-        for i in range(n):
-            node = self.tree.get_node("0")
+        for sample_i in range(n):
+            node = self.tree.get_node("R")
             split_i = node.data["split_i"]
             split_v = node.data["split_v"]
             g = node.data["g"]
 
             while split_i is not None:
-                if x[i, split_i] <= split_i:
+                if x[sample_i, split_i] <= split_v:
                     node = self.tree.get_node(f"{node.identifier}0")
                 else:
                     node = self.tree.get_node(f"{node.identifier}1")
@@ -820,8 +820,8 @@ class TBDT:
                 split_v = node.data["split_v"]
                 g = node.data["g"]
 
-            ghat[i] = g
+            ghat[sample_i] = g
             for j in range(m):
-                bhat[i] += g[j] * tb[i, j]
+                bhat[sample_i] += g[j] * tb[sample_i, j]
 
         return ghat, bhat
