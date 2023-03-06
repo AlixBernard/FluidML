@@ -418,8 +418,6 @@ class TBDT:
         Threshold for which if the number of points is below, brute
         force will be used and optim otherwise, if it is -1 then
         optimization is disabled.
-    logger : logging.Logger or None, default=None
-        Logger to output details.
 
     Methods
     -------
@@ -442,7 +440,6 @@ class TBDT:
         max_features: int | float | str | None = "sqrt",
         gamma: float = 1e0,
         optim_threshold: int = 1_000,
-        logger: logging.Logger | None = None,
     ) -> None:
         self.name = name
         self.tree = Tree()
