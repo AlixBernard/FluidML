@@ -32,7 +32,6 @@ from scipy import optimize as opt
 from numpy.random import default_rng
 
 # Local packages
-from fluidml import utils
 from fluidml.models import Tree, Node
 
 
