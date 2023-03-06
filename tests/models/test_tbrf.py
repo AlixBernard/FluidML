@@ -2,6 +2,7 @@ import pytest
 from pathlib import Path
 
 import numpy as np
+from numpy.testing import assert_array_almost_equal
 
 from fluidml.models import TBDT, TBRF
 
@@ -27,6 +28,19 @@ def targets():
 def tb():
     n, m = 5, 2
     return np.arange(n * m * 9).reshape(n, m, 9) - 3.2
+
+
+@pytest.fixture
+def b_prediction1():
+    return np.array(
+        [
+            [-7.30, -6.52, -5.75, -4.98, -4.21, -3.44, -2.67, -1.90, -1.13],
+            [6.58, 7.35, 8.12, 8.89, 9.66, 10.43, 11.20, 11.97, 12.74],
+            [16.79, 17.32, 17.85, 18.38, 18.91, 19.43, 19.96, 20.49, 21.02],
+            [26.31, 26.84, 27.36, 27.89, 28.42, 28.95, 29.48, 30.01, 30.54],
+            [34.40, 35.16, 35.92, 36.67, 37.43, 38.19, 38.94, 39.70, 40.46],
+        ]
+    )
 
 
 @pytest.fixture
@@ -166,3 +180,10 @@ class TestTBRF:
         tbrf2 = TBRF.from_dict(tbrf1_as_dict)
         for tbdt1, tbdt2 in zip(tbrf1.trees, tbrf2.trees):
             assert tbrf2 == tbrf1
+
+    def test_predict(self, tbrf1, features, targets, tb, seed1, b_prediction1):
+        tbrf1.fit(features, targets, tb, seed=seed1)
+        g_trees, b_trees, b = tbrf1.predict(features, tb)
+        with open("preds.txt", "w") as file:
+            file.write(str(b))
+        assert_array_almost_equal(b, b_prediction1, decimal=2)

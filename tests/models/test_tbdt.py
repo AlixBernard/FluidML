@@ -2,6 +2,7 @@ import pytest
 from pathlib import Path
 
 import numpy as np
+from numpy.testing import assert_array_almost_equal
 
 from fluidml.models import TBDT
 
@@ -27,6 +28,32 @@ def targets():
 def tb():
     n, m = 5, 2
     return np.arange(n * m * 9).reshape(n, m, 9) - 3.2
+
+
+@pytest.fixture
+def g_prediction1():
+    return np.array(
+        [
+            [0.94442465, 0.05555829],
+            [0.94442465, 0.05555829],
+            [0.55545823, -0.01743836],
+            [0.55545823, -0.01743836],
+            [0.55545823, -0.01743836],
+        ]
+    )
+
+
+@pytest.fixture
+def b_prediction1():
+    return np.array(
+        [
+            [-2.69, -1.69, -0.69, 0.30, 1.30, 2.29, 3.29, 4.29, 5.29],
+            [15.29, 16.29, 17.29, 18.29, 19.29, 20.29, 21.29, 22.29, 23.29],
+            [17.49, 18.02, 18.56, 19.10, 19.64, 20.18, 20.71, 21.25, 21.79],
+            [27.17, 27.71, 28.25, 28.78, 29.32, 29.86, 30.40, 30.94, 31.47],
+            [36.85, 37.39, 37.93, 38.47, 39.01, 39.54, 40.08, 40.62, 41.16],
+        ]
+    )
 
 
 @pytest.fixture
@@ -190,3 +217,11 @@ class TestTBDT:
         with open("tmp.dot", "w") as file:
             file.write(tbdt1.to_graphviz())
         assert tbdt1.to_graphviz() == tbdt1_as_graphviz
+
+    def test_predict(
+        self, tbdt1, features, targets, tb, seed1, g_prediction1, b_prediction1
+    ):
+        tbdt1.fit(features, targets, tb, seed=seed1)
+        g, b = tbdt1.predict(features, tb)
+        assert_array_almost_equal(g, g_prediction1)
+        assert_array_almost_equal(b, b_prediction1, decimal=2)
