@@ -682,7 +682,7 @@ class TBDT:
         tb: np.ndarray,
         seed: int | None = None,
         logger: logging.Logger | None = None,
-    ) -> dict:
+    ):
         """Fit the TBDT.
 
         Parameters
