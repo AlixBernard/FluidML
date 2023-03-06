@@ -266,19 +266,19 @@ class TBRF:
         seed : int | None
 
         """
-        _log(logging.INFO, f"Fitting all trees of '{self.name}'", logger)
+        _log(logging.INFO, f"Fitting '{self.name}'", logger)
 
         rng = default_rng(seed)
-        tbdt_seeds = [rng.integers(int(1e1)) for _ in range(self.n_estimators)]
+        seeds = [rng.integers(int(1e1)) for _ in range(self.n_estimators)]
         jobs = (n_jobs,) if n_jobs != -1 else ()
         with mp.Pool(*jobs) as pool:
             res = [
-                pool.apply_async(self._fit_tree, (i, x, y, tb, seed))
-                for i, seed in enumerate(tbdt_seeds)
+                pool.apply_async(self._fit_tree, (i, x, y, tb, seed, logger))
+                for i, seed in enumerate(seeds)
             ]
             self.trees = [r.get() for r in res]
 
-        _log(logging.INFO, f"Fitted all trees of '{self.name}'", logger)
+        _log(logging.INFO, f"Fitted '{self.name}'", logger)
 
     def _fit_tree(
         self,
@@ -287,6 +287,7 @@ class TBRF:
         y: np.ndarray,
         tb: np.ndarray,
         seed: int | None = None,
+        logger: logging.Logger | None = None,
     ) -> list[Tree]:
         """Fit the specified tree."""
         rng = default_rng(seed)
@@ -298,11 +299,14 @@ class TBRF:
             if self.bootstrap
             else np.arange(n)
         )
+        tbdt_seed = rng.integers(int(1e9))
 
         x_sampled = x[idx_sampled]
         y_sampled = y[idx_sampled]
         tb_sampled = tb[idx_sampled]
-        tbdt.fit(x_sampled, y_sampled, tb_sampled, rng.integers(int(1e9)))
+        tbdt.fit(
+            x_sampled, y_sampled, tb_sampled, seed=tbdt_seed, logger=logger
+        )
 
         return self.trees[i_tree]
 
