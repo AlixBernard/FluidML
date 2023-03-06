@@ -7,11 +7,11 @@
 # @Last modified time: 2023-02-26 08:04:27
 
 
-from .version import version as __version__
+from fluidml.version import version as __version__
 
 __all__ = ["__version__"]
 
 
-from .utils import *
+from fluidml.utils import *
 
 __all__ += utils.__all__
