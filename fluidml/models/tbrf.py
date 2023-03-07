@@ -27,8 +27,8 @@ from fluidml.models import Tree, TBDT
 def _log(
     level: int,
     message: str,
-    *args,
     logger: logging.Logger | None = None,
+    *args,
     **kwargs,
 ) -> None:
     if logger is not None:
