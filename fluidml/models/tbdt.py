@@ -210,7 +210,7 @@ def obj_func_J(
     tb_sorted: np.ndarray,
     TT_sorted: np.ndarray,
     Ty_sorted: np.ndarray,
-    i_float: float | None = None,
+    i: int | None = None,
 ) -> tuple[float, dict]:
     """Objective function which minimize the RMSE difference w.r.t. the
     target `y`.
@@ -225,9 +225,8 @@ def obj_func_J(
         Sorted preconstructed matrices $transpose(T)*T$.
     Ty_sorted : np.ndarray
         Sorted preconstructed matrices $transpose(T)*f$.
-    i_float : float or None
-        If not None, index which value will be turned to an int to use
-        when splitting the data.
+    i : int or None
+        If not None, index to use when splitting the data.
 
     Returns
     -------
@@ -238,12 +237,11 @@ def obj_func_J(
         diff_l, diff_r, diff.
 
     """
-    if i_float is None:
+    if i is None:
         ghat, bhat = fit_tensor(TT_sorted, Ty_sorted, tb_sorted, y_sorted)
         diff = y_sorted - bhat
         extra = {"g": ghat, "diff": diff}
     else:
-        i = int(i_float)
         g_l, b_l = fit_tensor(
             TT_sorted[:i], Ty_sorted[:i], tb_sorted[:i], y_sorted[:i]
         )
@@ -305,9 +303,7 @@ def find_Jmin_sorted(
 
     best_J = 1e12
     for i in range(1, n):
-        J, extra = obj_func_J(
-            y[asort], tb[asort], TT[asort], Ty[asort], i_float=i
-        )
+        J, extra = obj_func_J(y[asort], tb[asort], TT[asort], Ty[asort], i=i)
         if J < best_J:
             best_i, best_J, best_extra = i, J, extra
 
@@ -391,9 +387,7 @@ def find_Jmin_opt(
 
     # Find all relevant parameters for the minimum which was found
     # ? Maybe this can be improved as it is redundant
-    J, extra = obj_func_J(
-        y_sorted, tb_sorted, TT_sorted, Ty_sorted, i_float=best_i
-    )
+    J, extra = obj_func_J(y_sorted, tb_sorted, TT_sorted, Ty_sorted, i=best_i)
     i_l_sorted = np.zeros(n, dtype=bool)
     i_l_sorted[:best_i] = True
     i_r_sorted = ~i_l_sorted
