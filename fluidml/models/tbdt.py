@@ -78,9 +78,6 @@ def fit_tensor(
         `(m,)`.
     bhat : np.ndarray
         Anysotropy tensor with shape `(n, 9)`.
-    diff : np.ndarray
-        The difference between `bhat` and the target `y` with shape
-        `(n, 9)`.
 
     """
     n, m, _ = TT.shape
@@ -92,9 +89,8 @@ def fit_tensor(
     bhat = np.zeros([n, 9])
     for i in range(m):
         bhat += ghat[i] * tb[:, i]
-    diff = y - bhat
 
-    return ghat, bhat, diff
+    return ghat, bhat
 
 
 def create_split(
@@ -207,16 +203,19 @@ def obj_func_J(
 
     """
     if i_float is None:
-        g, _, diff = fit_tensor(TT_sorted, Ty_sorted, tb_sorted, y_sorted)
-        extra = {"g": g, "diff": diff}
+        ghat, bhat = fit_tensor(TT_sorted, Ty_sorted, tb_sorted, y_sorted)
+        diff = y - bhat
+        extra = {"g": ghat, "diff": diff}
     else:
         i = int(i_float)
-        g_l, _, diff_l = fit_tensor(
+        g_l, b_l = fit_tensor(
             TT_sorted[:i], Ty_sorted[:i], tb_sorted[:i], y_sorted[:i]
         )
-        g_r, _, diff_r = fit_tensor(
+        diff_l = y_sorted[:i] - b_l
+        g_r, b_r = fit_tensor(
             TT_sorted[i:], Ty_sorted[i:], tb_sorted[i:], y_sorted[i:]
         )
+        diff_r = y_sorted[i:] - b_r
 
         diff = np.vstack([diff_l, diff_r])
         extra = {
@@ -288,6 +287,7 @@ def find_Jmin_sorted(
         "MSE_r": np.mean(best_extra["diff_r"] ** 2),
         "n_l": best_i,
         "n_r": n - best_i,
+        "extra": best_extra,
     }
 
     return results
@@ -374,6 +374,7 @@ def find_Jmin_opt(
         "MSE_r": np.mean(extra["diff_r"] ** 2),
         "n_l": best_i,
         "n_r": n - best_i,
+        "extra": extra,
     }
 
     if obs_identical:
@@ -725,7 +726,8 @@ class TBDT:
         )
         while nodes2add:
             node, parent, idx = nodes2add.popleft()
-            g, b, diff = fit_tensor(TT[idx], Ty[idx], tb[idx], y[idx])
+            ghat, bhat = fit_tensor(TT[idx], Ty[idx], tb[idx], y[idx])
+            diff = y[idx] - bhat
             rmse = np.sqrt(np.sum(diff**2))
             n_samples = len(idx)
 
@@ -757,7 +759,7 @@ class TBDT:
             node.data = {
                 "split_i": split_i,
                 "split_v": split_v,
-                "g": list(map(float, g)),
+                "g": list(map(float, ghat)),
                 "n_samples": n_samples,
                 "RMSE": rmse,
             }
