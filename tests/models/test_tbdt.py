@@ -167,12 +167,12 @@ def tbdt1_as_graphviz():
 	"R110" [label="split feat idx: None\nvalue: None\nnb samples: 1\nRMSE: 1.362e-04", shape=rectangle];
 	"R111" [label="split feat idx: None\nvalue: None\nnb samples: 2\nRMSE: 5.265e+00", shape=rectangle];
 
-	"R" -> "R1";
 	"R" -> "R0";
-	"R1" -> "R11";
+	"R" -> "R1";
 	"R1" -> "R10";
-	"R11" -> "R111";
+	"R1" -> "R11";
 	"R11" -> "R110";
+	"R11" -> "R111";
 }"""
 
 

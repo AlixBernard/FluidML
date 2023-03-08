@@ -20,7 +20,7 @@ __all__ = [
 # Built-in packages
 import json
 import logging
-from collections import OrderedDict
+from collections import deque, OrderedDict
 from time import perf_counter
 from functools import partial
 from pathlib import Path
@@ -722,9 +722,11 @@ class TBDT:
             Ty[i] = tb[i] @ y[i]  # Eq. 3.25 Tb
 
         # Tree construction
-        nodes2add = [(Node(identifier="R"), None, np.arange(n))]
+        nodes2add: deque[tuple(Node, Node | None, np.ndarray)] = deque(
+            [(Node(identifier="R"), None, np.arange(n))]
+        )
         while nodes2add:
-            node, parent, idx = nodes2add.pop()
+            node, parent, idx = nodes2add.popleft()
             g, b, diff = fit_tensor(TT[idx], Ty[idx], tb[idx], y[idx])
             rmse = np.sqrt(np.sum(diff**2))
             n_samples = len(idx)
