@@ -92,9 +92,10 @@ class TBRF:
         self.max_samples = max_samples
         self.tbdt_kwargs = tbdt_kwargs if tbdt_kwargs is not None else {}
 
+        padding = f"0>{len(str(self.n_estimators))}"
         self.trees = [
             TBDT(
-                name=f"{self.name}_TBDT-{i+1}",
+                name=f"{self.name}_TBDT-{i+1:{padding}}",
                 **self.tbdt_kwargs,
             )
             for i in range(self.n_estimators)
