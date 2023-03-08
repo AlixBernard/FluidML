@@ -169,6 +169,42 @@ def create_split(
     return best_res
 
 
+def cost_J(
+    TT: np.ndarray,
+    Ty: np.ndarray,
+    tb: np.ndarray,
+    y: np.ndarray,
+) -> tuple[float, dict]:
+    """Objective function which minimize the RMSE difference w.r.t. the
+    target `y`.
+
+    Parameters
+    ----------
+    TT : np.ndarray
+        Sorted preconstructed matrices $transpose(T)*T$.
+    Ty : np.ndarray
+        Sorted preconstructed matrices $transpose(T)*f$.
+    tb : np.ndarray
+        Sorted tensor basess.
+    y : np.ndarray
+        Sorted output features.
+
+    Returns
+    -------
+    J : float
+        The value of the cost function.
+    extra : dict
+        Dictionarry containing the following extra data: g_l, g_r,
+        diff_l, diff_r, diff.
+
+    """
+    ghat, bhat = fit_tensor(TT, Ty, tb, y)
+    diff = y - bhat
+    extra = {"g": ghat, "diff": diff}
+    J = np.mean(diff**2)
+    return J, extra
+
+
 def obj_func_J(
     y_sorted: np.ndarray,
     tb_sorted: np.ndarray,
@@ -204,7 +240,7 @@ def obj_func_J(
     """
     if i_float is None:
         ghat, bhat = fit_tensor(TT_sorted, Ty_sorted, tb_sorted, y_sorted)
-        diff = y - bhat
+        diff = y_sorted - bhat
         extra = {"g": ghat, "diff": diff}
     else:
         i = int(i_float)
