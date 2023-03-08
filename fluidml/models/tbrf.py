@@ -8,10 +8,9 @@ Glossary:
 
 """
 
-__all__ = ["_log", "TBRF"]
+__all__ = ["TBRF"]
 
 
-import json
 import logging
 import multiprocessing as mp
 from time import perf_counter

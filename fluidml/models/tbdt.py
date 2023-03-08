@@ -9,7 +9,6 @@ Glossary:
 """
 
 __all__ = [
-    "_log",
     "fit_tensor",
     "obj_func_J",
     "find_Jmin_sorted",
