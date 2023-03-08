@@ -14,7 +14,7 @@ __all__ = ["_log", "TBRF"]
 import json
 import logging
 import multiprocessing as mp
-from time import time
+from time import perf_counter
 from pathlib import Path
 
 import numpy as np
@@ -143,9 +143,9 @@ class TBRF:
 
     def _timer_func(func):
         def wrap_func(self, *args, **kwargs):
-            t1 = time()
+            t1 = perf_counter()
             result = func(self, *args, **kwargs)
-            t2 = time()
+            t2 = perf_counter()
             logger = kwargs.get("logger")
             _log(
                 logging.DEBUG,
@@ -268,6 +268,7 @@ class TBRF:
 
         """
         _log(logging.INFO, f"Fitting '{self.name}'", logger)
+        t_start = perf_counter()
 
         rng = default_rng(seed)
         seeds = [rng.integers(int(1e1)) for _ in range(self.n_estimators)]
@@ -279,7 +280,9 @@ class TBRF:
             ]
             self.trees = [r.get() for r in res]
 
-        _log(logging.INFO, f"Fitted '{self.name}'", logger)
+        t_end = perf_counter()
+        t_delta = t_end - t_start
+        _log(logging.INFO, f"Fitted {self.name!s} in {t_delta:.3f}", logger)
 
     def _fit_tree(
         self,
