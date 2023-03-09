@@ -50,7 +50,7 @@ def fit_tensor(
     Ty: np.ndarray,
     tb: np.ndarray,
     y: np.ndarray,
-) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
+) -> tuple[np.ndarray, np.ndarray]:
     r"""Makes a least square fit on training data `y`, by using the
     preconstructed matrices $T^t T$ and $T^t y$.
     Used in the `create_split()` method. The least squares fit is
@@ -169,40 +169,26 @@ def create_split(
     return best_res
 
 
-def cost_J(
-    TT: np.ndarray,
-    Ty: np.ndarray,
-    tb: np.ndarray,
-    y: np.ndarray,
-) -> tuple[float, dict]:
-    """Objective function which minimize the RMSE difference w.r.t. the
+def cost_J(y: np.ndarray, bhat: np.ndarray) -> tuple[float, dict]:
+    """Objective function which minimize the MSE difference w.r.t. the
     target `y`.
 
     Parameters
     ----------
-    TT : np.ndarray
-        Sorted preconstructed matrices $transpose(T)*T$.
-    Ty : np.ndarray
-        Sorted preconstructed matrices $transpose(T)*f$.
-    tb : np.ndarray
-        Sorted tensor basess.
     y : np.ndarray
-        Sorted output features.
+        The target.
+    bhat : np.ndarray
+        The target obtained.
 
     Returns
     -------
     J : float
         The value of the cost function.
-    extra : dict
-        Dictionarry containing the following extra data: g_l, g_r,
-        diff_l, diff_r, diff.
 
     """
-    ghat, bhat = fit_tensor(TT, Ty, tb, y)
     diff = y - bhat
-    extra = {"g": ghat, "diff": diff}
     J = np.mean(diff**2)
-    return J, extra
+    return J
 
 
 def obj_func_J(
@@ -264,7 +250,7 @@ def obj_func_J(
 
 
 def find_Jmin_sorted(
-    split_i: int,
+    split_feat_i: int,
     x: np.ndarray,
     y: np.ndarray,
     tb: np.ndarray,
@@ -277,7 +263,7 @@ def find_Jmin_sorted(
 
     Parameters
     ----------
-    feat_i : int
+    split_feat_i : int
         Index of the feature on which to find the optimum splitting
         point.
     x : np.ndarray
@@ -299,34 +285,48 @@ def find_Jmin_sorted(
 
     """
     n, p = x.shape
-    asort = np.argsort(x[:, split_i])
+    asort = np.argsort(x[:, split_feat_i])
+    TT_sorted = TT[asort]
+    Ty_sorted = Ty[asort]
+    tb_sorted = tb[asort]
+    y_sorted = y[asort]
 
     best_J = 1e12
     for i in range(1, n):
-        J, extra = obj_func_J(y[asort], tb[asort], TT[asort], Ty[asort], i=i)
+        ghat_sorted_l, bhat_sorted_l = fit_tensor(
+            TT_sorted[:i], Ty_sorted[:i], tb_sorted[:i], y_sorted[:i]
+        )
+        diff_sorted_l = y_sorted[:i] - bhat_sorted_l
+        ghat_sorted_r, bhat_sorted_r = fit_tensor(
+            TT_sorted[i:], Ty_sorted[i:], tb_sorted[i:], y_sorted[i:]
+        )
+        diff_sorted_r = y_sorted[i:] - bhat_sorted_r
+        diff_sorted = np.vstack([diff_sorted_l, diff_sorted_r])
+        J = np.mean(diff_sorted**2)
         if J < best_J:
-            best_i, best_J, best_extra = i, J, extra
+            best_i, best_J = i, J
+            best_ghat_l, best_ghat_r = ghat_sorted_l, ghat_sorted_r
+            best_diff_l, best_diff_r = diff_sorted_l, diff_sorted_r
 
     results = {
         "J": best_J,
-        "split_i": split_i,
-        "split_v": 0.5 * np.sum(x[asort][best_i - 1 : best_i + 1, split_i]),
+        "split_i": split_feat_i,
+        "split_v": 0.5 * x[asort][best_i - 1 : best_i + 1, split_feat_i].sum(),
         "idx_l": asort[:best_i],
         "idx_r": asort[best_i:],
-        "g_l": best_extra["g_l"],
-        "g_r": best_extra["g_r"],
-        "MSE_l": np.mean(best_extra["diff_l"] ** 2),
-        "MSE_r": np.mean(best_extra["diff_r"] ** 2),
+        "g_l": best_ghat_l,
+        "g_r": best_ghat_r,
+        "MSE_l": np.mean(best_diff_l**2),
+        "MSE_r": np.mean(best_diff_r**2),
         "n_l": best_i,
         "n_r": n - best_i,
-        "extra": best_extra,
     }
 
     return results
 
 
 def find_Jmin_opt(
-    split_i: int,
+    split_feat_i: int,
     x: np.ndarray,
     y: np.ndarray,
     tb: np.ndarray,
@@ -337,7 +337,7 @@ def find_Jmin_opt(
 
     Parameters
     ----------
-    split_i : int
+    split_feat_i : int
         Index of the feature on which to find the optimum splitting
         point.
     x : np.ndarray
@@ -359,7 +359,7 @@ def find_Jmin_opt(
 
     """
     n, p = x.shape
-    asort = np.argsort(x[:, split_i])
+    asort = np.argsort(x[:, split_feat_i])
     asort_back = np.argsort(asort)
 
     x_sorted = x[asort]
@@ -394,8 +394,8 @@ def find_Jmin_opt(
 
     results = {
         "J": J,
-        "split_i": split_i,
-        "split_v": 0.5 * np.sum(x_sorted[best_i - 1 : best_i + 1, split_i]),
+        "split_i": split_feat_i,
+        "split_v": 0.5 * x_sorted[best_i - 1 : best_i + 1, split_feat_i].sum(),
         "i_l": i_l_sorted[asort_back],
         "i_r": i_r_sorted[asort_back],
         "g_l": extra["g_l"],
@@ -404,7 +404,6 @@ def find_Jmin_opt(
         "MSE_r": np.mean(extra["diff_r"] ** 2),
         "n_l": best_i,
         "n_r": n - best_i,
-        "extra": extra,
     }
 
     if obs_identical:
