@@ -1,10 +1,9 @@
 import pytest
-from pathlib import Path
 
 import numpy as np
 from numpy.testing import assert_array_almost_equal
 
-from fluidml.models import TBDT, TBRF
+from fluidml.models import TBRF
 
 
 @pytest.fixture
