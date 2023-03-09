@@ -429,9 +429,6 @@ def create_split(
             best_split_data = split_data
             best_left_data = left_data
             best_right_data = right_data
-            best_i = i
-            best_J = split_data["J"]
-    best_split_data["split_i"] = int(feats_idx[best_i])  # Cast np.int to int
 
     return best_split_data, best_left_data, best_right_data
 
@@ -776,7 +773,7 @@ class TBDT:
             node, parent, idx = nodes2add.popleft()
             ghat, bhat = fit_tensor(TT[idx], Ty[idx], tb[idx], y[idx])
             diff = y[idx] - bhat
-            rmse = np.sqrt(np.mean(diff**2))
+            rmse = np.sqrt(np.sum(diff**2))
             n_samples = len(idx)
 
             split_i, split_v = None, None

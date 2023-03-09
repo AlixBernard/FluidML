@@ -77,6 +77,12 @@ def tbrf1_as_dict():
         "trees": [
             {
                 "name": "TBRF-1_TBDT-1",
+                "max_depth": 1,
+                "min_samples_split": 2,
+                "min_samples_leaf": 1,
+                "max_features": "sqrt",
+                "gamma": 0.001,
+                "optim_threshold": -1,
                 "nodes": {
                     "R": {
                         "tag": "R",
@@ -85,17 +91,7 @@ def tbrf1_as_dict():
                             "split_v": 3.5,
                             "g": [0.440899843950395, 0.06655163817786985],
                             "n_samples": 5,
-                            "RMSE": 8.595475475347694,
-                        },
-                    },
-                    "R1": {
-                        "tag": "R1",
-                        "data": {
-                            "split_i": None,
-                            "split_v": None,
-                            "g": [0.5061079087239555, 0.008860387786607164],
-                            "n_samples": 3,
-                            "RMSE": 6.607018588629073,
+                            "RMSE": 1.2813378307873173,
                         },
                     },
                     "R0": {
@@ -105,19 +101,29 @@ def tbrf1_as_dict():
                             "split_v": None,
                             "g": [1.9440298074400952, -0.9441627598264528],
                             "n_samples": 2,
-                            "RMSE": 0.0014642560046348896,
+                            "RMSE": 0.0003451284500901504,
+                        },
+                    },
+                    "R1": {
+                        "tag": "R1",
+                        "data": {
+                            "split_i": None,
+                            "split_v": None,
+                            "g": [0.5061079087239555, 0.008860387786607164],
+                            "n_samples": 3,
+                            "RMSE": 1.2715213202286189,
                         },
                     },
                 },
+            },
+            {
+                "name": "TBRF-1_TBDT-2",
                 "max_depth": 1,
                 "min_samples_split": 2,
                 "min_samples_leaf": 1,
                 "max_features": "sqrt",
                 "gamma": 0.001,
                 "optim_threshold": -1,
-            },
-            {
-                "name": "TBRF-1_TBDT-2",
                 "nodes": {
                     "R": {
                         "tag": "R",
@@ -126,17 +132,7 @@ def tbrf1_as_dict():
                             "split_v": 8.5,
                             "g": [0.5326875959492602, -0.014969567392243118],
                             "n_samples": 5,
-                            "RMSE": 8.505406145860315,
-                        },
-                    },
-                    "R1": {
-                        "tag": "R1",
-                        "data": {
-                            "split_i": None,
-                            "split_v": None,
-                            "g": [4.932820265944352, -3.9340978715479604],
-                            "n_samples": 2,
-                            "RMSE": 0.014003172078988718,
+                            "RMSE": 1.2679110878925437,
                         },
                     },
                     "R0": {
@@ -146,16 +142,20 @@ def tbrf1_as_dict():
                             "split_v": None,
                             "g": [0.6720814279079177, -0.1297156363871484],
                             "n_samples": 3,
-                            "RMSE": 6.417666303834766,
+                            "RMSE": 1.2350804560293975,
+                        },
+                    },
+                    "R1": {
+                        "tag": "R1",
+                        "data": {
+                            "split_i": None,
+                            "split_v": None,
+                            "g": [4.932820265944352, -3.9340978715479604],
+                            "n_samples": 2,
+                            "RMSE": 0.003300579311725016,
                         },
                     },
                 },
-                "max_depth": 1,
-                "min_samples_split": 2,
-                "min_samples_leaf": 1,
-                "max_features": "sqrt",
-                "gamma": 0.001,
-                "optim_threshold": -1,
             },
         ],
     }
