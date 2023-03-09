@@ -93,82 +93,6 @@ def fit_tensor(
     return ghat, bhat
 
 
-def create_split(
-    x: np.ndarray,
-    y: np.ndarray,
-    tb: np.ndarray,
-    TT: np.ndarray,
-    Ty: np.ndarray,
-    feats_idx: np.ndarray,
-) -> dict:
-    r"""Creates a split at a node for given input features `x`,
-    training output `y`, tensor basis `tb`, and the preconstruced
-    matrices `TT` and `Ty`.
-
-    Parameters
-    ----------
-    x : np.ndarray
-        Input features with shape `(n, p)`.
-    y : np.ndarray
-        Anisotropy tensors `b` (target) on which to fit the tree,
-        with shape `(n, 9)`.
-    tb : np.ndarray
-        Tensor bases with shape `(n, m, 9)`.
-    TT : np.ndarray
-        Preconstructed matrix $transpose(T)*T$.
-    Ty : np.ndarray
-        Preconstructed matrix $transpose(T)*f$.
-    feats_idx : np.ndarray
-        Indices of the features chosen to create the split from.
-
-    Returns
-    -------
-    best_res : dict
-        J : np.float64, split_i : list, split_v : list, i_l : list,
-        i_r : list, g_l : np.ndarray, g_r : np.ndarray,
-        MSE_l : np.float64, MSE_r : np.float64, n_l : int, n_r : int
-
-    Notes
-    -----
-    The preconstructed matrices are ``$T^t T$ and $T^t y$``.
-
-    """
-    n, p = x.shape
-    n_feats = len(feats_idx)
-    x = x[:, feats_idx]
-
-    # # If enabled, use optimization instead of brute force
-    # if 0 <= self.optim_threshold <= n:
-    #     # ! DEACTIVATED
-    #     # - Reason: problem with opt.minimize_scalar
-    #     partial_find_Jmin = partial(
-    #         find_Jmin_opt, x=x, y=y, tb=tb, TT=TT, Ty=Ty
-    #     )
-    # else:
-    partial_find_Jmin = partial(
-        find_Jmin_sorted, x=x, y=y, tb=tb, TT=TT, Ty=Ty
-    )
-
-    # Go through each splitting feature to select optimum splitting
-    # point, and save the relevant data in lists
-    res_li = {}
-    for i in range(n_feats):
-        results = partial_find_Jmin(i)
-        for k in results:
-            if k not in res_li:
-                res_li[k] = []
-            res_li[k].append(results[k])
-
-    # Find best splitting fitness found for all splitting features,
-    # and return relevant parameters
-    i_best = res_li["J"].index(min(res_li["J"]))
-    best_res = {k: v[i_best] for k, v in res_li.items()}
-    chosen_split_i = int(feats_idx[i_best])
-    best_res["split_i"] = chosen_split_i
-
-    return best_res
-
-
 def cost_J(y: np.ndarray, bhat: np.ndarray) -> tuple[float, dict]:
     """Objective function which minimize the MSE difference w.r.t. the
     target `y`.
@@ -415,6 +339,82 @@ def find_Jmin_opt(
         results["MSE_l"] = 0
 
     return results
+
+
+def create_split(
+    x: np.ndarray,
+    y: np.ndarray,
+    tb: np.ndarray,
+    TT: np.ndarray,
+    Ty: np.ndarray,
+    feats_idx: np.ndarray,
+) -> dict:
+    r"""Creates a split at a node for given input features `x`,
+    training output `y`, tensor basis `tb`, and the preconstruced
+    matrices `TT` and `Ty`.
+
+    Parameters
+    ----------
+    x : np.ndarray
+        Input features with shape `(n, p)`.
+    y : np.ndarray
+        Anisotropy tensors `b` (target) on which to fit the tree,
+        with shape `(n, 9)`.
+    tb : np.ndarray
+        Tensor bases with shape `(n, m, 9)`.
+    TT : np.ndarray
+        Preconstructed matrix $transpose(T)*T$.
+    Ty : np.ndarray
+        Preconstructed matrix $transpose(T)*f$.
+    feats_idx : np.ndarray
+        Indices of the features chosen to create the split from.
+
+    Returns
+    -------
+    best_res : dict
+        J : np.float64, split_i : list, split_v : list, i_l : list,
+        i_r : list, g_l : np.ndarray, g_r : np.ndarray,
+        MSE_l : np.float64, MSE_r : np.float64, n_l : int, n_r : int
+
+    Notes
+    -----
+    The preconstructed matrices are ``$T^t T$ and $T^t y$``.
+
+    """
+    n, p = x.shape
+    n_feats = len(feats_idx)
+    x = x[:, feats_idx]
+
+    # # If enabled, use optimization instead of brute force
+    # if 0 <= self.optim_threshold <= n:
+    #     # ! DEACTIVATED
+    #     # - Reason: problem with opt.minimize_scalar
+    #     partial_find_Jmin = partial(
+    #         find_Jmin_opt, x=x, y=y, tb=tb, TT=TT, Ty=Ty
+    #     )
+    # else:
+    partial_find_Jmin = partial(
+        find_Jmin_sorted, x=x, y=y, tb=tb, TT=TT, Ty=Ty
+    )
+
+    # Go through each splitting feature to select optimum splitting
+    # point, and save the relevant data in lists
+    res_li = {}
+    for i in range(n_feats):
+        results = partial_find_Jmin(i)
+        for k in results:
+            if k not in res_li:
+                res_li[k] = []
+            res_li[k].append(results[k])
+
+    # Find best splitting fitness found for all splitting features,
+    # and return relevant parameters
+    i_best = res_li["J"].index(min(res_li["J"]))
+    best_res = {k: v[i_best] for k, v in res_li.items()}
+    chosen_split_i = int(feats_idx[i_best])
+    best_res["split_i"] = chosen_split_i
+
+    return best_res
 
 
 class TBDT:
