@@ -281,7 +281,7 @@ class TBRF:
 
         t_end = perf_counter()
         t_delta = t_end - t_start
-        _log(logging.INFO, f"Fitted {self.name!s} in {t_delta:.3f}", logger)
+        _log(logging.INFO, f"Fitted {self.name!s} in {t_delta:.3f}s", logger)
 
     def _fit_tree(
         self,
