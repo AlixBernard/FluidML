@@ -219,7 +219,7 @@ def find_Jmin_sorted(
 
 
     """
-    n, p = x.shape
+    n = len(x)
     asort = np.argsort(x[:, split_feat_i])
     TT_sorted = TT[asort]
     Ty_sorted = Ty[asort]
@@ -297,7 +297,7 @@ def find_Jmin_opt(
         Same as `best_res` in higher method.
 
     """
-    n, p = x.shape
+    n = len(x)
     asort = np.argsort(x[:, split_feat_i])
     asort_back = np.argsort(asort)
 
@@ -404,7 +404,6 @@ def create_split(
     The preconstructed matrices are ``$T^t T$ and $T^t y$``.
 
     """
-    n, p = x.shape
     n_feats = len(feats_idx)
     x = x[:, feats_idx]
 
@@ -769,6 +768,10 @@ class TBDT:
             Ty[i] = tb[i] @ y[i]  # Eq. 3.25 Tb
 
         # Tree construction
+        idx = np.arange(n)
+        ghat, bhat = fit_tensor(TT[idx], Ty[idx], tb[idx], y[idx])
+        diff = y[idx] - bhat
+        rmse = np.sqrt(np.mean(diff**2))
         nodes2add: deque[tuple(Node, Node | None, np.ndarray)] = deque(
             [(Node(identifier="R"), None, np.arange(n))]
         )
@@ -797,8 +800,10 @@ class TBDT:
                     split_v = split_data["split_v"]
                     node_l = Node(identifier=f"{node.identifier}0")
                     node_r = Node(identifier=f"{node.identifier}1")
-                    nodes2add.append((node_l, node, left_data["idx"]))
-                    nodes2add.append((node_r, node, right_data["idx"]))
+                    idx_l = idx[left_data["idx"]]
+                    idx_r = idx[right_data["idx"]]
+                    nodes2add.append((node_l, node, idx_l))
+                    nodes2add.append((node_r, node, idx_r))
 
             node.tag = node.identifier
             node.data = {

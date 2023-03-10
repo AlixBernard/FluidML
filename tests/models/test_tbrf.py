@@ -166,9 +166,9 @@ class TestTBRF:
         tbrf1.fit(features, targets, tb, seed=seed1)
         import json
 
-        with open("tmp1-tbrf.json", "w") as file:
+        with open("test_tmp1-tbrf.json", "w") as file:
             json.dump(tbrf1.to_dict(), file, indent=4)
-        with open("tmp2-tbrf.json", "w") as file:
+        with open("test_tmp2-tbrf.json", "w") as file:
             json.dump(tbrf1_as_dict, file, indent=4)
         assert tbrf1.to_dict() == tbrf1_as_dict
 
@@ -177,12 +177,22 @@ class TestTBRF:
     ):
         tbrf1.fit(features, targets, tb, seed=seed1)
         tbrf2 = TBRF.from_dict(tbrf1_as_dict)
-        for tbdt1, tbdt2 in zip(tbrf1.trees, tbrf2.trees):
-            assert tbrf2 == tbrf1
+        assert tbrf2 == tbrf1
 
     def test_predict(self, tbrf1, features, targets, tb, seed1, b_prediction1):
         tbrf1.fit(features, targets, tb, seed=seed1)
         g_trees, b_trees, b = tbrf1.predict(features, tb)
-        with open("preds.txt", "w") as file:
-            file.write(str(b))
+        import json
+
+        with open("test_preds-tbrf.txt", "w") as file:
+            file.write(
+                json.dumps(
+                    {
+                        "g_trees": [g.tolist() for g in g_trees],
+                        "b_trees": [b.tolist() for b in b_trees],
+                        "b": b.tolist(),
+                    },
+                    indent=4,
+                )
+            )
         assert_array_almost_equal(b, b_prediction1, decimal=2)
