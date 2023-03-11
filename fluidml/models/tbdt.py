@@ -86,9 +86,7 @@ def fit_tensor(
 
     # Solve Eq. 3.25
     ghat, _, _, _ = np.linalg.lstsq(lhs, rhs, rcond=None)
-    bhat = np.zeros([n, 9])
-    for i in range(m):
-        bhat += ghat[i] * tb[:, i]
+    bhat = np.einsum("j,ijk->ik", ghat, tb)
 
     return ghat, bhat
 
