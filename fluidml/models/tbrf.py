@@ -266,7 +266,7 @@ class TBRF:
         seed : int | None
 
         """
-        _log(logging.INFO, f"Fitting '{self.name}'", logger)
+        _log(logging.INFO, f"Fitting {self.name}", logger)
         t_start = perf_counter()
 
         rng = default_rng(seed)
@@ -281,7 +281,7 @@ class TBRF:
 
         t_end = perf_counter()
         t_delta = t_end - t_start
-        _log(logging.INFO, f"Fitted {self.name!r} in {t_delta:.3f}s", logger)
+        _log(logging.INFO, f"Fitted {self.name} in {t_delta:.3f}s", logger)
 
     def _fit_tree(
         self,

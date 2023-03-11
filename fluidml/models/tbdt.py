@@ -523,7 +523,7 @@ class TBDT:
             logger = kwargs.get("logger")
             _log(
                 logging.DEBUG,
-                f"Method '{self.name}.{func.__name__}' executed in "
+                f"Method {self.name}.{func.__name__} executed in "
                 f"{(t2-t1):.2f}s",
                 logger,
             )
@@ -753,7 +753,7 @@ class TBDT:
             MSE, n
 
         """
-        _log(logging.DEBUG, f"Fitting '{self.name}'", logger)
+        _log(logging.DEBUG, f"Fitting {self.name}", logger)
         t_start = perf_counter()
 
         rng = default_rng(seed)
@@ -817,16 +817,14 @@ class TBDT:
 
             _log(
                 logging.DEBUG,
-                f"Fitted node '{node.identifier:<35}', "
+                f"Fitted node {node.identifier:<35}, "
                 f"RMSE={rmse:.5e}, n_samples={n_samples:>6,}",
                 logger,
             )
 
         t_end = perf_counter()
         t_delta = t_end - t_start
-        _log(
-            logging.INFO, f"Fitted '{self.name}' in {t_delta: >9.3f}s", logger
-        )
+        _log(logging.INFO, f"Fitted {self.name} in {t_delta: >9.3f}s", logger)
 
     @_timer_func
     def predict(
