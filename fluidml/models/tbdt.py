@@ -773,13 +773,10 @@ class TBDT:
         diff = y[idx] - bhat
         rmse = np.sqrt(np.mean(diff**2))
         nodes2add: deque[tuple(Node, Node | None, np.ndarray)] = deque(
-            [(Node(identifier="R"), None, np.arange(n))]
+            [(Node(identifier="R"), None, np.arange(n), ghat, rmse)]
         )
         while nodes2add:
-            node, parent, idx = nodes2add.popleft()
-            ghat, bhat = fit_tensor(TT[idx], Ty[idx], tb[idx], y[idx])
-            diff = y[idx] - bhat
-            rmse = np.sqrt(np.mean(diff**2))
+            node, parent, idx, ghat, rmse = nodes2add.popleft()
             n_samples = len(idx)
 
             split_i, split_v = None, None
@@ -802,8 +799,11 @@ class TBDT:
                     node_r = Node(identifier=f"{node.identifier}1")
                     idx_l = idx[left_data["idx"]]
                     idx_r = idx[right_data["idx"]]
-                    nodes2add.append((node_l, node, idx_l))
-                    nodes2add.append((node_r, node, idx_r))
+                    ghat_l, ghat_r = left_data["ghat"], right_data["ghat"]
+                    rmse_l = np.sqrt(left_data["MSE"])
+                    rmse_r = np.sqrt(right_data["MSE"])
+                    nodes2add.append((node_l, node, idx_l, ghat_l, rmse_l))
+                    nodes2add.append((node_r, node, idx_r, ghat_r, rmse_r))
 
             node.tag = node.identifier
             node.data = {
