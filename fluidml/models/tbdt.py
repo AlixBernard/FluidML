@@ -851,17 +851,16 @@ class TBDT:
 
         """
         n, m, _ = tb.shape
-        bhat = np.zeros([n, 9])
         ghat = np.zeros([n, m])
 
-        for sample_i in range(n):
+        for i in range(n):
             node = self.tree.get_node("R")
             split_i = node.data["split_i"]
             split_v = node.data["split_v"]
             g = node.data["g"]
 
             while split_i is not None:
-                if x[sample_i, split_i] <= split_v:
+                if x[i, split_i] <= split_v:
                     node = self.tree.get_node(f"{node.identifier}0")
                 else:
                     node = self.tree.get_node(f"{node.identifier}1")
@@ -869,8 +868,7 @@ class TBDT:
                 split_v = node.data["split_v"]
                 g = node.data["g"]
 
-            ghat[sample_i] = g
-            for j in range(m):
-                bhat[sample_i] += g[j] * tb[sample_i, j]
+            ghat[i] = g
+        bhat = np.einsum("ij,ijk->ik", ghat, tb)
 
         return ghat, bhat
