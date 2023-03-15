@@ -22,6 +22,7 @@ import json
 import logging
 from collections import deque, OrderedDict
 from time import perf_counter
+from typing import Callable
 from functools import partial
 from pathlib import Path
 
@@ -32,6 +33,13 @@ from numpy.random import default_rng
 
 # Local packages
 from fluidml.models import Tree, Node
+
+
+COST_FUNCTIONS = {
+    "mae": lambda y_pred, y_true: np.mean(np.abs(y_pred - y_true)),
+    "mse": lambda y_pred, y_true: np.mean((y_pred - y_true) ** 2),
+    "rmse": lambda y_pred, y_true: np.sqrt(np.mean((y_pred - y_true) ** 2)),
+}
 
 
 def _log(
@@ -89,28 +97,6 @@ def fit_tensor(
     bhat = np.einsum("j,ijk->ik", ghat, tb)
 
     return ghat, bhat
-
-
-def cost_J(y: np.ndarray, bhat: np.ndarray) -> tuple[float, dict]:
-    """Objective function which minimize the MSE difference w.r.t. the
-    target `y`.
-
-    Parameters
-    ----------
-    y : np.ndarray
-        The target.
-    bhat : np.ndarray
-        The target obtained.
-
-    Returns
-    -------
-    J : float
-        The value of the cost function.
-
-    """
-    diff = y - bhat
-    J = np.mean(diff**2)
-    return J
 
 
 def obj_func_J(
@@ -178,6 +164,7 @@ def find_Jmin_sorted(
     tb: np.ndarray,
     TT: np.ndarray,
     Ty: np.ndarray,
+    cost_func: Callable[[np.ndarray, np.ndarray], float],
 ) -> tuple[dict[str, int | float]]:
     """Find optimum splitting point for the feature with index
     `feat_i`. Data is pre-sorted to save computational costs($n log(n)$
@@ -199,6 +186,8 @@ def find_Jmin_sorted(
         Preconstructed matrix $transpose(T)*T$.
     Ty : np.ndarray
         Preconstructed matrix $transpose(T)*f$.
+    cost_func : Callable[[np.ndarray, np.ndarray], float]
+        The cost function to minimize.
 
     Returns
     -------
@@ -226,20 +215,18 @@ def find_Jmin_sorted(
 
     best_J = 1e12
     for i in range(1, n):
-        ghat_sorted_l, bhat_sorted_l = fit_tensor(
+        ghat_l, bhat_l = fit_tensor(
             TT_sorted[:i], Ty_sorted[:i], tb_sorted[:i], y_sorted[:i]
         )
-        diff_sorted_l = y_sorted[:i] - bhat_sorted_l
-        ghat_sorted_r, bhat_sorted_r = fit_tensor(
+        ghat_r, bhat_r = fit_tensor(
             TT_sorted[i:], Ty_sorted[i:], tb_sorted[i:], y_sorted[i:]
         )
-        diff_sorted_r = y_sorted[i:] - bhat_sorted_r
-        diff_sorted = np.vstack([diff_sorted_l, diff_sorted_r])
-        J = np.mean(diff_sorted**2)
+        bhat_sorted = np.vstack([bhat_l, bhat_r])
+        J = cost_func(bhat_sorted, y_sorted)
         if J < best_J:
             best_i, best_J = i, J
-            best_ghat_l, best_ghat_r = ghat_sorted_l, ghat_sorted_r
-            best_diff_l, best_diff_r = diff_sorted_l, diff_sorted_r
+            best_ghat_l, best_ghat_r = ghat_l, ghat_r
+            best_bhat_l, best_bhat_r = bhat_l, bhat_r
 
     split_data = {
         "J": best_J,
@@ -249,13 +236,13 @@ def find_Jmin_sorted(
     left_data = {
         "idx": asort[:best_i],
         "ghat": best_ghat_l,
-        "MSE": np.mean(best_diff_l**2),
+        "cost": cost_func(best_bhat_l, y_sorted[:best_i]),
         "n": best_i,
     }
     right_data = {
         "idx": asort[best_i:],
         "ghat": best_ghat_r,
-        "MSE": np.mean(best_diff_r**2),
+        "cost": cost_func(best_bhat_r, y_sorted[best_i:]),
         "n": n - best_i,
     }
 
@@ -414,7 +401,13 @@ def create_split(
     #     )
     # else:
     partial_find_Jmin = partial(
-        find_Jmin_sorted, x=x, y=y, tb=tb, TT=TT, Ty=Ty
+        find_Jmin_sorted,
+        x=x,
+        y=y,
+        tb=tb,
+        TT=TT,
+        Ty=Ty,
+        cost_func=COST_FUNCTIONS["mse"],
     )
 
     # Go through each splitting feature to select optimum splitting
@@ -798,8 +791,8 @@ class TBDT:
                     idx_l = idx[left_data["idx"]]
                     idx_r = idx[right_data["idx"]]
                     ghat_l, ghat_r = left_data["ghat"], right_data["ghat"]
-                    rmse_l = np.sqrt(left_data["MSE"])
-                    rmse_r = np.sqrt(right_data["MSE"])
+                    rmse_l = np.sqrt(left_data["cost"])
+                    rmse_r = np.sqrt(right_data["cost"])
                     nodes2add.append((node_l, node, idx_l, ghat_l, rmse_l))
                     nodes2add.append((node_r, node, idx_r, ghat_r, rmse_r))
 
