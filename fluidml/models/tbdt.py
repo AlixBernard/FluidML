@@ -716,6 +716,7 @@ class TBDT:
         cost_func: Callable[[np.ndarray, np.ndarray], float] = COST_FUNCTIONS[
             "rmse"
         ],
+        cost_name: str = "RMSE",
         seed: int | None = None,
         logger: logging.Logger | None = None,
     ):
@@ -764,13 +765,12 @@ class TBDT:
         # Tree construction
         idx = np.arange(n)
         ghat, bhat = fit_tensor(TT[idx], Ty[idx], tb[idx], y[idx])
-        diff = y[idx] - bhat
-        rmse = np.sqrt(np.mean(diff**2))
+        cost = cost_func(bhat, y)
         nodes2add: deque[tuple(Node, Node | None, np.ndarray)] = deque(
-            [(Node(identifier="R"), None, np.arange(n), ghat, rmse)]
+            [(Node(identifier="R"), None, np.arange(n), ghat, cost)]
         )
         while nodes2add:
-            node, parent, idx, ghat, rmse = nodes2add.popleft()
+            node, parent, idx, ghat, cost = nodes2add.popleft()
             n_samples = len(idx)
 
             split_i, split_v = None, None
@@ -811,14 +811,14 @@ class TBDT:
                 "split_v": split_v,
                 "g": list(map(float, ghat)),
                 "n_samples": n_samples,
-                "RMSE": rmse,
+                cost_name: cost,
             }
             self.tree.add_node(node, parent=parent)
 
             _log(
                 logging.DEBUG,
                 f"Fitted node {node.identifier:<35}, "
-                f"RMSE={rmse:.5e}, n_samples={n_samples:>6,}",
+                f"{cost_name}={cost:.5e}, n_samples={n_samples:>6,}",
                 logger,
             )
 
