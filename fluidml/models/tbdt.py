@@ -348,6 +348,7 @@ def create_split(
     TT: np.ndarray,
     Ty: np.ndarray,
     feats_idx: np.ndarray,
+    cost_func: Callable[[np.ndarray, np.ndarray], float],
 ) -> dict:
     r"""Creates a split at a node for given input features `x`,
     training output `y`, tensor basis `tb`, and the preconstruced
@@ -368,6 +369,8 @@ def create_split(
         Preconstructed matrix $transpose(T)*f$.
     feats_idx : np.ndarray
         Indices of the features chosen to create the split from.
+    cost_func : Callable[[np.ndarray, np.ndarray], float]
+        The cost function to minimize.
 
     Returns
     -------
@@ -401,13 +404,7 @@ def create_split(
     #     )
     # else:
     partial_find_Jmin = partial(
-        find_Jmin_sorted,
-        x=x,
-        y=y,
-        tb=tb,
-        TT=TT,
-        Ty=Ty,
-        cost_func=COST_FUNCTIONS["mse"],
+        find_Jmin_sorted, x=x, y=y, tb=tb, TT=TT, Ty=Ty, cost_func=cost_func
     )
 
     # Go through each splitting feature to select optimum splitting
@@ -716,6 +713,9 @@ class TBDT:
         x: np.ndarray,
         y: np.ndarray,
         tb: np.ndarray,
+        cost_func: Callable[[np.ndarray, np.ndarray], float] = COST_FUNCTIONS[
+            "rmse"
+        ],
         seed: int | None = None,
         logger: logging.Logger | None = None,
     ):
@@ -730,8 +730,11 @@ class TBDT:
             the TBDT.
         tb : np.ndarray
             Tensor bases with shape `(n, m, 9)`.
+        cost_func : Callable[[np.ndarray, np.ndarray], float]
+            The cost function to minimize.
         seed : int | None
             Random state to use to create the random number generator.
+        logger : logging.Logger | None
 
         Returns
         -------
@@ -777,7 +780,13 @@ class TBDT:
                 n_feats = self._get_n_feats(p)
                 feats_idx = rng.choice(p, size=n_feats, replace=False)
                 split_data, left_data, right_data = create_split(
-                    x[idx], y[idx], tb[idx], TT[idx], Ty[idx], feats_idx
+                    x[idx],
+                    y[idx],
+                    tb[idx],
+                    TT[idx],
+                    Ty[idx],
+                    feats_idx,
+                    cost_func,
                 )
                 have_min_samples_leaf = (
                     len(left_data["idx"]) >= self.min_samples_leaf,
@@ -791,10 +800,10 @@ class TBDT:
                     idx_l = idx[left_data["idx"]]
                     idx_r = idx[right_data["idx"]]
                     ghat_l, ghat_r = left_data["ghat"], right_data["ghat"]
-                    rmse_l = np.sqrt(left_data["cost"])
-                    rmse_r = np.sqrt(right_data["cost"])
-                    nodes2add.append((node_l, node, idx_l, ghat_l, rmse_l))
-                    nodes2add.append((node_r, node, idx_r, ghat_r, rmse_r))
+                    cost_l = left_data["cost"]
+                    cost_r = right_data["cost"]
+                    nodes2add.append((node_l, node, idx_l, ghat_l, cost_l))
+                    nodes2add.append((node_r, node, idx_r, ghat_r, cost_r))
 
             node.tag = node.identifier
             node.data = {
