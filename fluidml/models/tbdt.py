@@ -11,7 +11,7 @@ Glossary:
 __all__ = [
     "fit_tensor",
     "obj_func_J",
-    "find_Jmin_sorted",
+    "find_min_cost_sort",
     "find_Jmin_opt",
     "TBDT",
 ]
@@ -157,7 +157,7 @@ def obj_func_J(
     return J, extra
 
 
-def find_Jmin_sorted(
+def find_min_cost_sort(
     split_feat_i: int,
     x: np.ndarray,
     y: np.ndarray,
@@ -192,9 +192,9 @@ def find_Jmin_sorted(
     Returns
     -------
     split_data : dict[str, int | float]
-        Data containing the value of the cost function J with the split,
-        the index of the feature on which the split is made, and the
-        value determining the split.
+        Data containing the value of the cost function cost with the
+        split, the index of the feature on which the split is made, and
+        the value determining the split.
     left_data : dict[str, int | float]
         Data containing the indices, the value of `ghat`, the mean
         square error, and the number of the sample that are present in
@@ -213,7 +213,7 @@ def find_Jmin_sorted(
     tb_sorted = tb[asort]
     y_sorted = y[asort]
 
-    best_J = 1e12
+    best_cost = 1e12
     for i in range(1, n):
         ghat_l, bhat_l = fit_tensor(
             TT_sorted[:i], Ty_sorted[:i], tb_sorted[:i], y_sorted[:i]
@@ -222,14 +222,14 @@ def find_Jmin_sorted(
             TT_sorted[i:], Ty_sorted[i:], tb_sorted[i:], y_sorted[i:]
         )
         bhat_sorted = np.vstack([bhat_l, bhat_r])
-        J = cost_func(bhat_sorted, y_sorted)
-        if J < best_J:
-            best_i, best_J = i, J
+        cost = cost_func(bhat_sorted, y_sorted)
+        if cost < best_cost:
+            best_i, best_cost = i, cost
             best_ghat_l, best_ghat_r = ghat_l, ghat_r
             best_bhat_l, best_bhat_r = bhat_l, bhat_r
 
     split_data = {
-        "J": best_J,
+        "cost": best_cost,
         "split_i": split_feat_i,
         "split_v": 0.5 * x[asort][best_i - 1 : best_i + 1, split_feat_i].sum(),
     }
@@ -404,20 +404,19 @@ def create_split(
     #     )
     # else:
     partial_find_Jmin = partial(
-        find_Jmin_sorted, x=x, y=y, tb=tb, TT=TT, Ty=Ty, cost_func=cost_func
+        find_min_cost_sort, x=x, y=y, tb=tb, TT=TT, Ty=Ty, cost_func=cost_func
     )
 
     # Go through each splitting feature to select optimum splitting
     # point, and save the relevant data in lists
-    best_J = 1e12
+    best_cost = 1e12
     for i in range(n_feats):
         split_data, left_data, right_data = partial_find_Jmin(i)
-        if split_data["J"] < best_J:
+        if split_data["cost"] < best_cost:
             best_split_data = split_data
             best_left_data = left_data
             best_right_data = right_data
-            best_i = i
-            best_J = split_data["J"]
+            best_i, best_cost = i, split_data["cost"]
     best_split_data["split_i"] = int(feats_idx[best_i])  # Cast np.int to int
 
     return best_split_data, best_left_data, best_right_data
@@ -733,6 +732,8 @@ class TBDT:
             Tensor bases with shape `(n, m, 9)`.
         cost_func : Callable[[np.ndarray, np.ndarray], float]
             The cost function to minimize.
+        cost_name : str
+            Name of the cost function that will be added to the data.
         seed : int | None
             Random state to use to create the random number generator.
         logger : logging.Logger | None
