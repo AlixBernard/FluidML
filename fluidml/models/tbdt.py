@@ -28,7 +28,8 @@ from pathlib import Path
 
 # Third party packages
 import numpy as np
-from scipy import optimize as opt
+
+# from scipy import optimize as opt
 from numpy.random import default_rng
 
 # Local packages
