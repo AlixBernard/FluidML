@@ -12,7 +12,7 @@ __all__ = [
     "fit_tensor",
     "obj_func_J",
     "find_min_cost_sort",
-    "find_Jmin_opt",
+    # "find_Jmin_opt",
     "TBDT",
 ]
 
@@ -249,96 +249,96 @@ def find_min_cost_sort(
     return split_data, left_data, right_data
 
 
-def find_Jmin_opt(
-    split_feat_i: int,
-    x: np.ndarray,
-    y: np.ndarray,
-    tb: np.ndarray,
-    TT: np.ndarray,
-    Ty: np.ndarray,
-) -> dict[str, int | float | np.ndarray]:
-    """Find optimum splitting point by using an optimization routine.
+# def find_Jmin_opt(
+#     split_feat_i: int,
+#     x: np.ndarray,
+#     y: np.ndarray,
+#     tb: np.ndarray,
+#     TT: np.ndarray,
+#     Ty: np.ndarray,
+# ) -> dict[str, int | float | np.ndarray]:
+#     """Find optimum splitting point by using an optimization routine.
 
-    Parameters
-    ----------
-    split_feat_i : int
-        Index of the feature on which to find the optimum splitting
-        point.
-    x : np.ndarray
-        Input features with shape `(n, p)`.
-    y : np.ndarray
-        Anisotropy tensor `b` (target) on which to fit the tree with
-        shape `(n, 9)`.
-    tb : np.ndarray
-        Tensor basis with shape `(n, m, 9)`.
-    TT : np.ndarray
-        Preconstructed matrix $transpose(T)*T$.
-    Ty : np.ndarray
-        Preconstructed matrix $transpose(T)*f$.
+#     Parameters
+#     ----------
+#     split_feat_i : int
+#         Index of the feature on which to find the optimum splitting
+#         point.
+#     x : np.ndarray
+#         Input features with shape `(n, p)`.
+#     y : np.ndarray
+#         Anisotropy tensor `b` (target) on which to fit the tree with
+#         shape `(n, 9)`.
+#     tb : np.ndarray
+#         Tensor basis with shape `(n, m, 9)`.
+#     TT : np.ndarray
+#         Preconstructed matrix $transpose(T)*T$.
+#     Ty : np.ndarray
+#         Preconstructed matrix $transpose(T)*f$.
 
-    Returns
-    -------
-    results : dict[str, int | float | None]
-        Same as `best_res` in higher method.
+#     Returns
+#     -------
+#     results : dict[str, int | float | None]
+#         Same as `best_res` in higher method.
 
-    """
-    n = len(x)
-    asort = np.argsort(x[:, split_feat_i])
-    asort_back = np.argsort(asort)
+#     """
+#     n = len(x)
+#     asort = np.argsort(x[:, split_feat_i])
+#     asort_back = np.argsort(asort)
 
-    x_sorted = x[asort]
-    y_sorted = y[asort]
-    tb_sorted = tb[asort]
-    TT_sorted = TT[asort]
-    Ty_sorted = Ty[asort]
+#     x_sorted = x[asort]
+#     y_sorted = y[asort]
+#     tb_sorted = tb[asort]
+#     TT_sorted = TT[asort]
+#     Ty_sorted = Ty[asort]
 
-    obs_identical = True if np.all(x == x[0]) else False
+#     obs_identical = True if np.all(x == x[0]) else False
 
-    res = opt.minimize_scalar(
-        obj_func_J,
-        method="brent",
-        tol=None,
-        args=(y_sorted, tb_sorted, TT_sorted, Ty_sorted),
-        bounds=(1, n - 1),
-        options={"xtol": 1e-8, "maxiter": 200},
-    )
-    best_i = int(res.x)
+#     res = opt.minimize_scalar(
+#         obj_func_J,
+#         method="brent",
+#         tol=None,
+#         args=(y_sorted, tb_sorted, TT_sorted, Ty_sorted),
+#         bounds=(1, n - 1),
+#         options={"xtol": 1e-8, "maxiter": 200},
+#     )
+#     best_i = int(res.x)
 
-    # TODO: in case optimization algorithm does not work it
-    # - returns 0, needs further testing
-    if best_i == 0:
-        best_i = 1
+#     # TODO: in case optimization algorithm does not work it
+#     # - returns 0, needs further testing
+#     if best_i == 0:
+#         best_i = 1
 
-    # Find all relevant parameters for the minimum which was found
-    # ? Maybe this can be improved as it is redundant
-    J, extra = obj_func_J(y_sorted, tb_sorted, TT_sorted, Ty_sorted, i=best_i)
-    i_l_sorted = np.zeros(n, dtype=bool)
-    i_l_sorted[:best_i] = True
-    i_r_sorted = ~i_l_sorted
+#     # Find all relevant parameters for the minimum which was found
+#     # ? Maybe this can be improved as it is redundant
+#     J, extra = obj_func_J(y_sorted, tb_sorted, TT_sorted, Ty_sorted, i=best_i)
+#     i_l_sorted = np.zeros(n, dtype=bool)
+#     i_l_sorted[:best_i] = True
+#     i_r_sorted = ~i_l_sorted
 
-    results = {
-        "J": J,
-        "split_i": split_feat_i,
-        "split_v": 0.5 * x_sorted[best_i - 1 : best_i + 1, split_feat_i].sum(),
-        "i_l": i_l_sorted[asort_back],
-        "i_r": i_r_sorted[asort_back],
-        "g_l": extra["g_l"],
-        "g_r": extra["g_r"],
-        "MSE_l": np.mean(extra["diff_l"] ** 2),
-        "MSE_r": np.mean(extra["diff_r"] ** 2),
-        "n_l": best_i,
-        "n_r": n - best_i,
-    }
+#     results = {
+#         "J": J,
+#         "split_i": split_feat_i,
+#         "split_v": 0.5 * x_sorted[best_i - 1 : best_i + 1, split_feat_i].sum(),
+#         "i_l": i_l_sorted[asort_back],
+#         "i_r": i_r_sorted[asort_back],
+#         "g_l": extra["g_l"],
+#         "g_r": extra["g_r"],
+#         "MSE_l": np.mean(extra["diff_l"] ** 2),
+#         "MSE_r": np.mean(extra["diff_r"] ** 2),
+#         "n_l": best_i,
+#         "n_r": n - best_i,
+#     }
 
-    if obs_identical:
-        # Right and left splits are made equal. This leads to
-        # termination of the branch later on in `self.fit()`
-        results["g_l"] = extra["g_r"]
-        results["i_l"] = i_r_sorted[asort_back]
-        results["n_l"] = 0
-        results["MSE_l"] = 0
+#     if obs_identical:
+#         # Right and left splits are made equal. This leads to
+#         # termination of the branch later on in `self.fit()`
+#         results["g_l"] = extra["g_r"]
+#         results["i_l"] = i_r_sorted[asort_back]
+#         results["n_l"] = 0
+#         results["MSE_l"] = 0
 
-    return results
+#     return results
 
 
 def create_split(
