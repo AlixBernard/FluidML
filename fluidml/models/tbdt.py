@@ -350,6 +350,7 @@ def create_split(
     Ty: np.ndarray,
     feats_idx: np.ndarray,
     cost_func: Callable[[np.ndarray, np.ndarray], float],
+    strategy: str = "sort",
 ) -> dict:
     r"""Creates a split at a node for given input features `x`,
     training output `y`, tensor basis `tb`, and the preconstruced
@@ -372,6 +373,8 @@ def create_split(
         Indices of the features chosen to create the split from.
     cost_func : Callable[[np.ndarray, np.ndarray], float]
         The cost function to minimize.
+    strategy : {'sort'}
+        Strategy to use to find the best split.
 
     Returns
     -------
@@ -393,6 +396,9 @@ def create_split(
     The preconstructed matrices are ``$T^t T$ and $T^t y$``.
 
     """
+    FIND_MIN_COST_STRATEGIES = {
+        "sort": find_min_cost_sort,
+    }
     n_feats = len(feats_idx)
     x = x[:, feats_idx]
 
@@ -404,21 +410,28 @@ def create_split(
     #         find_Jmin_opt, x=x, y=y, tb=tb, TT=TT, Ty=Ty
     #     )
     # else:
-    partial_find_Jmin = partial(
-        find_min_cost_sort, x=x, y=y, tb=tb, TT=TT, Ty=Ty, cost_func=cost_func
+    try:
+        min_func = FIND_MIN_COST_STRATEGIES[strategy]
+    except IndexError:
+        raise ValueError(
+            f"The strategy {strategy!r} is not implemented"
+            f"please use one of {{'sort'}}"
+        )
+    find_data_minimizing_cost = partial(
+        min_func, x=x, y=y, tb=tb, TT=TT, Ty=Ty, cost_func=cost_func
     )
 
     # Go through each splitting feature to select optimum splitting
     # point, and save the relevant data in lists
     best_cost = 1e12
     for i in range(n_feats):
-        split_data, left_data, right_data = partial_find_Jmin(i)
+        split_data, left_data, right_data = find_data_minimizing_cost(i)
         if split_data["cost"] < best_cost:
             best_split_data = split_data
             best_left_data = left_data
             best_right_data = right_data
             best_i, best_cost = i, split_data["cost"]
-    best_split_data["split_i"] = int(feats_idx[best_i])  # Cast np.int to int
+    best_split_data["split_i"] = int(feats_idx[best_i])  # Recover original idx
 
     return best_split_data, best_left_data, best_right_data
 
