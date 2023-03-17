@@ -4,12 +4,17 @@ from pathlib import Path
 import numpy as np
 from numpy.testing import assert_array_almost_equal
 
-from fluidml.models import TBDT
+from fluidml.models import TBDT, fit_tensor
 
 
 @pytest.fixture
 def seed1():
     return 47
+
+
+@pytest.fixture
+def gamma1():
+    return 4e-1
 
 
 @pytest.fixture
@@ -28,6 +33,24 @@ def targets():
 def tb():
     n, m = 5, 2
     return np.arange(n * m * 9).reshape(n, m, 9) - 3.2
+
+
+@pytest.fixture
+def TT(tb, gamma1):
+    n, m = 5, 2
+    TT = np.zeros([n, m, m])
+    for i in range(n):
+        TT[i] = tb[i] @ tb[i].T + gamma1 * np.eye(m)
+    return TT
+
+
+@pytest.fixture
+def Ty(targets, tb):
+    n, m = 5, 2
+    Ty = np.zeros([n, m])
+    for i in range(n):
+        Ty[i] = tb[i] @ targets[i]
+    return Ty
 
 
 @pytest.fixture
@@ -174,6 +197,22 @@ def tbdt1_as_graphviz():
 	"R11" -> "R110";
 	"R11" -> "R111";
 }"""
+
+
+def test_fit_tensor(TT, Ty, tb, targets):
+    ghat, bhat = fit_tensor(TT, Ty, tb, targets)
+    expected_ghat = np.array([0.42508692, 0.07988004])
+    expected_bhat = np.array(
+        [
+            [-0.89, -0.39, 0.11, 0.61, 1.12, 1.62, 2.13, 2.63, 3.14],
+            [8.19, 8.69, 9.20, 9.70, 10.21, 10.71, 11.22, 11.72, 12.23],
+            [17.28, 17.78, 18.29, 18.79, 19.30, 19.80, 20.31, 20.81, 21.32],
+            [26.37, 26.87, 27.38, 27.88, 28.39, 28.89, 29.40, 29.90, 30.41],
+            [35.46, 35.96, 36.47, 36.97, 37.48, 37.98, 38.49, 38.99, 39.50],
+        ]
+    )
+    assert_array_almost_equal(ghat, expected_ghat)
+    assert_array_almost_equal(bhat, expected_bhat, decimal=2)
 
 
 class TestTBDT:
