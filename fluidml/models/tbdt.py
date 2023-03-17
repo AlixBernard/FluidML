@@ -69,9 +69,9 @@ def fit_tensor(
     Parameters
     ----------
     TT : np.ndarray
-        Preconstructed matrix $T^t T$ with shape `(n, m, 9)`.
+        Preconstructed matrix $T^t T$ with shape `(n, m, m)`.
     Ty : np.ndarray
-        Preconstructed matrix $T^t*f$.
+        Preconstructed matrix $T^t*f$ with shape `(n, m)`.
     tb : np.ndarray
         Tensor Basis for each points with shape `(n, m, 9)` where
         `n` is the number of points and `m` is the number of tensors
