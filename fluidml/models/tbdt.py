@@ -21,6 +21,7 @@ __all__ = [
 import json
 import logging
 from collections import deque, OrderedDict
+from dataclasses import dataclass
 from time import perf_counter
 from typing import Callable
 from functools import partial
@@ -41,6 +42,21 @@ COST_FUNCTIONS = {
     "mse": lambda y_pred, y_true: np.mean((y_pred - y_true) ** 2),
     "rmse": lambda y_pred, y_true: np.sqrt(np.mean((y_pred - y_true) ** 2)),
 }
+
+
+@dataclass
+class SplitData:
+    split_i: int
+    split_v: float
+    cost: float
+
+
+@dataclass
+class NodeSplitData:
+    n_samples: int
+    idx_samples: np.ndarray
+    ghat: np.ndarray
+    cost: np.ndarray
 
 
 def _log(
@@ -71,7 +87,7 @@ def fit_tensor(
     TT : np.ndarray
         Preconstructed matrix $T^t T$ with shape `(n, m, m)`.
     Ty : np.ndarray
-        Preconstructed matrix $T^t*f$ with shape `(n, m)`.
+        Preconstructed matrix $T^t y$ with shape `(n, m)`.
     tb : np.ndarray
         Tensor Basis for each points with shape `(n, m, 9)` where
         `n` is the number of points and `m` is the number of tensors
@@ -166,7 +182,7 @@ def find_min_cost_sort(
     TT: np.ndarray,
     Ty: np.ndarray,
     cost_func: Callable[[np.ndarray, np.ndarray], float],
-) -> tuple[dict[str, int | float]]:
+) -> tuple[SplitData, NodeSplitData, NodeSplitData]:
     """Find optimum splitting point for the feature with index
     `feat_i`. Data is pre-sorted to save computational costs($n log(n)$
     instead of $n^2$).
@@ -192,15 +208,15 @@ def find_min_cost_sort(
 
     Returns
     -------
-    split_data : dict[str, int | float]
+    split_data : SplitData
         Data containing the value of the cost function cost with the
         split, the index of the feature on which the split is made, and
         the value determining the split.
-    left_data : dict[str, int | float]
+    left_data : NodeSplitData
         Data containing the indices, the value of `ghat`, the mean
         square error, and the number of the sample that are present in
         the left node from the split.
-    right_data : dict[str, int | float]
+    right_data : NodeSplitData
         Data containing the indices, the value of `ghat`, the mean
         square error, and the number of the sample that are present in
         the right node from the split.
@@ -229,23 +245,13 @@ def find_min_cost_sort(
             best_ghat_l, best_ghat_r = ghat_l, ghat_r
             best_bhat_l, best_bhat_r = bhat_l, bhat_r
 
-    split_data = {
-        "cost": best_cost,
-        "split_i": split_feat_i,
-        "split_v": 0.5 * x[asort][best_i - 1 : best_i + 1, split_feat_i].sum(),
-    }
-    left_data = {
-        "idx": asort[:best_i],
-        "ghat": best_ghat_l,
-        "cost": cost_func(best_bhat_l, y_sorted[:best_i]),
-        "n": best_i,
-    }
-    right_data = {
-        "idx": asort[best_i:],
-        "ghat": best_ghat_r,
-        "cost": cost_func(best_bhat_r, y_sorted[best_i:]),
-        "n": n - best_i,
-    }
+    split_v = 0.5 * x[asort][best_i - 1 : best_i + 1, split_feat_i].sum()
+    cost_l = cost_func(best_bhat_l, y_sorted[:best_i])
+    cost_r = cost_func(best_bhat_r, y_sorted[best_i:])
+
+    split_data = SplitData(split_feat_i, split_v, best_cost)
+    left_data = NodeSplitData(best_i, asort[:best_i], best_ghat_l, cost_l)
+    right_data = NodeSplitData(n - best_i, asort[best_i:], best_ghat_r, cost_r)
 
     return split_data, left_data, right_data
 
@@ -351,7 +357,7 @@ def create_split(
     feats_idx: np.ndarray,
     cost_func: Callable[[np.ndarray, np.ndarray], float],
     strategy: str = "sort",
-) -> dict:
+) -> tuple[SplitData, NodeSplitData, NodeSplitData]:
     r"""Creates a split at a node for given input features `x`,
     training output `y`, tensor basis `tb`, and the preconstruced
     matrices `TT` and `Ty`.
@@ -378,15 +384,15 @@ def create_split(
 
     Returns
     -------
-    split_data : dict[str, int | float]
+    split_data : SplitData
         Data containing the value of the cost function J with the split,
         the index of the feature on which the split is made, and the
         value determining the split.
-    left_data : dict[str, int | float]
+    left_data : NodeSplitData
         Data containing the indices, the value of `ghat`, the mean
         square error, and the number of the sample that are present in
         the left node from the split.
-    right_data : dict[str, int | float]
+    right_data : NodeSplitData
         Data containing the indices, the value of `ghat`, the mean
         square error, and the number of the sample that are present in
         the right node from the split.
@@ -426,12 +432,12 @@ def create_split(
     best_cost = 1e12
     for i in range(n_feats):
         split_data, left_data, right_data = find_data_minimizing_cost(i)
-        if split_data["cost"] < best_cost:
+        if split_data.cost < best_cost:
             best_split_data = split_data
             best_left_data = left_data
             best_right_data = right_data
-            best_i, best_cost = i, split_data["cost"]
-    best_split_data["split_i"] = int(feats_idx[best_i])  # Recover original idx
+            best_i, best_cost = i, split_data.cost
+    best_split_data.split_i = int(feats_idx[best_i])  # Recover original idx
 
     return best_split_data, best_left_data, best_right_data
 
@@ -804,19 +810,19 @@ class TBDT:
                     cost_func,
                 )
                 have_min_samples_leaf = (
-                    len(left_data["idx"]) >= self.min_samples_leaf,
-                    len(right_data["idx"]) >= self.min_samples_leaf,
+                    left_data.n_samples >= self.min_samples_leaf,
+                    right_data.n_samples >= self.min_samples_leaf,
                 )
                 if all(have_min_samples_leaf):
-                    split_i = split_data["split_i"]
-                    split_v = split_data["split_v"]
+                    split_i = split_data.split_i
+                    split_v = split_data.split_v
                     node_l = Node(identifier=f"{node.identifier}0")
                     node_r = Node(identifier=f"{node.identifier}1")
-                    idx_l = idx[left_data["idx"]]
-                    idx_r = idx[right_data["idx"]]
-                    ghat_l, ghat_r = left_data["ghat"], right_data["ghat"]
-                    cost_l = left_data["cost"]
-                    cost_r = right_data["cost"]
+                    idx_l = idx[left_data.idx_samples]
+                    idx_r = idx[right_data.idx_samples]
+                    ghat_l, ghat_r = left_data.ghat, right_data.ghat
+                    cost_l = left_data.cost
+                    cost_r = right_data.cost
                     nodes2add.append((node_l, node, idx_l, ghat_l, cost_l))
                     nodes2add.append((node_r, node, idx_r, ghat_r, cost_r))
 
