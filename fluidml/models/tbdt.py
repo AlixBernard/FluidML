@@ -58,6 +58,14 @@ class NodeSplitData:
     ghat: np.ndarray
     cost: np.ndarray
 
+    def __eq__(self, data) -> bool:
+        conditions = (
+            self.n_samples == data.n_samples,
+            np.all(self.idx_samples == data.idx_samples),
+            np.isclose(self.ghat, data.ghat).all(),
+        )
+        return all(conditions)
+
 
 def _log(
     level: int,
