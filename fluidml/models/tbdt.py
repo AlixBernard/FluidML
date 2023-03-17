@@ -74,7 +74,7 @@ def fit_tensor(
         Preconstructed matrix $T^t*f$.
     tb : np.ndarray
         Tensor Basis for each points with shape `(n, m, 9)` where
-        `n` is the number of points and `d` is the number of tensors
+        `n` is the number of points and `m` is the number of tensors
         in the tensor basis.
     y : np.ndarray
         Anisotropy tensor `b` (target) on which to fit the tree with
