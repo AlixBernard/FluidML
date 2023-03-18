@@ -246,6 +246,19 @@ def test_find_min_cost_sort(features, targets, tb, TT, Ty):
 
 
 class TestTBDT:
+    def test_get_n_feats(self, tbdt1):
+        assert tbdt1._get_n_feats(19) == 5
+        tbdt1.max_features = "log"
+        assert tbdt1._get_n_feats(19) == 3
+        tbdt1.max_features = "log2"
+        assert tbdt1._get_n_feats(9) == 4
+        tbdt1.max_features = "log10"
+        assert tbdt1._get_n_feats(19) == 2
+        tbdt1.max_features = 11
+        assert tbdt1._get_n_feats(19) == 11
+        tbdt1.max_features = 0.7
+        assert tbdt1._get_n_feats(19) == 14
+
     def test_to_dict(self, tbdt1, features, targets, tb, tbdt1_as_dict, seed1):
         tbdt1.fit(features, targets, tb, seed=seed1)
         import json
