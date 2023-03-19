@@ -4,7 +4,7 @@ from pathlib import Path
 import numpy as np
 from numpy.testing import assert_array_almost_equal
 
-from fluidml.models import TBDT, fit_tensor, find_min_cost_sort
+from fluidml.models import TBDT, fit_tensor, find_min_cost_sort, create_split
 from fluidml.models.tbdt import COST_FUNCTIONS, SplitData, NodeSplitData
 
 
@@ -219,12 +219,6 @@ def test_fit_tensor(TT, Ty, tb, targets):
 def test_find_min_cost_sort(features, targets, tb, TT, Ty):
     split_i = 1
     cost_func = COST_FUNCTIONS["rmse"]
-    expected_split_data = None
-    expected_left_data = None
-    expected_right_data = None
-    split_data, left_data, right_data = find_min_cost_sort(
-        split_i, features, targets, tb, TT, Ty, cost_func
-    )
     expected_split_data = SplitData(
         split_i=1, split_v=-2.5, cost=1.1453519364694025
     )
@@ -239,6 +233,36 @@ def test_find_min_cost_sort(features, targets, tb, TT, Ty):
         idx_samples=np.array([1, 2, 3, 4]),
         ghat=np.array([0.44750095, 0.06033519]),
         cost=1.2805107642515274,
+    )
+    split_data, left_data, right_data = find_min_cost_sort(
+        split_i, features, targets, tb, TT, Ty, cost_func
+    )
+    assert split_data == expected_split_data
+    assert left_data == expected_left_data
+    assert right_data == expected_right_data
+
+
+def test_create_split(features, targets, tb, TT, Ty):
+    feats_idx = [0, 1]
+    cost_func = COST_FUNCTIONS["rmse"]
+    strategy = "sort"
+    expected_split_data = SplitData(
+        split_i=0, split_v=-3.5, cost=1.1453519364694025
+    )
+    expected_left_data = NodeSplitData(
+        n_samples=1,
+        idx_samples=np.array([0]),
+        ghat=np.array([0.93659482, 0.05663975]),
+        cost=0.01800062262608076,
+    )
+    expected_right_data = NodeSplitData(
+        n_samples=4,
+        idx_samples=np.array([1, 2, 3, 4]),
+        ghat=np.array([0.44750095, 0.06033519]),
+        cost=1.2805107642515274,
+    )
+    split_data, left_data, right_data = create_split(
+        features, targets, tb, TT, Ty, feats_idx, cost_func, strategy
     )
     assert split_data == expected_split_data
     assert left_data == expected_left_data
