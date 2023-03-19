@@ -10,7 +10,7 @@ Glossary:
 
 __all__ = [
     "fit_tensor",
-    "obj_func_J",
+    # "obj_func_J",
     "find_min_cost_sort",
     # "find_Jmin_opt",
     "TBDT",
@@ -124,62 +124,62 @@ def fit_tensor(
     return ghat, bhat
 
 
-def obj_func_J(
-    y_sorted: np.ndarray,
-    tb_sorted: np.ndarray,
-    TT_sorted: np.ndarray,
-    Ty_sorted: np.ndarray,
-    i: int | None = None,
-) -> tuple[float, dict]:
-    """Objective function which minimize the RMSE difference w.r.t. the
-    target `y`.
+# def obj_func_J(
+#     y_sorted: np.ndarray,
+#     tb_sorted: np.ndarray,
+#     TT_sorted: np.ndarray,
+#     Ty_sorted: np.ndarray,
+#     i: int | None = None,
+# ) -> tuple[float, dict]:
+#     """Objective function which minimize the RMSE difference w.r.t. the
+#     target `y`.
 
-    Parameters
-    ----------
-    y_sorted : np.ndarray
-        Sorted output features.
-    tb_sorted : np.ndarray
-        Sorted tensor basess.
-    TT_sorted : np.ndarray
-        Sorted preconstructed matrices $transpose(T)*T$.
-    Ty_sorted : np.ndarray
-        Sorted preconstructed matrices $transpose(T)*f$.
-    i : int or None
-        If not None, index to use when splitting the data.
+#     Parameters
+#     ----------
+#     y_sorted : np.ndarray
+#         Sorted output features.
+#     tb_sorted : np.ndarray
+#         Sorted tensor basess.
+#     TT_sorted : np.ndarray
+#         Sorted preconstructed matrices $transpose(T)*T$.
+#     Ty_sorted : np.ndarray
+#         Sorted preconstructed matrices $transpose(T)*f$.
+#     i : int or None
+#         If not None, index to use when splitting the data.
 
-    Returns
-    -------
-    J : float
-        The value of the cost function.
-    extra : dict
-        Dictionarry containing the following extra data: g_l, g_r,
-        diff_l, diff_r, diff.
+#     Returns
+#     -------
+#     J : float
+#         The value of the cost function.
+#     extra : dict
+#         Dictionarry containing the following extra data: g_l, g_r,
+#         diff_l, diff_r, diff.
 
-    """
-    if i is None:
-        ghat, bhat = fit_tensor(TT_sorted, Ty_sorted, tb_sorted, y_sorted)
-        diff = y_sorted - bhat
-        extra = {"g": ghat, "diff": diff}
-    else:
-        g_l, b_l = fit_tensor(
-            TT_sorted[:i], Ty_sorted[:i], tb_sorted[:i], y_sorted[:i]
-        )
-        diff_l = y_sorted[:i] - b_l
-        g_r, b_r = fit_tensor(
-            TT_sorted[i:], Ty_sorted[i:], tb_sorted[i:], y_sorted[i:]
-        )
-        diff_r = y_sorted[i:] - b_r
+#     """
+#     if i is None:
+#         ghat, bhat = fit_tensor(TT_sorted, Ty_sorted, tb_sorted, y_sorted)
+#         diff = y_sorted - bhat
+#         extra = {"g": ghat, "diff": diff}
+#     else:
+#         g_l, b_l = fit_tensor(
+#             TT_sorted[:i], Ty_sorted[:i], tb_sorted[:i], y_sorted[:i]
+#         )
+#         diff_l = y_sorted[:i] - b_l
+#         g_r, b_r = fit_tensor(
+#             TT_sorted[i:], Ty_sorted[i:], tb_sorted[i:], y_sorted[i:]
+#         )
+#         diff_r = y_sorted[i:] - b_r
 
-        diff = np.vstack([diff_l, diff_r])
-        extra = {
-            "g_l": g_l,
-            "g_r": g_r,
-            "diff_l": diff_l,
-            "diff_r": diff_r,
-            "diff": diff,
-        }
-    J = np.mean(diff**2)
-    return J, extra
+#         diff = np.vstack([diff_l, diff_r])
+#         extra = {
+#             "g_l": g_l,
+#             "g_r": g_r,
+#             "diff_l": diff_l,
+#             "diff_r": diff_r,
+#             "diff": diff,
+#         }
+#     J = np.mean(diff**2)
+#     return J, extra
 
 
 def find_min_cost_sort(
@@ -652,23 +652,6 @@ class TBDT:
         with open(path, "r") as file:
             tbdt_dict = json.load(file)
         return cls.from_dict(tbdt_dict)
-
-    def _load_tree(self, tree_dict: dict) -> None:
-        subtree = tree_dict
-        id_, node_dict = subtree.items()[0]
-        data = node_dict["data"]
-        nodes2add = [(Node(identifier=id_, tag=id_, data=data), None)]
-        while nodes2add:
-            node, parent = nodes2add.pop()
-            self.tree.add_node(node, parent=parent)
-
-            if "children" in node_dict:
-                for subtree in node_dict["children"]:
-                    id_, node_dict = subtree.items
-                    data = node_dict["data"]
-                    nodes2add.append(
-                        (Node(identifier=id_, tag=id_, data=data), node)
-                    )
 
     def to_graphviz(
         self, dir_path: Path | None = None, shape="rectangle", graph="digraph"
