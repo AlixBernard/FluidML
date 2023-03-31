@@ -579,7 +579,7 @@ def get_inv6to14(
     """
     n = len(Ak)
 
-    inv = np.zeros([n, 3])
+    inv = np.zeros([n, 9])
     for i in range(n):
         inv[i, 0] = np.trace(R[i] @ (R[i] @ S[i]))
         inv[i, 1] = np.trace(R[i] @ (R[i] @ (S[i] @ S[i])))
@@ -655,7 +655,7 @@ def get_inv18to41(
     """
     n = len(Ak)
 
-    inv = np.zeros([n, 3])
+    inv = np.zeros([n, 24])
     for i in range(n):
         inv[i, 0] = np.trace(R[i] @ (Ap[i] @ S[i]))
         inv[i, 1] = np.trace(R[i] @ (Ap[i] @ (S[i] @ S[i])))
@@ -750,7 +750,7 @@ def get_inv43to47(
     """
     n = len(Ak)
 
-    inv = np.zeros([n, 3])
+    inv = np.zeros([n, 5])
     for i in range(n):
         inv[i, 0] = np.trace(R @ (Ap @ (Ak @ S)))
         inv[i, 1] = np.trace(R @ (Ak @ (Ap @ S)))
