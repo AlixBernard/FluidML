@@ -34,14 +34,14 @@ __all__ = [
     "get_invariants_FS2",
     "get_invariants_FS3",
     "get_tau_BM",
-    "get_Inv1to2",
-    "get_Inv3to5",
-    "get_Inv6to14",
-    "get_Inv15to17",
-    "get_Inv18to41",
-    "get_Inv42",
-    "get_Inv43to47",
-    "get_Inv1to47",
+    "get_inv1to2",
+    "get_inv3to5",
+    "get_inv6to14",
+    "get_inv15to17",
+    "get_inv18to41",
+    "get_inv42",
+    "get_inv43to47",
+    "get_inv1to47",
 ]
 
 
@@ -497,7 +497,7 @@ def get_tau_BM(k: np.ndarray, nut: np.ndarray, S: np.ndarray) -> np.ndarray:
     return tau_BM
 
 
-def get_Inv1to2(S: np.ndarray) -> np.ndarray:
+def get_inv1to2(S: np.ndarray) -> np.ndarray:
     """Compute the invariants 1 to 2 from Wu et al. (2018). To get the
     normalized invariants the input should be normalized before.
 
@@ -508,21 +508,21 @@ def get_Inv1to2(S: np.ndarray) -> np.ndarray:
 
     Returns
     -------
-    Inv : np.ndarray
+    inv : np.ndarray
         Invariants with shape `(n, 2)`.
 
     """
     n = len(S)
 
-    Inv = np.zeros([n, 2])
+    inv = np.zeros([n, 2])
     for i in range(n):
-        Inv[i, 0] = np.trace(S[i] @ S[i])
-        Inv[i, 1] = np.trace(S[i] @ (S[i] @ S[i]))
+        inv[i, 0] = np.trace(S[i] @ S[i])
+        inv[i, 1] = np.trace(S[i] @ (S[i] @ S[i]))
 
-    return Inv
+    return inv
 
 
-def get_Inv3to5(Ak: np.ndarray, Ap: np.ndarray, R: np.ndarray) -> np.ndarray:
+def get_inv3to5(Ak: np.ndarray, Ap: np.ndarray, R: np.ndarray) -> np.ndarray:
     """Compute the invariants 3 to 5 from Wu et al. (2018). To get the
     normalized invariants the input should be normalized before.
 
@@ -538,22 +538,22 @@ def get_Inv3to5(Ak: np.ndarray, Ap: np.ndarray, R: np.ndarray) -> np.ndarray:
 
     Returns
     -------
-    Inv : np.ndarray
+    inv : np.ndarray
         Invariants with shape `(n, 3)`.
 
     """
     n = len(Ak)
 
-    Inv = np.zeros([n, 3])
+    inv = np.zeros([n, 3])
     for i in range(n):
-        Inv[i, 0] = np.trace(R[i] @ R[i])
-        Inv[i, 1] = np.trace(Ap[i] @ Ap[i])
-        Inv[i, 2] = np.trace(Ak[i] @ Ak[i])
+        inv[i, 0] = np.trace(R[i] @ R[i])
+        inv[i, 1] = np.trace(Ap[i] @ Ap[i])
+        inv[i, 2] = np.trace(Ak[i] @ Ak[i])
 
-    return Inv
+    return inv
 
 
-def get_Inv6to14(
+def get_inv6to14(
     Ak: np.ndarray, Ap: np.ndarray, R: np.ndarray, S: np.ndarray
 ) -> np.ndarray:
     """Compute the invariants 6 to 14 from Wu et al. (2018). To get the
@@ -573,32 +573,32 @@ def get_Inv6to14(
 
     Returns
     -------
-    Inv : np.ndarray
+    inv : np.ndarray
         Invariants with shape `(n, 9)`.
 
     """
     n = len(Ak)
 
-    Inv = np.zeros([n, 3])
+    inv = np.zeros([n, 3])
     for i in range(n):
-        Inv[i, 0] = np.trace(R[i] @ (R[i] @ S[i]))
-        Inv[i, 1] = np.trace(R[i] @ (R[i] @ (S[i] @ S[i])))
-        Inv[i, 2] = np.trace(R[i] @ (R[i] @ (S[i] @ (R[i] @ (S[i] @ S[i])))))
-        Inv[i, 3] = np.trace(Ap[i] @ (Ap[i] @ S[i]))
-        Inv[i, 4] = np.trace(Ap[i] @ (Ap[i] @ (S[i] @ S[i])))
-        Inv[i, 5] = np.trace(
+        inv[i, 0] = np.trace(R[i] @ (R[i] @ S[i]))
+        inv[i, 1] = np.trace(R[i] @ (R[i] @ (S[i] @ S[i])))
+        inv[i, 2] = np.trace(R[i] @ (R[i] @ (S[i] @ (R[i] @ (S[i] @ S[i])))))
+        inv[i, 3] = np.trace(Ap[i] @ (Ap[i] @ S[i]))
+        inv[i, 4] = np.trace(Ap[i] @ (Ap[i] @ (S[i] @ S[i])))
+        inv[i, 5] = np.trace(
             Ap[i] @ (Ap[i] @ (S[i] @ (Ap[i] @ (S[i] @ S[i]))))
         )
-        Inv[i, 6] = np.trace(Ak[i] @ (Ak[i] @ S[i]))
-        Inv[i, 7] = np.trace(Ak[i] @ (Ak[i] @ (S[i] @ S[i])))
-        Inv[i, 8] = np.trace(
+        inv[i, 6] = np.trace(Ak[i] @ (Ak[i] @ S[i]))
+        inv[i, 7] = np.trace(Ak[i] @ (Ak[i] @ (S[i] @ S[i])))
+        inv[i, 8] = np.trace(
             Ak[i] @ (Ak[i] @ (S[i] @ (Ak[i] @ (S[i] @ S[i]))))
         )
 
-    return Inv
+    return inv
 
 
-def get_Inv15to17(Ak: np.ndarray, Ap: np.ndarray, R: np.ndarray) -> np.ndarray:
+def get_inv15to17(Ak: np.ndarray, Ap: np.ndarray, R: np.ndarray) -> np.ndarray:
     """Compute the invariants 15 to 17 from Wu et al. (2018). To get the
     normalized invariants the input should be normalized before.
 
@@ -614,22 +614,22 @@ def get_Inv15to17(Ak: np.ndarray, Ap: np.ndarray, R: np.ndarray) -> np.ndarray:
 
     Returns
     -------
-    Inv : np.ndarray
+    inv : np.ndarray
         Invariants with shape `(n, 3)`.
 
     """
     n = len(Ak)
 
-    Inv = np.zeros([n, 3])
+    inv = np.zeros([n, 3])
     for i in range(n):
-        Inv[i, 0] = np.trace(R[i] @ Ap[i])
-        Inv[i, 1] = np.trace(Ap[i] @ Ak[i])
-        Inv[i, 2] = np.trace(R[i] @ Ak[i])
+        inv[i, 0] = np.trace(R[i] @ Ap[i])
+        inv[i, 1] = np.trace(Ap[i] @ Ak[i])
+        inv[i, 2] = np.trace(R[i] @ Ak[i])
 
-    return Inv
+    return inv
 
 
-def get_Inv18to41(
+def get_inv18to41(
     Ak: np.ndarray, Ap: np.ndarray, R: np.ndarray, S: np.ndarray
 ) -> np.ndarray:
     """Compute the invariants 18 to 41 from Wu et al. (2018). To get the
@@ -649,51 +649,51 @@ def get_Inv18to41(
 
     Returns
     -------
-    Inv : np.ndarray
+    inv : np.ndarray
         Invariants with shape `(n, 24)`.
 
     """
     n = len(Ak)
 
-    Inv = np.zeros([n, 3])
+    inv = np.zeros([n, 3])
     for i in range(n):
-        Inv[i, 0] = np.trace(R[i] @ (Ap[i] @ S[i]))
-        Inv[i, 1] = np.trace(R[i] @ (Ap[i] @ (S[i] @ S[i])))
-        Inv[i, 2] = np.trace(R[i] @ (R[i] @ (Ap[i] @ S[i])))
-        Inv[i, 3] = np.trace(Ap[i] @ (Ap[i] @ (R[i] @ S[i])))
-        Inv[i, 4] = np.trace(R[i] @ (R[i] @ (Ap[i] @ (S[i] @ S[i]))))
-        Inv[i, 5] = np.trace(Ap[i] @ (Ap[i] @ (R[i] @ (S[i] @ S[i]))))
-        Inv[i, 6] = np.trace(R[i] @ (R[i] @ (S[i] @ (Ap[i] @ (S[i] @ S[i])))))
-        Inv[i, 7] = np.trace(Ap[i] @ (Ap[i] @ (S[i] @ (R[i] @ (S[i] @ S[i])))))
+        inv[i, 0] = np.trace(R[i] @ (Ap[i] @ S[i]))
+        inv[i, 1] = np.trace(R[i] @ (Ap[i] @ (S[i] @ S[i])))
+        inv[i, 2] = np.trace(R[i] @ (R[i] @ (Ap[i] @ S[i])))
+        inv[i, 3] = np.trace(Ap[i] @ (Ap[i] @ (R[i] @ S[i])))
+        inv[i, 4] = np.trace(R[i] @ (R[i] @ (Ap[i] @ (S[i] @ S[i]))))
+        inv[i, 5] = np.trace(Ap[i] @ (Ap[i] @ (R[i] @ (S[i] @ S[i]))))
+        inv[i, 6] = np.trace(R[i] @ (R[i] @ (S[i] @ (Ap[i] @ (S[i] @ S[i])))))
+        inv[i, 7] = np.trace(Ap[i] @ (Ap[i] @ (S[i] @ (R[i] @ (S[i] @ S[i])))))
 
-        Inv[i, 8] = np.trace(R[i] @ (Ak[i] @ S[i]))
-        Inv[i, 9] = np.trace(R[i] @ (Ak[i] @ (S[i] @ S[i])))
-        Inv[i, 10] = np.trace(R[i] @ (R[i] @ (Ak[i] @ S[i])))
-        Inv[i, 11] = np.trace(Ak[i] @ (Ak[i] @ (R[i] @ S[i])))
-        Inv[i, 12] = np.trace(R[i] @ (R[i] @ (Ak[i] @ (S[i] @ S[i]))))
-        Inv[i, 13] = np.trace(Ak[i] @ (Ak[i] @ (R[i] @ (S[i] @ S[i]))))
-        Inv[i, 14] = np.trace(R[i] @ (R[i] @ (S[i] @ (Ak[i] @ (S[i] @ S[i])))))
-        Inv[i, 15] = np.trace(
+        inv[i, 8] = np.trace(R[i] @ (Ak[i] @ S[i]))
+        inv[i, 9] = np.trace(R[i] @ (Ak[i] @ (S[i] @ S[i])))
+        inv[i, 10] = np.trace(R[i] @ (R[i] @ (Ak[i] @ S[i])))
+        inv[i, 11] = np.trace(Ak[i] @ (Ak[i] @ (R[i] @ S[i])))
+        inv[i, 12] = np.trace(R[i] @ (R[i] @ (Ak[i] @ (S[i] @ S[i]))))
+        inv[i, 13] = np.trace(Ak[i] @ (Ak[i] @ (R[i] @ (S[i] @ S[i]))))
+        inv[i, 14] = np.trace(R[i] @ (R[i] @ (S[i] @ (Ak[i] @ (S[i] @ S[i])))))
+        inv[i, 15] = np.trace(
             Ak[i] @ (Ak[i] @ (S[i] @ (R[i] @ (S[i] @ S[i]))))
         )
 
-        Inv[i, 16] = np.trace(Ap[i] @ (Ak[i] @ S[i]))
-        Inv[i, 17] = np.trace(Ap[i] @ (Ak[i] @ (S[i] @ S[i])))
-        Inv[i, 18] = np.trace(Ap[i] @ (Ap[i] @ (Ak[i] @ S[i])))
-        Inv[i, 19] = np.trace(Ak[i] @ (Ak[i] @ (Ap[i] @ S[i])))
-        Inv[i, 20] = np.trace(Ap[i] @ (Ap[i] @ (Ak[i] @ (S[i] @ S[i]))))
-        Inv[i, 21] = np.trace(Ak[i] @ (Ak[i] @ (Ap[i] @ (S[i] @ S[i]))))
-        Inv[i, 22] = np.trace(
+        inv[i, 16] = np.trace(Ap[i] @ (Ak[i] @ S[i]))
+        inv[i, 17] = np.trace(Ap[i] @ (Ak[i] @ (S[i] @ S[i])))
+        inv[i, 18] = np.trace(Ap[i] @ (Ap[i] @ (Ak[i] @ S[i])))
+        inv[i, 19] = np.trace(Ak[i] @ (Ak[i] @ (Ap[i] @ S[i])))
+        inv[i, 20] = np.trace(Ap[i] @ (Ap[i] @ (Ak[i] @ (S[i] @ S[i]))))
+        inv[i, 21] = np.trace(Ak[i] @ (Ak[i] @ (Ap[i] @ (S[i] @ S[i]))))
+        inv[i, 22] = np.trace(
             Ap[i] @ (Ap[i] @ (S[i] @ (Ak[i] @ (S[i] @ S[i]))))
         )
-        Inv[i, 23] = np.trace(
+        inv[i, 23] = np.trace(
             Ak[i] @ (Ak[i] @ (S[i] @ (Ap[i] @ (S[i] @ S[i]))))
         )
 
-    return Inv
+    return inv
 
 
-def get_Inv42(Ak: np.ndarray, Ap: np.ndarray, R: np.ndarray) -> np.ndarray:
+def get_inv42(Ak: np.ndarray, Ap: np.ndarray, R: np.ndarray) -> np.ndarray:
     """Compute the invariant 42 from Wu et al. (2018). To get the
     normalized invariants the input should be normalized before.
 
@@ -711,20 +711,20 @@ def get_Inv42(Ak: np.ndarray, Ap: np.ndarray, R: np.ndarray) -> np.ndarray:
 
     Returns
     -------
-    Inv : np.ndarray
+    inv : np.ndarray
         Invariants with shape `(n,)`.
 
     """
     n = len(Ak)
 
-    Inv = np.zeros([n])
+    inv = np.zeros([n])
     for i in range(n):
-        Inv[i] = np.trace(R[i] @ (Ap[i] @ Ak[i]))
+        inv[i] = np.trace(R[i] @ (Ap[i] @ Ak[i]))
 
-    return Inv
+    return inv
 
 
-def get_Inv43to47(
+def get_inv43to47(
     Ak: np.ndarray, Ap: np.ndarray, R: np.ndarray, S: np.ndarray
 ) -> np.ndarray:
     """Compute the invariants 43 to 47 from Wu et al. (2018). To get the
@@ -744,60 +744,59 @@ def get_Inv43to47(
 
     Returns
     -------
-    Inv : np.ndarray
+    inv : np.ndarray
         Invariants with shape `(n, 5)`.
 
     """
     n = len(Ak)
 
-    Inv = np.zeros([n, 3])
+    inv = np.zeros([n, 3])
     for i in range(n):
-        Inv[i, 0] = np.trace(R @ (Ap @ (Ak @ S)))
-        Inv[i, 1] = np.trace(R @ (Ak @ (Ap @ S)))
-        Inv[i, 2] = np.trace(R @ (Ap @ (Ak @ (S @ S))))
-        Inv[i, 3] = np.trace(R @ (Ak @ (Ap @ (S @ S))))
-        Inv[i, 4] = np.trace(R @ (Ap @ (S @ (Ak @ (S @ S)))))
+        inv[i, 0] = np.trace(R @ (Ap @ (Ak @ S)))
+        inv[i, 1] = np.trace(R @ (Ak @ (Ap @ S)))
+        inv[i, 2] = np.trace(R @ (Ap @ (Ak @ (S @ S))))
+        inv[i, 3] = np.trace(R @ (Ak @ (Ap @ (S @ S))))
+        inv[i, 4] = np.trace(R @ (Ap @ (S @ (Ak @ (S @ S)))))
 
-    return Inv
+    return inv
 
 
-def get_Inv1to47(
+def get_inv1to47(
     Ak: np.ndarray, Ap: np.ndarray, R: np.ndarray, S: np.ndarray
 ) -> np.ndarray:
     """Compute the 47 invariants from Wu et al. (2018). To get the
-    normalized invariants the input should be normalized before.
+        normalized invariants the input should be normalized before.
 
-    Parameters
-    ----------
-    Ak : np.ndarray
-        Turbulent kinetic energy antisymmetric tensors with shape
-        `(n, 3, 3)`.
-    Ap : np.ndarray
-        Pressure gradient antisymmetric tensors with shape `(n, 3, 3)`.
-    R : np.ndarray
-        Mean rotation rate tensors with shape `(n, 3, 3)`.
-    S : np.ndarray
-        Mean strain rate tensors with shape `(n, 3, 3)`.
+        Parameters
+        ----------
+        Ak : np.ndarray
+            Turbulent kinetic energy antisymmetric tensors with shape
+            `(n, 3, 3)`.
+        Ap : np.ndarray
+            Pressure gradient antisymmetric tensors with shape `(n, 3, 3)`.
+        R : np.ndarray
+            Mean rotation rate tensors with shape `(n, 3, 3)`.
+        S : np.ndarray
+            Mean strain rate tensors with shape `(n, 3, 3)`.
 
-    Returns
-    -------
-    Inv : np.ndarray
-        Invariants with shape `(n, 47)`.
-
-    """
-    Inv = np.hstack(
+        Returns
+        -------
+        inv : np.ndarray
+            Invariants with shape `(n, 47)`.
+    i"""
+    inv = np.hstack(
         [
-            get_Inv1to2(S),
-            get_Inv3to5(Ak, Ap, R),
-            get_Inv6to14(Ak, Ap, R, S),
-            get_Inv15to17(Ak, Ap, R),
-            get_Inv18to41(Ak, Ap, R, S),
-            get_Inv42(Ak, Ap, R).reshape(-1, 1),
-            get_Inv43to47(Ak, Ap, R, S),
+            get_inv1to2(S),
+            get_inv3to5(Ak, Ap, R),
+            get_inv6to14(Ak, Ap, R, S),
+            get_inv15to17(Ak, Ap, R),
+            get_inv18to41(Ak, Ap, R, S),
+            get_inv42(Ak, Ap, R).reshape(-1, 1),
+            get_inv43to47(Ak, Ap, R, S),
         ]
     )
 
-    return Inv
+    return inv
 
 
 if __name__ == "__main__":
