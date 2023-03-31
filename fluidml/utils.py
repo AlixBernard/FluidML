@@ -752,11 +752,11 @@ def get_inv43to47(
 
     inv = np.zeros([n, 5])
     for i in range(n):
-        inv[i, 0] = np.trace(R @ (Ap @ (Ak @ S)))
-        inv[i, 1] = np.trace(R @ (Ak @ (Ap @ S)))
-        inv[i, 2] = np.trace(R @ (Ap @ (Ak @ (S @ S))))
-        inv[i, 3] = np.trace(R @ (Ak @ (Ap @ (S @ S))))
-        inv[i, 4] = np.trace(R @ (Ap @ (S @ (Ak @ (S @ S)))))
+        inv[i, 0] = np.trace(R[i] @ (Ap[i] @ (Ak[i] @ S[i])))
+        inv[i, 1] = np.trace(R[i] @ (Ak[i] @ (Ap[i] @ S[i])))
+        inv[i, 2] = np.trace(R[i] @ (Ap[i] @ (Ak[i] @ (S[i] @ S[i]))))
+        inv[i, 3] = np.trace(R[i] @ (Ak[i] @ (Ap[i] @ (S[i] @ S[i]))))
+        inv[i, 4] = np.trace(R[i] @ (Ap[i] @ (S[i] @ (Ak[i] @ (S[i] @ S[i])))))
 
     return inv
 
