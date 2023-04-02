@@ -19,8 +19,13 @@ from pathlib import Path
 import numpy as np
 from numpy.random import default_rng
 
+from fluidml.models import TBDT
 
-from fluidml.models import Tree, TBDT
+
+PREDICTION_METHODS = {
+    "mean": lambda x: np.mean(x, axis=0),
+    "median": lambda x: np.median(x, axis=0),
+}
 
 
 def _log(
@@ -291,7 +296,7 @@ class TBRF:
         tb: np.ndarray,
         seed: int | None = None,
         logger: logging.Logger | None = None,
-    ) -> list[Tree]:
+    ) -> list[TBDT]:
         """Fit the specified tree."""
         rng = default_rng(seed)
         n = len(x)
@@ -356,10 +361,6 @@ class TBRF:
             If the parameter `method` is not a valid value.
 
         """
-        PREDICTION_METHODS = {
-            "mean": lambda x: np.mean(x, axis=0),
-            "median": lambda x: np.median(x, axis=0),
-        }
         n, m, _ = tb.shape
 
         # Initialize predictions
@@ -382,7 +383,8 @@ class TBRF:
             b = PREDICTION_METHODS[method](b_trees)
         except KeyError:
             raise ValueError(
-                "The `method` attribute must be one of {'mean', 'median'}"
+                f"The `method` attribute must be one of "
+                f"{{{', '.join(map(repr, PREDICTION_METHODS.keys()))}}}"
             )
 
         _log(logging.INFO, "Predicted the anysotropy tensor 'b'", logger)
