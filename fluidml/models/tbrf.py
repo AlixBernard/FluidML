@@ -356,6 +356,10 @@ class TBRF:
             If the parameter `method` is not a valid value.
 
         """
+        PREDICTION_METHODS = {
+            "mean": lambda x: np.mean(x, axis=0),
+            "median": lambda x: np.median(x, axis=0),
+        }
         n, m, _ = tb.shape
 
         # Initialize predictions
@@ -374,13 +378,11 @@ class TBRF:
         for i in range(len(self)):
             g_trees[i], b_trees[i] = data[i]
 
-        if method == "mean":
-            b = np.mean(b_trees, axis=0)
-        elif method == "median":
-            b = np.median(b_trees, axis=0)
-        else:
+        try:
+            b = PREDICTION_METHODS[method](b_trees)
+        except KeyError:
             raise ValueError(
-                "The `method` attribute must be 'mean' or 'median'"
+                "The `method` attribute must be one of {'mean', 'median'}"
             )
 
         _log(logging.INFO, "Predicted the anysotropy tensor 'b'", logger)
