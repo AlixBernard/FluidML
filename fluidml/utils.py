@@ -12,7 +12,6 @@ Glossary:
     - `n` is the total number of samples
     - `p` is the total number of features
     - `m` is the number of tensors in the tensor basis
-    - `s` is the number of TBDTs in the TBRF
 
 """
 
@@ -51,16 +50,18 @@ def get_S(
 
     Parameters
     ----------
-    gradU : np.ndarray
-        Velocity gradient with shape `(n, 3, 3)`.
-    scale_factors : np.ndarray
-        Scale factors with shape `(n,)`, recommanded to use `k/epsilon`.
-        Default is None.
+    gradU : np.ndarray[shape=(n, 3, 3)]
+        Velocity gradients.
+    scale_factors : np.ndarray[shape=(n,)], default=None
 
     Returns
     -------
-    S : np.ndarray
-        Mean strain rate tensors with shape `(n, 3, 3)`.
+    S : np.ndarray[shape=(n, 3, 3)]
+        Mean strain rate tensors.
+
+    Notes
+    -----
+    It is recommanded to use $\frac{k}{epsilon}$ for scaling factors.
 
     """
     n = len(gradU)
@@ -82,16 +83,19 @@ def get_R(
 
     Parameters
     ----------
-    gradU : np.ndarray
-        Velocity gradient with shape `(n, 3, 3)`.
-    scale_factors : np.ndarray
-        Scale factors with shape `(n,)`, recommanded to use `k/epsilon`.
-        Default is None.
+    gradU : np.ndarray[shape=(n, 3, 3)]
+        Velocity gradients.
+    scale_factors : np.ndarray[shape=(n,)], default=None
+        Scale factors, recommanded to use `k/epsilon`.
 
     Returns
     -------
-    R : np.ndarray
-        Mean rotation rate tensors with shape `(n, 3, 3)`.
+    R : np.ndarray[shape=(n, 3, 3)]
+        Mean rotation rate tensors.
+
+    Notes
+    -----
+    It is recommanded to use $\frac{k}{epsilon}$ for scaling factors.
 
     """
     n = len(gradU)
@@ -114,16 +118,14 @@ def get_Ak(
 
     Parameters
     ----------
-    gradk : np.ndarray
-        Turbulent kinetic energy gradient with shape `(n, 3)`.
-    scale_factors : np.ndarray, default=None
-        Scale factors with shape `(n,)`.
+    gradk : np.ndarray[shape=(n, 3)]
+        Turbulent kinetic energy gradients.
+    scale_factors : np.ndarray[shape=(n,)], default=None
 
     Returns
     -------
-    Ak : np.ndarray
-        Turbulent kinetic energy gradient antisymmetric tensors with
-        shape `(n, 3, 3)`.
+    Ak : np.ndarray[shape=(n, 3, 3)]
+        Turbulent kinetic energy gradient antisymmetric tensors.
 
     Notes
     -----
@@ -150,15 +152,15 @@ def get_Ap(
 
     Parameters
     ----------
-    gradp : np.ndarray
-        Pressure gradient with shape `(n, 3)`.
-    scale_factors : np.ndarray, default=None
+    gradp : np.ndarray[shape=(n, 3)]
+        Pressure gradients.
+    scale_factors : np.ndarray[shape=(n,)], default=None
         Scale factors with shape `(n,)`.
 
     Returns
     -------
-    Ap : np.ndarray
-        Pressure gradient antisymmetric tensors with shape `(n, 3, 3)`.
+    Ap : np.ndarray[shape=(n, 3, 3)]
+        Pressure gradient antisymmetric tensors.
 
     Notes
     -----
@@ -184,19 +186,18 @@ def get_TB10(
 
     Parameters
     ----------
-    S : np.ndarray
-        Mean strain rate tensors with shape `(n, 3, 3)`.
-    R : np.ndarray
-        Mean rotation rate tensors with shape `(n, 3, 3)`.
-    scale_factors : np.ndarray
-        Scale factors with shape `(10,)`, recommanded to use `k/epsilon`.
+    S : np.ndarray[shape=(n, 3, 3)]
+        Mean strain rate tensors.
+    R : np.ndarray[shape=(n, 3, 3)]
+        Mean rotation rate tensors.
+    scale_factors : np.ndarray[shape=(10,)], default=None
+        Scale factors, recommanded to use `k/epsilon`.
         # ? Or use `[10] + 3*[100] + 2*[1_000] + 4*[10_0000]`
-        Default is None.
 
     Returns
     -------
-    T : np.ndarray
-        Tensor bases with shape `(n, 10, 3, 3)`.
+    T : np.ndarray[shape=(n, 10, 3, 3)]
+        Tensor bases.
 
     """
     n = len(S)
@@ -237,15 +238,15 @@ def get_invariants_FS1(S: np.ndarray, R: np.ndarray) -> np.ndarray:
 
     Parameters
     ----------
-    S : np.ndarray
-        Mean strain rate tensors with shape `(n, 3, 3)`.
-    R : np.ndarray
-        Mean rotation rate tensors with shape `(n, 3, 3)`.
+    S : np.ndarray[shape=(n, 3, 3)]
+        Mean strain rate tensors.
+    R : np.ndarray[shape=(n, 3, 3)]
+        Mean rotation rate tensors.
 
     Returns
     -------
-    inv : np.ndarray
-        Invariants set FS1 with shape `(n, 6)`.
+    inv : np.ndarray[shape=(n, 6)]
+        Invariants set FS1.
 
     """
     n, _, _ = S.shape
@@ -270,18 +271,17 @@ def get_invariants_FS2(
 
     Parameters
     ----------
-    S : np.ndarray
-        Mean strain rate tensors with shape `(n, 3, 3)`.
-    R : np.ndarray
-        Mean rotation rate tensors with shape `(n, 3, 3)`.
-    Ak : np.ndarray | None
-        Turbulent kinetic energy antisymmetric tensors with shape
-        `(n, 3, 3)`.
+    S : np.ndarray[shape=(n, 3, 3)]
+        Mean strain rate tensors.
+    R : np.ndarray[shape=(n, 3, 3)]
+        Mean rotation rate tensors.
+    Ak : np.ndarray | None[shape=(n, 3, 3)]
+        Turbulent kinetic energy antisymmetric tensors.
 
     Returns
     -------
-    inv : np.ndarray
-        Invariants set FS2 + FS2_extra with shape `(n, 13)`.
+    inv : np.ndarray[shape=(n, 13)]
+        Invariants set FS2 + FS2_extra.
         FS2_extra is ${A_k^2 R S, A_k^2 R S^2, A^2 S R S^2}$.
 
     """
@@ -321,37 +321,34 @@ def get_invariants_FS3(data: dict) -> np.ndarray:
     ----------
     data : dict
         Dictionary containing the following keys:
-            epsilon : np.ndarray | None
-                Epsilon with shape `(n,)`.
-            gradk : np.ndarray
-                Gradient of the turbulent kinetic energy with shape
-                `(n, 3)`.
-            gradp : np.ndarray
-                Gradient of the pressure with shape `(n, 3)`.
-            gradU : np.ndarray
-                Gradient of the velocity U with shape `(n, 3, 3)`.
-            gradU2 : np.ndarray
-                Gradient of the velocity U squared with shape
-                `(n, 3, 3)`.
-            k : np.ndarray | None
-                Kinetic energy with shape `(n,)`.
+            epsilon : np.ndarray[shape=(n,)] | None
+            gradk : np.ndarray[shape=(n, 3)]
+                Gradient of the turbulent kinetic energy.
+            gradp : np.ndarray[shape=(n, 3)]
+                Pressure gradients.
+            gradU : np.ndarray[shape=(n, 3, 3)]
+                Velocity gradients.
+            gradU2 : np.ndarray[shape=(n, 3, 3)]
+                Square of the velocity gradients.
+            k : np.ndarray[shape=(n,)] | None
+                Kinetic energy.
             nu : float
                 Viscosity.
-            R : np.ndarray
-                Mean rotation rate tensors with shape `(n, 3, 3)`.
-            S : np.ndarray
-                Mean strain rate tensors with shape `(n, 3, 3)`.
-            tau : np.ndarray
-                Reynolds stress tensors with shape `(n, 3, 3)`.
-            U : np.ndarray
-                Velocity with shape `(n, 3)`.
-            wallDistance : np.ndarray
-                Distance to the wall with shape `(n,)`.
+            R : np.ndarray[shape=(n, 3, 3)]
+                Mean rotation rate tensors.
+            S : np.ndarray[shape=(n, 3, 3)]
+                Mean strain rate tensors.
+            tau : np.ndarray[shape=(n, 3, 3)]
+                Reynolds stress tensors.
+            U : np.ndarray[shape=(n, 3)]
+                Velocity vectors.
+            wallDistance : np.ndarray[shape=(n,)]
+                Distances to the wall.
 
     Returns
     -------
-    inv : np.ndarray
-        Invariants set FS3 with shape `(n, 9)`.
+    inv : np.ndarray[shape=(n, 9)]
+        Invariants set FS3.
     """
     epsilon = data["epsilon"]
     gradk = data["gradk"]
@@ -414,18 +411,18 @@ def get_b_BM(k: np.ndarray, nut: np.ndarray, S: np.ndarray) -> np.ndarray:
 
     Parameters
     ----------
-    k : np.ndarray
-        Turbulent kinetic energy with shape `(n,)`.
-    nut : np.ndarray
-        Turbulent viscosity with shape `(n,)`.
-    S : np.ndarray
-        Mean strain rate tensors with shape `(n, 3, 3)`.
+    k : np.ndarray[shape=(n,)]
+        Turbulent kinetic energies.
+    nut : np.ndarray[shape=(n,)]
+        Turbulent viscosities.
+    S : np.ndarray[shape=(n, 3, 3)]
+        Mean strain rate tensors.
 
     Returns
     -------
-    b_BM : np.ndarray
+    b_BM : np.ndarray[shape=(n, 3, 3)]
         Normalized Reynolds-stress anisotropic tensors from the
-        Boussinesq model with shape `(n, 3, 3)`.
+        Boussinesq model.
 
     """
     n = len(k)
@@ -443,18 +440,17 @@ def get_tau_BM(k: np.ndarray, nut: np.ndarray, S: np.ndarray) -> np.ndarray:
 
     Parameters
     ----------
-    k : np.ndarray
-        Turbulent kinetic energy with shape `(n,)`.
-    nut : np.ndarray
-        Turbulent viscosity with shape `(n,)`.
-    S : np.ndarray
-        Mean strain rate tensors with shape `(n, 3, 3)`.
+    k : np.ndarray[shape=(n,)]
+        Turbulent kinetic energies.
+    nut : np.ndarray[shape=(n,)]
+        Turbulent viscosities.
+    S : np.ndarray[shape=(n, 3, 3)]
+        Mean strain rate tensors.
 
     Returns
     -------
-    tau_BM : np.ndarray
-        Reynolds-stress tensors from the Boussinesq model with shape
-        `(n, 3, 3)`.
+    tau_BM : np.ndarray[shape=(n, 3, 3)]
+        Reynolds-stress tensors from the Boussinesq model.
 
     """
     n = len(k)
@@ -738,20 +734,19 @@ def get_inv1to47(
 
         Parameters
         ----------
-        Ak : np.ndarray
-            Turbulent kinetic energy antisymmetric tensors with shape
-            `(n, 3, 3)`.
-        Ap : np.ndarray
-            Pressure gradient antisymmetric tensors with shape `(n, 3, 3)`.
-        R : np.ndarray
-            Mean rotation rate tensors with shape `(n, 3, 3)`.
-        S : np.ndarray
-            Mean strain rate tensors with shape `(n, 3, 3)`.
+        Ak : np.ndarray[shape=(n, 3, 3)]
+            Turbulent kinetic energy antisymmetric tensors.
+        Ap : np.ndarray[shape=(n, 3, 3)]
+            Pressure gradient antisymmetric tensors.
+        R : np.ndarray[shape=(n, 3, 3)]
+            Mean rotation rate tensors.
+        S : np.ndarray[shape=(n, 3, 3)]
+            Mean strain rate tensors.
 
         Returns
         -------
-        inv : np.ndarray
-            Invariants with shape `(n, 47)`.
+        inv : np.ndarray[shape=(n, 47)]
+            Invariants.
     i"""
     inv = np.hstack(
         [
@@ -766,6 +761,93 @@ def get_inv1to47(
     )
 
     return inv
+
+
+def make_realizable(b: np.ndarray) -> np.ndarray:
+    """
+    From Ling et al. (2016), see https://github.com/tbnn/tbnn:
+    This function is specific to turbulence modeling.
+    Given the anisotropy tensor, this function forces realizability
+    by shifting values within acceptable ranges for Aii > -1/3 and 2|Aij| < Aii + Ajj + 2/3
+    Then, if eigenvalues negative, shifts them to zero. Noteworthy that this step can undo
+    constraints from first step, so this function should be called iteratively to get convergence
+    to a realizable state.
+    :param b: the predicted anisotropy tensor (num_points X 9 array)
+
+    Parameters
+    ----------
+    b : np.ndarray[shape=(n, 9)]
+        Anisotropy tensor on which to enforce realizability.
+
+    Returns
+    -------
+    b_realizable : np.ndarray[shape=(n, 9)]
+
+    """
+    n, _ = b.shape
+    A = np.zeros([3, 3])
+    for i in range(n):
+        # Scales all on-diags to retain zero trace
+        if np.min(b[i, [0, 4, 8]]) < -1.0 / 3.0:
+            b[i, [0, 4, 8]] *= -1.0 / (3.0 * np.min(b[i, [0, 4, 8]]))
+        if 2.0 * np.abs(b[i, 1]) > b[i, 0] + b[i, 4] + 2.0 / 3.0:
+            b[i, 1] = (b[i, 0] + b[i, 4] + 2.0 / 3.0) * 0.5 * np.sign(b[i, 1])
+            b[i, 3] = (b[i, 0] + b[i, 4] + 2.0 / 3.0) * 0.5 * np.sign(b[i, 1])
+        if 2.0 * np.abs(b[i, 5]) > b[i, 4] + b[i, 8] + 2.0 / 3.0:
+            b[i, 5] = (b[i, 4] + b[i, 8] + 2.0 / 3.0) * 0.5 * np.sign(b[i, 5])
+            b[i, 7] = (b[i, 4] + b[i, 8] + 2.0 / 3.0) * 0.5 * np.sign(b[i, 5])
+        if 2.0 * np.abs(b[i, 2]) > b[i, 0] + b[i, 8] + 2.0 / 3.0:
+            b[i, 2] = (b[i, 0] + b[i, 8] + 2.0 / 3.0) * 0.5 * np.sign(b[i, 2])
+            b[i, 6] = (b[i, 0] + b[i, 8] + 2.0 / 3.0) * 0.5 * np.sign(b[i, 2])
+
+        # Enforce positive semidefinite by pushing evalues to non-negative
+        A[0, 0] = b[i, 0]
+        A[1, 1] = b[i, 4]
+        A[2, 2] = b[i, 8]
+        A[0, 1] = b[i, 1]
+        A[1, 0] = b[i, 1]
+        A[1, 2] = b[i, 5]
+        A[2, 1] = b[i, 5]
+        A[0, 2] = b[i, 2]
+        A[2, 0] = b[i, 2]
+        evalues, evectors = np.linalg.eig(A)
+        if (
+            np.max(evalues)
+            < (3.0 * np.abs(np.sort(evalues)[1]) - np.sort(evalues)[1]) / 2.0
+        ):
+            evalues = (
+                evalues
+                * (3.0 * np.abs(np.sort(evalues)[1]) - np.sort(evalues)[1])
+                / (2.0 * np.max(evalues))
+            )
+            A = np.dot(
+                np.dot(evectors, np.diag(evalues)), np.linalg.inv(evectors)
+            )
+            for j in range(3):
+                b[i, j] = A[j, j]
+            b[i, 1] = A[0, 1]
+            b[i, 5] = A[1, 2]
+            b[i, 2] = A[0, 2]
+            b[i, 3] = A[0, 1]
+            b[i, 7] = A[1, 2]
+            b[i, 6] = A[0, 2]
+        if np.max(evalues) > 1.0 / 3.0 - np.sort(evalues)[1]:
+            evalues = (
+                evalues * (1.0 / 3.0 - np.sort(evalues)[1]) / np.max(evalues)
+            )
+            A = np.dot(
+                np.dot(evectors, np.diag(evalues)), np.linalg.inv(evectors)
+            )
+            for j in range(3):
+                b[i, j] = A[j, j]
+            b[i, 1] = A[0, 1]
+            b[i, 5] = A[1, 2]
+            b[i, 2] = A[0, 2]
+            b[i, 3] = A[0, 1]
+            b[i, 7] = A[1, 2]
+            b[i, 6] = A[0, 2]
+
+    return b
 
 
 if __name__ == "__main__":
