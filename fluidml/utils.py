@@ -25,7 +25,6 @@ from numpy.random import default_rng
 # Local packages
 
 __all__ = [
-    "jsonify",
     "get_S",
     "get_R",
     "get_Ak",
@@ -43,36 +42,6 @@ __all__ = [
     "get_inv43to47",
     "get_inv1to47",
 ]
-
-
-def jsonify(x):
-    """Convert a variable of numpy type such as np.int, np.float, or
-    np.ndarray into a serializable type.
-
-    Parameters
-    ----------
-    x : Any
-        The variable to convert.
-
-    Returns
-    -------
-    y : Any
-        The converted variable.
-
-    """
-    if isinstance(x, np.int64):
-        y = int(x)
-    elif isinstance(x, np.float64):
-        y = float(x)
-    elif isinstance(x, np.ndarray):
-        y = jsonify(x.tolist())
-    elif isinstance(x, list):
-        y = [jsonify(e) for e in x]
-    elif isinstance(x, dict):
-        y = {jsonify(k): jsonify(v) for k, v in x.items()}
-    else:
-        y = x
-    return y
 
 
 def get_S(
