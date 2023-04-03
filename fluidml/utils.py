@@ -43,70 +43,39 @@ __all__ = [
 ]
 
 
-def get_S(
-    gradU: np.ndarray, scale_factors: np.ndarray | None = None
-) -> np.ndarray:
+def get_S(gradU: np.ndarray) -> np.ndarray:
     """Compute mean strain rate tensors.
 
     Parameters
     ----------
     gradU : np.ndarray[shape=(n, 3, 3)]
         Velocity gradients.
-    scale_factors : np.ndarray[shape=(n,)], default=None
 
     Returns
     -------
     S : np.ndarray[shape=(n, 3, 3)]
         Mean strain rate tensors.
 
-    Notes
-    -----
-    It is recommanded to use $\frac{k}{epsilon}$ for scaling factors.
-
     """
-    n = len(gradU)
-    if scale_factors is None:
-        scale_factors = np.ones(n)
-
-    S = np.zeros([n, 3, 3])
-    R = np.zeros([n, 3, 3])
-    for i in range(n):
-        S[i] = 0.5 * (gradU[i] + gradU[i].T) * scale_factors[i]
-
+    S = 0.5 * (gradU + np.einsum("...ji", gradU))
     return S
 
 
-def get_R(
-    gradU: np.ndarray, scale_factors: np.ndarray | None = None
-) -> np.ndarray:
+def get_R(gradU: np.ndarray) -> np.ndarray:
     """Compute mean rotation rate tensors.
 
     Parameters
     ----------
     gradU : np.ndarray[shape=(n, 3, 3)]
         Velocity gradients.
-    scale_factors : np.ndarray[shape=(n,)], default=None
-        Scale factors, recommanded to use `k/epsilon`.
 
     Returns
     -------
     R : np.ndarray[shape=(n, 3, 3)]
         Mean rotation rate tensors.
 
-    Notes
-    -----
-    It is recommanded to use $\frac{k}{epsilon}$ for scaling factors.
-
     """
-    n = len(gradU)
-    if scale_factors is None:
-        scale_factors = np.ones(n)
-
-    S = np.zeros([n, 3, 3])
-    R = np.zeros([n, 3, 3])
-    for i in range(n):
-        R[i] = 0.5 * (gradU[i] - gradU[i].T) * scale_factors[i]
-
+    R = 0.5 * (gradU - np.einsum("...ji", gradU))
     return R
 
 
