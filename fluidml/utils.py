@@ -129,7 +129,7 @@ def get_Ak(
 
     Notes
     -----
-    It is recommended tu  recommended to use $\frac{\sqrt{k}}{epsilon}$
+    It is recommended to use $\frac{\sqrt{k}}{epsilon}$
     for scaling factors.
 
     """
@@ -164,7 +164,7 @@ def get_Ap(
 
     Notes
     -----
-    It is recommended tu  recommended to use $\frac{1}{| dU / dt |}$ for
+    It is recommended to use $\frac{1}{| dU / dt |}$ for
     scaling factors.
 
     """
@@ -730,7 +730,7 @@ def get_inv1to47(
     Ak: np.ndarray, Ap: np.ndarray, R: np.ndarray, S: np.ndarray
 ) -> np.ndarray:
     """Compute the 47 invariants from Wu et al. (2018). To get the
-        normalized invariants the input should be normalized before.
+    normalized invariants the input should be normalized before.
 
         Parameters
         ----------
