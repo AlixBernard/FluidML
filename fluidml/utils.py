@@ -110,52 +110,43 @@ def get_R(
     return R
 
 
-def get_Ak(
-    gradk: np.ndarray,
-    scale_factors: np.ndarray | None = None,
-) -> np.ndarray:
+def get_Ak(gradk: np.ndarray) -> np.ndarray:
     r"""Compute turbulent kinetic energy gradient antisymmetric tensors.
 
     Parameters
     ----------
     gradk : np.ndarray[shape=(n, 3)]
         Turbulent kinetic energy gradients.
-    scale_factors : np.ndarray[shape=(n,)], default=None
 
     Returns
     -------
     Ak : np.ndarray[shape=(n, 3, 3)]
-        Turbulent kinetic energy gradient antisymmetric tensors.
+        Turbulent kinetic energy gradient antisymmetric tensors, i.e.
+        $A_k = -I \cross \nabla k$.
 
     Notes
     -----
-    It is recommended to use $\frac{\sqrt{k}}{epsilon}$
-    for scaling factors.
+    Here `eijk` denotes the Levi-Civita symbol, its use greatly reduce
+    the computational time.
 
     """
-    n = len(gradk)
-    if scale_factors is None:
-        scale_factors = np.ones(n)
+    eijk = np.zeros((3, 3, 3))
+    eijk[0, 1, 2] = eijk[1, 2, 0] = eijk[2, 0, 1] = 1
+    eijk[0, 2, 1] = eijk[2, 1, 0] = eijk[1, 0, 2] = -1
 
-    Ak = np.zeros([n, 3, 3])
-    for i in range(n):
-        Ak[i] = -np.cross(np.eye(3), gradk[i]) * scale_factors[i]
+    u, v = gradk, np.eye(3)
+    Ak = np.einsum("iuk,vk->uvi", np.einsum("ijk,uj->iuk", eijk, u), v)
 
     return Ak
 
 
-def get_Ap(
-    gradp: np.ndarray,
-    scale_factors: np.ndarray | None = None,
-) -> np.ndarray:
+def get_Ap(gradp: np.ndarray) -> np.ndarray:
     """Compute pressure gradient antisymmetric tensors.
 
     Parameters
     ----------
     gradp : np.ndarray[shape=(n, 3)]
         Pressure gradients.
-    scale_factors : np.ndarray[shape=(n,)], default=None
-        Scale factors with shape `(n,)`.
 
     Returns
     -------
@@ -164,17 +155,16 @@ def get_Ap(
 
     Notes
     -----
-    It is recommended to use $\frac{1}{| dU / dt |}$ for
-    scaling factors.
+    Here `eijk` denotes the Levi-Civita symbol, its use greatly reduce
+    the computational time.
 
     """
-    n = len(gradp)
-    if scale_factors is None:
-        scale_factors = np.ones(n)
+    eijk = np.zeros((3, 3, 3))
+    eijk[0, 1, 2] = eijk[1, 2, 0] = eijk[2, 0, 1] = 1
+    eijk[0, 2, 1] = eijk[2, 1, 0] = eijk[1, 0, 2] = -1
 
-    Ap = np.zeros([n, 3, 3])
-    for i in range(n):
-        Ap[i] = -np.cross(np.eye(3), gradp[i]) * scale_factors[i]
+    u, v = gradp, np.eye(3)
+    Ap = np.einsum("iuk,vk->uvi", np.einsum("ijk,uj->iuk", eijk, u), v)
 
     return Ap
 
