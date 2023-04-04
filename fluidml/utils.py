@@ -301,6 +301,7 @@ def get_invariants_FS3(data: dict) -> np.ndarray:
     -------
     inv : np.ndarray[shape=(n, 9)]
         Invariants set FS3.
+
     """
     epsilon = data["epsilon"]
     gradk = data["gradk"]
@@ -377,12 +378,7 @@ def get_b_BM(k: np.ndarray, nut: np.ndarray, S: np.ndarray) -> np.ndarray:
         Boussinesq model.
 
     """
-    n = len(k)
-
-    b_BM = np.zeros([n, 3, 3])
-    for i in range(n):
-        b_BM[i] = -(nut[i] / k[i]) * S[i]
-
+    b_BM = np.einsum("i,ijk->ijk", -nut / k, S)
     return b_BM
 
 
@@ -405,12 +401,9 @@ def get_tau_BM(k: np.ndarray, nut: np.ndarray, S: np.ndarray) -> np.ndarray:
         Reynolds-stress tensors from the Boussinesq model.
 
     """
-    n = len(k)
-
-    tau_BM = np.zeros([n, 3, 3])
-    for i in range(n):
-        tau_BM[i] = (2 / 3) * k[i] * np.eye(3) - 2 * nut[i] * S[i]
-
+    tau_BM = (2 / 3) * np.einsum("i,jk->ijk", k, np.eye(3)) - 2 * np.einsum(
+        "i,ijk->ijk", nut, S
+    )
     return tau_BM
 
 
