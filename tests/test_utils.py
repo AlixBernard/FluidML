@@ -19,6 +19,7 @@ from numpy.testing import assert_array_almost_equal
 from pathlib import Path
 
 from fluidml.utils import get_S, get_R, get_Ak, get_Ap, get_TB10
+from fluidml.utils import get_b_BM, get_tau_BM
 
 # Local packages
 
@@ -28,9 +29,8 @@ __all__ = [
     "test_get_Ak",
     "test_get_Ap",
     "test_get_TB10",
-    "test_get_invariants_FS1",
-    "test_get_invariants_FS2",
-    "test_get_invariants_FS3",
+    "test_get_b_BM",
+    "test_get_tau_BM",
 ]
 
 
@@ -38,6 +38,10 @@ __all__ = [
 def data1() -> dict[str, np.ndarray]:
     n = 5
     data = {
+        "k": np.arange(n) - 5 / 3,
+        "nut": np.arange(n) ** 2 - 0.8,
+    }
+    data |= {
         "gradU": ((np.arange(n * 3 * 3).reshape(-1, 3, 3) - 12) / 10) ** 3,
         "gradk": ((np.arange(n * 3).reshape(-1, 3) - 30) / 10) ** 2,
         "gradp": (np.arange(n * 3).reshape(-1, 3) / 10) ** 0.5 - 0.5,
@@ -77,6 +81,20 @@ def data1() -> dict[str, np.ndarray]:
             for s, r in zip(data["S"], data["R"])
         ]
     ).reshape(-1, 10, 3, 3)
+    data |= {
+        "b_BM": np.array(
+            [
+                -(nut / k) * s
+                for k, nut, s in zip(data["k"], data["nut"], data["S"])
+            ]
+        ),
+        "tau_BM": np.array(
+            [
+                (2 / 3) * k * np.eye(3) - 2 * nut * s
+                for k, nut, s in zip(data["k"], data["nut"], data["S"])
+            ]
+        ),
+    }
 
     return data
 
@@ -101,13 +119,13 @@ def test_get_TB10(data1):
     assert_array_almost_equal(get_TB10(data1["S"], data1["R"]), data1["tb10"])
 
 
-def test_get_invariants_FS1():
-    ...
+def test_get_b_BM(data1):
+    assert_array_almost_equal(
+        get_b_BM(data1["k"], data1["nut"], data1["S"]), data1["b_BM"]
+    )
 
 
-def test_get_invariants_FS2():
-    ...
-
-
-def test_get_invariants_FS3():
-    ...
+def test_get_tau_BM(data1):
+    assert_array_almost_equal(
+        get_tau_BM(data1["k"], data1["nut"], data1["S"]), data1["tau_BM"]
+    )
