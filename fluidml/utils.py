@@ -138,9 +138,7 @@ def get_Ap(gradp: np.ndarray) -> np.ndarray:
     return Ap
 
 
-def get_TB10(
-    S: np.ndarray, R: np.ndarray, scale_factors: np.ndarray | None = None
-) -> np.ndarray:
+def get_TB10(S: np.ndarray, R: np.ndarray) -> np.ndarray:
     """Compute tensor bases composed of 10 tensors.
 
     Parameters
@@ -149,45 +147,40 @@ def get_TB10(
         Mean strain rate tensors.
     R : np.ndarray[shape=(n, 3, 3)]
         Mean rotation rate tensors.
-    scale_factors : np.ndarray[shape=(10,)], default=None
-        Scale factors, recommanded to use `k/epsilon`.
-        # ? Or use `[10] + 3*[100] + 2*[1_000] + 4*[10_0000]`
 
     Returns
     -------
     T : np.ndarray[shape=(n, 10, 3, 3)]
         Tensor bases.
 
+    Notes
+    -----
+    The normalized versions of `S` and `R` should be used, also denoted
+    respectively `Shat` and `Rhat`.
+
     """
     n = len(S)
-    if scale_factors is None:
-        scale_factors = np.ones(10)
 
     T = np.zeros([n, 10, 3, 3])
-    for i in range(n):
-        T[i, 0] = S[i]
-        T[i, 1] = S[i] @ R[i] - R[i] @ S[i]
-        T[i, 2] = S[i] @ S[i] - (1 / 3) * np.eye(3) * np.trace(S[i] @ S[i])
-        T[i, 3] = R[i] @ R[i] - (1 / 3) * np.eye(3) * np.trace(R[i] @ R[i])
-        T[i, 4] = R[i] @ (S[i] @ S[i]) - S[i] @ (S[i] @ R[i])
+    for i, (s, r) in enumerate(zip(S, R)):
+        T[i, 0] = s
+        T[i, 1] = s @ r - r @ s
+        T[i, 2] = s @ s - (1 / 3) * np.eye(3) * np.trace(s @ s)
+        T[i, 3] = r @ r - (1 / 3) * np.eye(3) * np.trace(r @ r)
+        T[i, 4] = r @ (s @ s) - s @ (s @ r)
         T[i, 5] = (
-            R[i] @ (R[i] @ S[i])
-            + S[i] @ (R[i] @ R[i])
-            - (2 / 3) * np.eye(3) * np.trace(S[i] @ (R[i] @ R[i]))
+            r @ (r @ s)
+            + s @ (r @ r)
+            - (2 / 3) * np.eye(3) * np.trace(s @ (r @ r))
         )
-        T[i, 6] = R[i] @ (S[i] @ (R[i] @ R[i])) - R[i] @ (R[i] @ (S[i] @ R[i]))
-        T[i, 7] = S[i] @ (R[i] @ (S[i] @ S[i])) - S[i] @ (S[i] @ (R[i] @ S[i]))
+        T[i, 6] = r @ (s @ (r @ r)) - r @ (r @ (s @ r))
+        T[i, 7] = s @ (r @ (s @ s)) - s @ (s @ (r @ s))
         T[i, 8] = (
-            R[i] @ (R[i] @ (S[i] @ S[i]))
-            + S[i] @ (S[i] @ (R[i] @ R[i]))
-            - (2 / 3) * np.eye(3) * np.trace(S[i] @ (S[i] @ (R[i] @ R[i])))
+            r @ (r @ (s @ s))
+            + s @ (s @ (r @ r))
+            - (2 / 3) * np.eye(3) * np.trace(s @ (s @ (r @ r)))
         )
-        T[i, 9] = R[i] @ (S[i] @ (S[i] @ (R[i] @ R[i]))) - R[i] @ (
-            R[i] @ (S[i] @ (S[i] @ R[i]))
-        )
-
-        for j in range(10):
-            T[i, j] *= scale_factors[j]
+        T[i, 9] = r @ (s @ (s @ (r @ r))) - r @ (r @ (s @ (s @ r)))
 
     return T
 
