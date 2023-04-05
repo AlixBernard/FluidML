@@ -258,13 +258,12 @@ class TBRF:
 
         Parameters
         ----------
-        x : np.ndarray
-            Input features with shape `(n, p)`.
-        y : np.ndarray
-            Anisotropy tensors `b` with shape `(n, 9)` on which to fit
-            the tree.
-        tb : np.ndarray
-            Tensor bases with shape `(n, m, 9)`.
+        x : np.ndarray[shape=(n, p)]
+            Input features.
+        y : np.ndarray[shape=(n, 9)]
+            Anisotropy tensors `b` on which to fit the tree.
+        tb : np.ndarray[shape=(n, m, 9)]
+            Tensor bases.
         n_jobs : int, default=1
             The number of jobs to run in parallel, -1 means using all
             processors.
@@ -333,11 +332,11 @@ class TBRF:
 
         Parameters
         ----------
-        x : np.ndarray
-            Input features with shape `(n, p)`.
-        tb : np.ndarray
-            Tensor bases with shape `(n, m, 9)`.
-        method : {'mean', 'median'}
+        x : np.ndarray[shape=(n, p)]
+            Input features.
+        tb : np.ndarray[shape=(n, m, 9)]
+            Tensor bases.
+        method : str {'mean', 'median'}
             How to compute the TBRF prediction from all the TBDT
             predictions, possible values are 'mean' and 'median'.
         n_jobs : int, default=1
@@ -346,14 +345,12 @@ class TBRF:
 
         Returns
         -------
-        bhat : np.ndarray
-            Anisotropy tensors with shape `(n, 9)`.
-        b : np.ndarray
-            Anisotropy tensors for each TBDT in the TBRF with shape
-            `(s, n, 9)`.
-        g : np.ndarray
-            Tensor basis coefficients for each TBDT in the TBRF with
-            shape `(s, n, 10)`.
+        bhat : np.ndarray[shape=(n, 9)]
+            Anisotropy tensors.
+        b : np.ndarray[shape=(s, n, 9)]
+            Anisotropy tensors for each TBDT in the TBRF.
+        g : np.ndarray[shape=(s, n, m)]
+            Tensor basis coefficients for each TBDT in the TBRF.
 
         Raises
         ------

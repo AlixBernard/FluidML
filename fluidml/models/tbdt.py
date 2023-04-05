@@ -93,25 +93,21 @@ def fit_tensor(
 
     Parameters
     ----------
-    TT : np.ndarray
-        Preconstructed matrix $T^t T$ with shape `(n, m, m)`.
-    Ty : np.ndarray
-        Preconstructed matrix $T^t y$ with shape `(n, m)`.
-    tb : np.ndarray
-        Tensor Basis for each points with shape `(n, m, 9)` where
-        `n` is the number of points and `m` is the number of tensors
-        in the tensor basis.
-    y : np.ndarray
-        Anisotropy tensor `b` (target) on which to fit the tree with
-        shape `(n, 9)`.
+    TT : np.ndarray[shape=(n, m, m)]
+        Preconstructed matrix $T^t T$.
+    Ty : np.ndarray[shape=(n, m)]
+        Preconstructed matrix $T^t y$.
+    tb : np.ndarray[shape=(n, m, 9)]
+        Tensor Basis for each point.
+    y : np.ndarray[shape=(n, 9)]
+        Anisotropy tensor `b` (target) on which to fit the tree.
 
     Returns
     -------
-    ghat : np.ndarray
-        Optimum value for the tensor basis coefficients with shape
-        `(m,)`.
-    bhat : np.ndarray
-        Anysotropy tensor with shape `(n, 9)`.
+    ghat : np.ndarray[shape=(m,)]
+        Optimum value for the tensor basis coefficients.
+    bhat : np.ndarray[shape=(n,)]
+        Anysotropy tensor.
 
     """
     n, m, _ = TT.shape
@@ -201,16 +197,15 @@ def find_min_cost_sort(
     split_feat_i : int
         Index of the feature on which to find the optimum splitting
         point.
-    x : np.ndarray
-        Input features with shape `(n, p)`.
-    y : np.ndarray
-        Anisotropy tensor `b` (target) on which to fit the tree with
-        shape `(n, 9)`.
-    tb : np.ndarray
-        Tensor bases with shape `(n, m, 9)`.
-    TT : np.ndarray
+    x : np.ndarray[shape=(n, p)]
+        Input features.
+    y : np.ndarray[shape=(n, 9)]
+        Anisotropy tensor `b` (target) on which to fit the tree.
+    tb : np.ndarray[shape=(n, m, 9)]
+        Tensor bases.
+    TT : np.ndarray[shape=(n, m, m)]
         Preconstructed matrix $transpose(T)*T$.
-    Ty : np.ndarray
+    Ty : np.ndarray[shape=(n, m)]
         Preconstructed matrix $transpose(T)*f$.
     cost_func : Callable[[np.ndarray, np.ndarray], float]
         The cost function to minimize.
@@ -373,16 +368,15 @@ def create_split(
 
     Parameters
     ----------
-    x : np.ndarray
-        Input features with shape `(n, p)`.
-    y : np.ndarray
-        Anisotropy tensors `b` (target) on which to fit the tree,
-        with shape `(n, 9)`.
-    tb : np.ndarray
-        Tensor bases with shape `(n, m, 9)`.
-    TT : np.ndarray
+    x : np.ndarray[shape=(n, p)]
+        Input features.
+    y : np.ndarray[shape=(n, 9)]
+        Anisotropy tensors `b` (target) on which to fit the tree.
+    tb : np.ndarray[shape=(n, m, 9)]
+        Tensor bases.
+    TT : np.ndarray[shape=(n, m, m)]
         Preconstructed matrix $transpose(T)*T$.
-    Ty : np.ndarray
+    Ty : np.ndarray[shape=(n, m)]
         Preconstructed matrix $transpose(T)*f$.
     feats_idx : np.ndarray
         Indices of the features chosen to create the split from.
@@ -735,13 +729,12 @@ class TBDT:
 
         Parameters
         ----------
-        x : np.ndarray
-            Input features with shape `(n, p)`.
-        y : np.ndarray
-            Anisotropy tensors `b` with shape `(n, 9)` on which to fit
-            the TBDT.
-        tb : np.ndarray
-            Tensor bases with shape `(n, m, 9)`.
+        x : np.ndarray[shape=(n, p)]
+            Input features.
+        y : np.ndarray[shape=(n, 9)]
+            Anisotropy tensors `b` on which to fit the TBDT.
+        tb : np.ndarray[shape=(n, m, 9)]
+            Tensor bases.
         cost_func : Callable[[np.ndarray, np.ndarray], float]
             The cost function to minimize.
         cost_name : str
@@ -852,17 +845,17 @@ class TBDT:
 
         Parameters
         ----------
-        x : np.ndarray
-            Input features with shape `(n, p)`.
-        tb : np.ndarray
-            Tensor basess with shape `(n, m, 9)`.
+        x : np.ndarray[shape=(n, p)]
+            Input features.
+        tb : np.ndarray[shape=(n, m, 9)]
+            Tensor basess.
 
         Returns
         -------
-        ghat : np.ndarray
-            Tensor basis coefficients with shape `(n, m)`.
-        bhat : np.ndarray
-            Anisotropy tensors with shape `(n, 9)`.
+        ghat : np.ndarray[shape=(n, m)]
+            Tensor basis coefficients.
+        bhat : np.ndarray[shape=(n, 9)]
+            Anisotropy tensors.
 
         """
         n, m, _ = tb.shape
