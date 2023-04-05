@@ -249,7 +249,7 @@ class TBRF:
         x: np.ndarray,
         y: np.ndarray,
         tb: np.ndarray,
-        n_jobs: int = 1,
+        n_jobs: int | None = None,
         seed: int | None = None,
         logger: logging.Logger | None = None,
     ) -> dict:
@@ -264,8 +264,8 @@ class TBRF:
             Anisotropy tensors `b` on which to fit the tree.
         tb : np.ndarray[shape=(n, m, 9)]
             Tensor bases.
-        n_jobs : int, default=1
-            The number of jobs to run in parallel, -1 means using all
+        n_jobs : int, default=None
+            The number of jobs to run in parallel, None means using all
             processors.
         seed : int | None
 
@@ -275,8 +275,7 @@ class TBRF:
 
         rng = default_rng(seed)
         seeds = [rng.integers(int(1e1)) for _ in range(self.n_estimators)]
-        jobs = (n_jobs,) if n_jobs != -1 else ()
-        with mp.Pool(*jobs) as pool:
+        with mp.Pool(processes=n_jobs) as pool:
             res = [
                 pool.apply_async(self._fit_tree, (i, x, y, tb, seed, logger))
                 for i, seed in enumerate(seeds)
@@ -323,7 +322,7 @@ class TBRF:
         x: np.ndarray,
         tb: np.ndarray,
         method: str = "mean",
-        n_jobs: int = 1,
+        n_jobs: int | None = None,
         logger: logging.Logger | None = None,
     ) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
         """Tensor Basis Random Forest predictions given input features
@@ -339,8 +338,8 @@ class TBRF:
         method : str {'mean', 'median'}
             How to compute the TBRF prediction from all the TBDT
             predictions, possible values are 'mean' and 'median'.
-        n_jobs : int, default=1
-            The number of jobs to run in parallel, -1 means using all
+        n_jobs : int, default=None
+            The number of jobs to run in parallel, None means using all
             processors.
 
         Returns
@@ -364,8 +363,7 @@ class TBRF:
         b_trees = np.zeros([len(self), n, 9])
         g_trees = np.zeros([len(self), n, m])
 
-        jobs = (n_jobs,) if n_jobs != -1 else ()
-        with mp.Pool(*jobs) as pool:
+        with mp.Pool(processes=n_jobs) as pool:
             res = [
                 pool.apply_async(self._predict_tree, (i, x, tb))
                 for i in range(len(self))
