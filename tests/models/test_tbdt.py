@@ -1,3 +1,4 @@
+import json
 import pytest
 from pathlib import Path
 
@@ -6,6 +7,11 @@ from numpy.testing import assert_array_almost_equal
 
 from fluidml.models import TBDT, fit_tensor, find_min_cost_sort, create_split
 from fluidml.models.tbdt import COST_FUNCTIONS, SplitData, NodeSplitData
+
+
+def save_str2path(s: str, fp: Path) -> None:
+    with open(fp, "w") as file:
+        file.write(s)
 
 
 @pytest.fixture
@@ -283,14 +289,16 @@ class TestTBDT:
         tbdt1.max_features = 0.7
         assert tbdt1._get_n_feats(19) == 14
 
-    def test_to_dict(self, tbdt1, features, targets, tb, tbdt1_as_dict, seed1):
+    def test_to_dict(
+        self, tmp_path, tbdt1, features, targets, tb, tbdt1_as_dict, seed1
+    ):
         tbdt1.fit(features, targets, tb, seed=seed1)
-        import json
 
-        with open("tmp1.json", "w") as file:
-            json.dump(tbdt1.to_dict(), file, indent=4)
-        with open("tmp2.json", "w") as file:
-            json.dump(tbdt1_as_dict, file, indent=4)
+        str_to_dict = json.dumps(tbdt1.to_dict(), indent=4)
+        save_str2path(str_to_dict, tmp_path / "to_dict.json")
+        str_as_dict = json.dumps(tbdt1_as_dict, indent=4)
+        save_str2path(str_as_dict, tmp_path / "as_dict.json")
+
         assert tbdt1.to_dict() == tbdt1_as_dict
 
     def test_from_dict(
@@ -300,47 +308,45 @@ class TestTBDT:
         tbdt2 = TBDT.from_dict(tbdt1_as_dict)
         assert tbdt2 == tbdt1
 
-    def test_save_to_json(self, tbdt1, features, targets, tb, seed1):
+    def test_save_to_json(self, tmp_path, tbdt1, features, targets, tb, seed1):
         tbdt1.fit(features, targets, tb, seed=seed1)
-        file_path = Path(__file__).parent / "test_tbdt1.json"
-        try:
-            tbdt1.save_to_json(file_path)
-            tbdt2 = TBDT.load_from_json(file_path)
-        except Exception as err:
-            print(
-                "The follwing error prevented removing the temporarly save"
-                f"file {file_path}:\n\t{err}"
-            )
-        finally:
-            file_path.unlink()
+        fp = tmp_path / "tbdt1.json"
+        tbdt1.save_to_json(fp)
+        tbdt2 = TBDT.load_from_json(fp)
         assert tbdt1 == tbdt2
 
-    def test_load_from_json(self, tbdt1, features, targets, tb, seed1):
+    def test_load_from_json(
+        self, tmp_path, tbdt1, features, targets, tb, seed1
+    ):
         tbdt1.fit(features, targets, tb, seed=seed1)
-        file_path = Path(__file__).parent / "test_tbdt1.json"
-        tbdt1.save_to_json(file_path)
-        tbdt2 = TBDT.load_from_json(file_path)
-        file_path.unlink()
+        fp = tmp_path / "tbdt1.json"
+        tbdt1.save_to_json(fp)
+        tbdt2 = TBDT.load_from_json(fp)
         assert tbdt1 == tbdt2
 
     def test_to_graphviz(
-        self, tbdt1, features, targets, tb, tbdt1_as_graphviz, seed1
+        self, tmp_path, tbdt1, features, targets, tb, tbdt1_as_graphviz, seed1
     ):
         tbdt1.fit(features, targets, tb, seed=seed1)
-        with open("test_tmp.dot", "w") as file:
-            file.write(tbdt1.to_graphviz())
+        save_str2path(tbdt1.to_graphviz(), tmp_path / "tbdt1.dot")
         assert tbdt1.to_graphviz() == tbdt1_as_graphviz
 
     def test_predict(
-        self, tbdt1, features, targets, tb, seed1, g_prediction1, b_prediction1
+        self,
+        tmp_path,
+        tbdt1,
+        features,
+        targets,
+        tb,
+        seed1,
+        g_prediction1,
+        b_prediction1,
     ):
         tbdt1.fit(features, targets, tb, seed=seed1)
         g, b = tbdt1.predict(features, tb)
-        import json
 
-        with open("test_preds.txt", "w") as file:
-            file.write(
-                json.dumps({"g": g.tolist(), "b": b.tolist()}, indent=4)
-            )
+        s = json.dumps({"g": g.tolist(), "b": b.tolist()}, indent=4)
+        save_str2path(s, tmp_path / "preds.json")
+
         assert_array_almost_equal(g, g_prediction1)
         assert_array_almost_equal(b, b_prediction1, decimal=2)
