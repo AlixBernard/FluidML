@@ -241,7 +241,9 @@ class TBRF:
 
         """
         for tree in self.trees:
-            tree.to_graphviz(dir_path, shape=shape, graph=graph)
+            tree.to_graphviz(
+                dir_path / f"{tree.name}.dot", shape=shape, graph=graph
+            )
 
     @_timer_func
     def fit(

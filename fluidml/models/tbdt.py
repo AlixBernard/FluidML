@@ -621,43 +621,43 @@ class TBDT:
             tbdt.tree.add_node(node, parent=parent)
         return tbdt
 
-    def save_to_json(self, path: Path) -> None:
+    def save_to_json(self, fp: Path) -> None:
         """Save the TBDT as a JSON file containing its dict representation.
 
         Parameters
         ----------
-        path : Path
+        fp : Path
 
         """
         tbdt_dict = OrderedDict(self.to_dict())
         tbdt_dict.move_to_end("nodes")
 
-        with open(path, "w") as file:
+        with open(fp, "w") as file:
             json.dump(tbdt_dict, file, indent=4)
 
     @classmethod
-    def load_from_json(cls, path: Path) -> None:
+    def load_from_json(cls, fp: Path) -> None:
         """Load the TBDT from a JSON file containing its dict representation.
 
         Parameters
         ----------
-        path : Path
+        fp : Path
 
         """
-        with open(path, "r") as file:
+        with open(fp, "r") as file:
             tbdt_dict = json.load(file)
         return cls.from_dict(tbdt_dict)
 
     def to_graphviz(
-        self, dir_path: Path | None = None, shape="rectangle", graph="digraph"
+        self, fp: Path | None = None, shape="rectangle", graph="digraph"
     ) -> str:
         """Export the tree to the graphviz dot format, returning it as
-        a str. If `dir_path` is specified, save it in this directory.
+        a str. If `fp` is specified, saves it.
 
         Parameters
         ----------
-        dir_path : str or Path
-            Directory to which save the tree.
+        fp : str or Path
+            File path to which the tree should be saved.
         shape : {'rectangle', 'circle'}, default='rectangle'
             Shape of the nodes.
         graph : str, default='digraph'
@@ -704,10 +704,8 @@ class TBDT:
             f"}}"
         )
 
-        if dir_path is not None:
-            if not dir_path.exists():
-                dir_path.mkdir(parents=True)
-            with open(dir_path / f"{self.name}.dot", "w") as file:
+        if fp is not None:
+            with open(fp, "w") as file:
                 file.write(dot_str)
 
         return dot_str
