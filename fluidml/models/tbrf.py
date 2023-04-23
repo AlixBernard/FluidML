@@ -384,7 +384,7 @@ class TBRF:
                 f"{{{', '.join(map(repr, PREDICTION_METHODS.keys()))}}}"
             )
 
-        _log(logging.INFO, "Predicted the anysotropy tensor 'b'", logger)
+        _log(logging.INFO, "Predicted the anysotropy tensor `b`", logger)
 
         return g_trees, b_trees, b
 
