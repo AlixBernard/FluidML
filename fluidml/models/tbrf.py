@@ -13,14 +13,13 @@ __all__ = ["TBRF"]
 
 import logging
 import multiprocessing as mp
-from time import perf_counter
 from pathlib import Path
+from time import perf_counter
 
 import numpy as np
 from numpy.random import default_rng
 
 from fluidml.models import TBDT
-
 
 PREDICTION_METHODS = {
     "mean": lambda x: np.mean(x, axis=0),

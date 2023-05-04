@@ -20,18 +20,18 @@ __all__ = [
 # Built-in packages
 import json
 import logging
-from collections import deque, OrderedDict
-from time import perf_counter
+from collections import OrderedDict, deque
 from functools import partial
 from pathlib import Path
+from time import perf_counter
 
 # Third party packages
 import numpy as np
-from scipy import optimize as opt
 from numpy.random import default_rng
+from scipy import optimize as opt
 
 # Local packages
-from fluidml.models import Tree, Node
+from fluidml.models import Node, Tree
 
 
 def _log(
