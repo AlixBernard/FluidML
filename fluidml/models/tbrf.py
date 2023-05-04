@@ -223,7 +223,7 @@ class TBRF:
 
     def to_graphviz(
         self,
-        dir_path: str | Path,
+        dir_path: Path,
         shape: str = "rectangle",
         graph: str = "diagraph",
     ) -> None:
@@ -253,7 +253,7 @@ class TBRF:
         n_jobs: int | None = None,
         seed: int | None = None,
         logger: logging.Logger | None = None,
-    ) -> dict:
+    ) -> None:
         """Create the TBRF given input features `x`, true response `y`,
         and tensor basis `tb`.
 
@@ -295,7 +295,7 @@ class TBRF:
         tb: np.ndarray,
         seed: int | None = None,
         logger: logging.Logger | None = None,
-    ) -> list[TBDT]:
+    ) -> TBDT:
         """Fit the specified tree."""
         rng = default_rng(seed)
         n = len(x)

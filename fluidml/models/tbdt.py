@@ -769,7 +769,7 @@ class TBDT:
         idx = np.arange(n)
         ghat, bhat = fit_tensor(TT[idx], Ty[idx], tb[idx], y[idx])
         cost = cost_func(bhat, y)
-        nodes2add: deque[tuple(Node, Node | None, np.ndarray)] = deque(
+        nodes2add: deque[tuple[Node, Node | None, np.ndarray, np.ndarray, float]] = deque(
             [(Node(identifier="R"), None, np.arange(n), ghat, cost)]
         )
         while nodes2add:
