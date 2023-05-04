@@ -21,12 +21,12 @@ __all__ = [
 # Built-in packages
 import json
 import logging
-from collections import deque, OrderedDict
+from collections import OrderedDict, deque
 from dataclasses import dataclass
-from time import perf_counter
-from typing import Callable
 from functools import partial
 from pathlib import Path
+from time import perf_counter
+from typing import Callable
 
 # Third party packages
 import numpy as np
@@ -35,8 +35,7 @@ import numpy as np
 from numpy.random import default_rng
 
 # Local packages
-from fluidml.models import Tree, Node
-
+from fluidml.models import Node, Tree
 
 COST_FUNCTIONS = {
     "mae": lambda y_pred, y_true: np.mean(np.abs(y_pred - y_true)),
