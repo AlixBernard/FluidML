@@ -1,0 +1,5 @@
+pytest
+bpython
+mypy
+ruff-lsp
+pyright
