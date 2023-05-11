@@ -10,11 +10,11 @@ extend-exclude = '''
 
 [tool.ruff]
 # Enable pycodestyle (`E`) and Pyflakes (`F`) codes by default.
-select = ["E", "F", "W", "I", "N", "NPY", "RUF"]
-ignore = []
+select = ["E", "F", "W", "I", "N", "NPY", "RUF", "W"]
+ignore = ["N803", "N806"]
 
 # Allow autofix for all enabled rules (when `--fix`) is provided.
-fixable = ["A", "B", "C", "D", "E", "F", "..."]
+fixable = ["A", "B", "C", "D", "E", "F", "I"]
 unfixable = []
 
 # Exclude a variety of commonly ignored directories.
@@ -40,9 +40,8 @@ exclude = [
     "node_modules",
     "venv",
 ]
-per-file-ignores = {}
+per-file-ignores = { "fluidml/models/__init__.py" = ["I001", "F403", "F405"] }
 
-# Same as Black.
 line-length = 79
 
 # Allow unused variables when underscore-prefixed.
