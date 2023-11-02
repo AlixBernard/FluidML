@@ -1,6 +1,4 @@
 pytest
 black
-bpython
 mypy
-ruff-lsp
-pyright
+ruff
