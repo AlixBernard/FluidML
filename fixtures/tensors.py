@@ -16,7 +16,7 @@ import numpy as np
 # Local packages
 
 __all__ = [
-    "graU_1",
+    "gradU_1",
     "gradU_2",
     "S_1",
     "S_2",
