@@ -38,9 +38,11 @@ from numpy.random import default_rng
 from fluidml.models import Node, Tree
 
 COST_FUNCTIONS = {
-    "mae": lambda y_pred, y_true: np.mean(np.abs(y_pred - y_true)),
-    "mse": lambda y_pred, y_true: np.mean((y_pred - y_true) ** 2),
-    "rmse": lambda y_pred, y_true: np.sqrt(np.mean((y_pred - y_true) ** 2)),
+    "mae": lambda y_pred, y_true: float(np.mean(np.abs(y_pred - y_true))),
+    "mse": lambda y_pred, y_true: float(np.mean((y_pred - y_true) ** 2)),
+    "rmse": lambda y_pred, y_true: float(
+        np.sqrt(np.mean((y_pred - y_true) ** 2))
+    ),
 }
 
 
@@ -56,7 +58,7 @@ class NodeSplitData:
     n_samples: int
     idx_samples: np.ndarray
     ghat: np.ndarray
-    cost: np.ndarray
+    cost: float
 
     def __eq__(self, data) -> bool:
         conditions = (
@@ -413,7 +415,7 @@ def create_split(
     # # If enabled, use optimization instead of brute force
     # if 0 <= self.optim_threshold <= n:
     #     # ! DEACTIVATED
-    #     # - Reason: problem with opt.minimize_scalar
+    #     # - REASON: problem with opt.minimize_scalar
     #     partial_find_Jmin = partial(
     #         find_Jmin_opt, x=x, y=y, tb=tb, TT=TT, Ty=Ty
     #     )
@@ -609,7 +611,12 @@ class TBDT:
             k: v for k, v in tbdt_dict.items() if k not in ["nodes"]
         }
         tbdt = TBDT(**tbdt_kwargs)
-        nodes2add = []
+        nodes2add: list[
+            tuple[
+                Node,  # Node to add
+                Node | None,  # Parent Node, if exists
+            ]
+        ] = []
         for k, v in tbdt_dict["nodes"].items():
             identifier, tag, data = k, v["tag"], v["data"]
             node = Node(identifier, tag, data=data)
@@ -770,7 +777,13 @@ class TBDT:
         ghat, bhat = fit_tensor(TT[idx], Ty[idx], tb[idx], y[idx])
         cost = cost_func(bhat, y)
         nodes2add: deque[
-            tuple[Node, Node | None, np.ndarray, np.ndarray, float]
+            tuple[
+                Node,  # Node to add
+                Node | None,  # Parent Node, if exists
+                np.ndarray,  # Indexes of samples in the node
+                np.ndarray,  # `ghat` values for the node
+                float,  # Cost value of the node for its samples
+            ]
         ] = deque([(Node(identifier="R"), None, np.arange(n), ghat, cost)])
         while nodes2add:
             node, parent, idx, ghat, cost = nodes2add.popleft()
