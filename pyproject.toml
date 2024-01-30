@@ -33,9 +33,20 @@ classifiers = [
 ]
 
 [project.optional-dependencies]
-test = ["pytest>=6.0"]
-dev = ["black", "ruff", "mypy"]
-examples = ["matplotlib>=2.0", "scipy", "sklearn"]
+test = [
+    "pytest>=6.0",
+    "pytest-cov>=2.0",
+]
+dev = [
+    "black",
+    "ruff",
+    "mypy",
+]
+examples = [
+    "matplotlib>=2.0",
+    "scipy",
+    "sklearn",
+]
 
 
 [project.urls]
@@ -45,6 +56,13 @@ Homepage = "https://github.com/AlixBernard/FluidML"
 
 [tool.setuptools]
 packages = ["fluidml"]
+
+[tool.pytest.ini_options]
+minversion = "6.0"
+addopts = "--cov=fluidml"
+testpaths = [
+    "tests",
+]
 
 [tool.black]
 line-length = 79
