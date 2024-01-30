@@ -1,12 +1,12 @@
 import json
-import pytest
 from pathlib import Path
 
 import numpy as np
+import pytest
 from numpy.testing import assert_array_almost_equal
 
-from fluidml.models import TBDT, fit_tensor, find_min_cost_sort, create_split
-from fluidml.models.tbdt import COST_FUNCTIONS, SplitData, NodeSplitData
+from fluidml.models import TBDT, create_split, find_min_cost_sort, fit_tensor
+from fluidml.models.tbdt import COST_FUNCTIONS, NodeSplitData, SplitData
 
 
 def save_str2path(s: str, fp: Path) -> None:
