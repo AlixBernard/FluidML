@@ -380,7 +380,7 @@ class TBRF:
         except KeyError:
             raise ValueError(
                 f"The `method` attribute must be one of "
-                f"{{{', '.join(map(repr, PREDICTION_METHODS.keys()))}}}"
+                f"{{{', '.join([repr(meth) for meth in PREDICTION_METHODS])}}}"
             )
 
         _log(logging.INFO, "Predicted the anysotropy tensor `b`", logger)

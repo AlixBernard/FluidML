@@ -812,7 +812,7 @@ class TBDT:
             node.data = {
                 "split_i": split_i,
                 "split_v": split_v,
-                "g": list(map(float, ghat)),
+                "g": [float(g_i) for g_i in ghat],
                 "n_samples": n_samples,
                 cost_name: cost,
             }
