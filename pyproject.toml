@@ -39,8 +39,10 @@ test = [
 ]
 dev = [
     "black",
-    "ruff",
     "mypy",
+    "ruff",
+    "ruff-lsp",
+    "pyright",
 ]
 examples = [
     "matplotlib>=2.0",
