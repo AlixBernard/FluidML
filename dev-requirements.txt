@@ -1,5 +1,4 @@
 pytest
-black
 mypy
 ruff
 ruff-lsp
