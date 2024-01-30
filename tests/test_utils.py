@@ -18,6 +18,7 @@ import pytest
 from numpy.testing import assert_array_almost_equal
 
 from fluidml.utils import (
+    # Tested
     enforce_realizability,
     get_Ak,
     get_Ap,
@@ -26,7 +27,8 @@ from fluidml.utils import (
     get_S,
     get_tau_BM,
     get_TB10,
-    make_realizable,
+    # Not tested
+    make_realizable,  # Used to test `enforce_realizability`
 )
 
 # Local packages
