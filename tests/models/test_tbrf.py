@@ -8,11 +8,6 @@ from numpy.testing import assert_array_almost_equal
 from fluidml.models import TBRF
 
 
-def save_str2path(s: str, fp: Path) -> None:
-    with open(fp, "w") as file:
-        file.write(s)
-
-
 @pytest.fixture
 def seed1():
     return 47
@@ -174,10 +169,10 @@ class TestTBRF:
     ):
         tbrf1.fit(features, targets, tb, seed=seed1)
 
-        str_to_dict = json.dumps(tbrf1.to_dict(), indent=4)
-        save_str2path(str_to_dict, tmp_path / "to_dict.json")
-        str_as_dict = json.dumps(tbrf1_as_dict, indent=4)
-        save_str2path(str_as_dict, tmp_path / "as_dict.json")
+        s_to_dict = json.dumps(tbrf1.to_dict(), indent=4)
+        (tmp_path / "to_dict.json").write_text(s_to_dict)
+        s_as_dict = json.dumps(tbrf1_as_dict, indent=4)
+        (tmp_path / "as_dict.json").write_text(s_as_dict)
 
         assert tbrf1.to_dict() == tbrf1_as_dict
 
@@ -200,6 +195,6 @@ class TestTBRF:
             "b": b.tolist(),
         }
         s = json.dumps(pred_data, indent=4)
-        save_str2path(s, tmp_path / "preds.json")
+        (tmp_path / "preds.json").write_text(s)
 
         assert_array_almost_equal(b, b_prediction1, decimal=2)

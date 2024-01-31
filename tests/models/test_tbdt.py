@@ -9,11 +9,6 @@ from fluidml.models import TBDT, create_split, find_min_cost_sort, fit_tensor
 from fluidml.models.tbdt import COST_FUNCTIONS, NodeSplitData, SplitData
 
 
-def save_str2path(s: str, fp: Path) -> None:
-    with open(fp, "w") as file:
-        file.write(s)
-
-
 @pytest.fixture
 def seed1():
     return 47
@@ -294,10 +289,10 @@ class TestTBDT:
     ):
         tbdt1.fit(features, targets, tb, seed=seed1)
 
-        str_to_dict = json.dumps(tbdt1.to_dict(), indent=4)
-        save_str2path(str_to_dict, tmp_path / "to_dict.json")
-        str_as_dict = json.dumps(tbdt1_as_dict, indent=4)
-        save_str2path(str_as_dict, tmp_path / "as_dict.json")
+        s_to_dict = json.dumps(tbdt1.to_dict(), indent=4)
+        (tmp_path / "to_dict.json").write_text(s_to_dict)
+        s_as_dict = json.dumps(tbdt1_as_dict, indent=4)
+        (tmp_path / "as_dict.json").write_text(s_as_dict)
 
         assert tbdt1.to_dict() == tbdt1_as_dict
 
@@ -328,7 +323,7 @@ class TestTBDT:
         self, tmp_path, tbdt1, features, targets, tb, tbdt1_as_graphviz, seed1
     ):
         tbdt1.fit(features, targets, tb, seed=seed1)
-        save_str2path(tbdt1.to_graphviz(), tmp_path / "tbdt1.dot")
+        (tmp_path / "tbdt1.dot").write_text(tbdt1.to_graphviz())
         assert tbdt1.to_graphviz() == tbdt1_as_graphviz
 
     def test_predict(
@@ -346,7 +341,7 @@ class TestTBDT:
         g, b = tbdt1.predict(features, tb)
 
         s = json.dumps({"g": g.tolist(), "b": b.tolist()}, indent=4)
-        save_str2path(s, tmp_path / "preds.json")
+        (tmp_path / "preds.json").write_text(s)
 
         assert_array_almost_equal(g, g_prediction1)
         assert_array_almost_equal(b, b_prediction1, decimal=2)

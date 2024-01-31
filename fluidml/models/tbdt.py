@@ -637,9 +637,7 @@ class TBDT:
         """
         tbdt_dict = OrderedDict(self.to_dict())
         tbdt_dict.move_to_end("nodes")
-
-        with open(fp, "w") as file:
-            json.dump(tbdt_dict, file, indent=4)
+        fp.write_text(json.dumps(tbdt_dict, indent=4))
 
     @classmethod
     def load_from_json(cls, fp: Path) -> None:
@@ -650,8 +648,7 @@ class TBDT:
         fp : Path
 
         """
-        with open(fp, "r") as file:
-            tbdt_dict = json.load(file)
+        tbdt_dict = json.loads(fp.read_text())
         return cls.from_dict(tbdt_dict)
 
     def to_graphviz(
@@ -662,7 +659,7 @@ class TBDT:
 
         Parameters
         ----------
-        fp : str or Path
+        fp : Path | None
             File path to which the tree should be saved.
         shape : {'rectangle', 'circle'}, default='rectangle'
             Shape of the nodes.
@@ -711,8 +708,7 @@ class TBDT:
         )
 
         if fp is not None:
-            with open(fp, "w") as file:
-                file.write(dot_str)
+            fp.write_text(dot_str)
 
         return dot_str
 
