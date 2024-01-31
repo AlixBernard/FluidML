@@ -8,7 +8,7 @@ init-dev:
 	pip install -r dev-requirements.txt
 
 test-all:
-	pytest tests
+	pytest --cov=fluidml tests
 
 test-models:
-	pytest tests/models
+	pytest --cov=fluidml/models tests/models
