@@ -12,6 +12,6 @@ from fluidml.version import version as __version__
 __all__ = ["__version__"]
 
 
-from fluidml.utils import *
+from fluidml import utils
 
 __all__ += utils.__all__
