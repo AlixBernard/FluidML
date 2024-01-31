@@ -46,14 +46,14 @@ COST_FUNCTIONS = {
 }
 
 
-@dataclass
+@dataclass(slots=True)
 class SplitData:
     split_i: int
     split_v: float
     cost: float
 
 
-@dataclass
+@dataclass(slots=True)
 class NodeSplitData:
     n_samples: int
     idx_samples: np.ndarray
