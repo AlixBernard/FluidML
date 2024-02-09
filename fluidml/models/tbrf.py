@@ -77,12 +77,14 @@ class TBRF:
         name: str = "TBRF",
         n_estimators: int = 10,
         bootstrap: bool = True,
+        max_samples: int | float | None = None,
         tbdt_kwargs: dict | None = None,
         logger: logging.Logger | None = None,
     ) -> None:
         self.name = name
         self.n_estimators = n_estimators
         self.bootstrap = bootstrap
+        self.max_samples = max_samples
         self.tbdt_kwargs = tbdt_kwargs if tbdt_kwargs is not None else {}
 
         padding = f"0>{len(str(self.n_estimators))}"
