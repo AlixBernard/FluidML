@@ -626,39 +626,39 @@ class TBDT:
             tbdt.tree.add_node(node, parent=parent)
         return tbdt
 
-    def save_to_json(self, fp: Path) -> None:
+    def save_to_json(self, fp: Path | str) -> None:
         """Save the TBDT as a JSON file containing its dict representation.
 
         Parameters
         ----------
-        fp : Path
+        fp : Path | str
 
         """
         tbdt_dict = OrderedDict(self.to_dict())
         tbdt_dict.move_to_end("nodes")
-        fp.write_text(json.dumps(tbdt_dict, indent=4))
+        Path(fp).write_text(json.dumps(tbdt_dict, indent=4))
 
     @classmethod
-    def load_from_json(cls, fp: Path) -> None:
+    def load_from_json(cls, fp: Path | str) -> None:
         """Load the TBDT from a JSON file containing its dict representation.
 
         Parameters
         ----------
-        fp : Path
+        fp : Path | str
 
         """
-        tbdt_dict = json.loads(fp.read_text())
+        tbdt_dict = json.loads(Path(fp).read_text())
         return cls.from_dict(tbdt_dict)
 
     def to_graphviz(
-        self, fp: Path | None = None, shape="rectangle", graph="digraph"
+        self, fp: Path | str | None = None, shape="rectangle", graph="digraph"
     ) -> str:
         """Export the tree to the graphviz dot format, returning it as
         a str. If `fp` is specified, saves it.
 
         Parameters
         ----------
-        fp : Path | None
+        fp : Path | str | None
             File path to which the tree should be saved.
         shape : {'rectangle', 'circle'}, default='rectangle'
             Shape of the nodes.
@@ -707,7 +707,7 @@ class TBDT:
         )
 
         if fp is not None:
-            fp.write_text(dot_str)
+            Path(fp).write_text(dot_str)
 
         return dot_str
 
