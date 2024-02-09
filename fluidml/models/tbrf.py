@@ -229,10 +229,9 @@ class TBRF:
             Type of graph.
 
         """
-        dir_path = Path(dir_path)
         for tree in self.trees:
             tree.to_graphviz(
-                dir_path / f"{tree.name}.dot", shape=shape, graph=graph
+                Path(dir_path) / f"{tree.name}.dot", shape=shape, graph=graph
             )
 
     @_timer_func
