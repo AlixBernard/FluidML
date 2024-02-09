@@ -17,7 +17,6 @@ __all__ = [
     "TBDT",
 ]
 
-
 # Built-in packages
 import json
 import logging
@@ -43,6 +42,12 @@ COST_FUNCTIONS = {
     "rmse": lambda y_pred, y_true: float(
         np.sqrt(np.mean((y_pred - y_true) ** 2))
     ),
+}
+FEAT_SUBSET_SIZES = {
+    "sqrt": lambda x: int(np.ceil(np.sqrt(x))),
+    "log": lambda x: int(np.ceil(np.log(x))),
+    "log2": lambda x: int(np.ceil(np.log2(x))),
+    "log10": lambda x: int(np.ceil(np.log10(x))),
 }
 
 
@@ -142,7 +147,7 @@ def fit_tensor(
 #         Sorted preconstructed matrices $transpose(T)*T$.
 #     Ty_sorted : np.ndarray
 #         Sorted preconstructed matrices $transpose(T)*f$.
-#     i : int or None
+#     i : int | None
 #         If not None, index to use when splitting the data.
 
 #     Returns
@@ -459,15 +464,14 @@ class TBDT:
         Minimum number of samples required to consider to split a node.
     min_samples_leaf : int
         Minimum number of samples required to be a leaf node.
-    max_features : int or float or str or None, default='sqrt'
+    max_features : int | float | str | None, default=None
         Number of features to consider when looking for the best split:
             - if int then consider `max_features`
             - if float then consider `ceil(max_features * p)`
-            - if 'sqrt' then consider `ceil(srqt(p))`
-            - if 'log2' then consider `ceil(log2(p))`
+            - if str then must be one of {'sqrt', 'log', 'log2',
+              'log10'} and ceil is applied to the result.
             - if None then consider `p`
-        where `p` is the total number of features. If the considered
-        number of feature is not at least 1 then an error is raised.
+        where `p` is the total number of features.
     gamma : float, default=1.0
         The regularization parameter gamma, 1.0 means no regularization.
     optim_threshold : int, default=1_000
@@ -493,7 +497,7 @@ class TBDT:
         max_depth: int = 400,
         min_samples_split: int = 2,
         min_samples_leaf: int = 1,
-        max_features: int | float | str | None = "sqrt",
+        max_features: int | float | str | None = None,
         gamma: float = 1e0,
         optim_threshold: int = 1_000,
     ) -> None:
@@ -558,33 +562,28 @@ class TBDT:
 
         Raises
         ------
-        RuntimeError
+        ValueError
             If the value of the attribute `max_features` is not one of
-            {'sqrt', 'log2'}, an int between 1 and `p`, or a float
-            between 0 and 1.
+            {'sqrt', 'log', 'log2', 'log10'}, an int between 1 and `p`,
+            or a float between 0 and 1.
 
 
         """
-        FEAT_SUBSET_SIZES = {
-            None: lambda x: x,
-            "sqrt": lambda x: int(np.ceil(np.sqrt(x))),
-            "log": lambda x: int(np.ceil(np.log(x))),
-            "log2": lambda x: int(np.ceil(np.log2(x))),
-            "log10": lambda x: int(np.ceil(np.log10(x))),
-        }
+        if self.max_features is None:
+            return p
         if isinstance(self.max_features, int):
             if 1 <= self.max_features <= p:
                 return self.max_features
         if isinstance(self.max_features, float):
             if 0.0 < self.max_features <= 1.0:
-                if round(self.max_features * p) >= 1:
-                    return int(np.ceil((self.max_features * p)))
-        try:
-            return FEAT_SUBSET_SIZES[self.max_features](p)
-        except IndexError:
-            pass
+                return max(1, int(np.ceil((self.max_features * p))))
+        if isinstance(self.max_features, str):
+            try:
+                return FEAT_SUBSET_SIZES[self.max_features](p)
+            except IndexError:
+                pass
         raise ValueError(
-            f"The attribute `max_features` (={self.max_features}) has an "
+            f"The attribute `max_features={self.max_features}` has an "
             f"incorrect value."
         )
 
