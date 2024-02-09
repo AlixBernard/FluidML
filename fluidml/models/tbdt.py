@@ -9,6 +9,8 @@ Glossary:
 """
 
 __all__ = [
+    "COST_FUNCTIONS",
+    "FEAT_SUBSET_SIZES",
     "fit_tensor",
     # "obj_func_J",
     "find_min_cost_sort",

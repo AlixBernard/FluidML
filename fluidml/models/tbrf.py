@@ -8,7 +8,7 @@ Glossary:
 
 """
 
-__all__ = ["TBRF"]
+__all__ = ["PREDICTION_METHODS", "TBRF"]
 
 
 import logging
