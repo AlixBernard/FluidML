@@ -20,6 +20,7 @@ __all__ = [
 ]
 
 # Built-in packages
+import functools
 import json
 import logging
 from collections import OrderedDict, deque
@@ -85,6 +86,28 @@ def _log(
 ) -> None:
     if logger is not None:
         logger.log(level, message, *args, **kwargs)
+
+
+def _timer_debug_log(func):
+    @functools.wraps(func)
+    def wrap_func(*args, **kwargs):
+        t1 = perf_counter()
+        result = func(*args, **kwargs)
+        t2 = perf_counter()
+        logger = kwargs.get("logger")
+        try:
+            class_name = f"{args[0].__name__}."
+        except (IndexError, AttributeError):
+            class_name = None
+        prefix = f"{class_name}." if class_name is not None else ""
+        _log(
+            logging.DEBUG,
+            f"'{prefix}{func.__name__}' executed in {(t2-t1):.2f}s",
+            logger,
+        )
+        return result
+
+    return wrap_func
 
 
 def fit_tensor(
@@ -532,22 +555,6 @@ class TBDT:
             return False
         return True
 
-    def _timer_func(func):
-        def wrap_func(self, *args, **kwargs):
-            t1 = perf_counter()
-            result = func(self, *args, **kwargs)
-            t2 = perf_counter()
-            logger = kwargs.get("logger")
-            _log(
-                logging.DEBUG,
-                f"Method {self.name}.{func.__name__} executed in "
-                f"{(t2-t1):.2f}s",
-                logger,
-            )
-            return result
-
-        return wrap_func
-
     def _get_n_feats(self, p: int) -> int:
         """Compute the number of features to consider to perform each
         split (cf. attribute `max_features`).
@@ -713,7 +720,7 @@ class TBDT:
 
         return dot_str
 
-    @_timer_func
+    @_timer_debug_log
     def fit(
         self,
         x: np.ndarray,
@@ -830,16 +837,17 @@ class TBDT:
 
             _log(
                 logging.DEBUG,
-                f"Fitted node {node.identifier:<35}, "
-                f"{cost_name}={cost:.5e}, n_samples={n_samples:>6,}",
+                f"Fitted node {node.identifier:<{self.max_depth}}, "
+                f"{cost_name}={cost:.5e}, "
+                f"n_samples={n_samples:>{int(np.log10(n))+2},}",
                 logger,
             )
 
         t_end = perf_counter()
         t_delta = t_end - t_start
-        _log(logging.INFO, f"Fitted {self.name} in {t_delta: >9.3f}s", logger)
+        _log(logging.INFO, f"Fitted {self.name} in {t_delta:>.3f}s", logger)
 
-    @_timer_func
+    @_timer_debug_log
     def predict(
         self,
         x: np.ndarray,
