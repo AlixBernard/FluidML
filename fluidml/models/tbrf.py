@@ -47,25 +47,17 @@ class TBRF:
         Name of the forest used as its string representation.
     n_estimators : int, default=10
         Number of trees to build in the forest.
-    max_features : int or float or str or None, default='sqrt'
-        Number of features to consider when looking for the best split:
-            - if int then consider `max_features`
-            - if float then consider `ceil(max_features * m)`
-            - if 'sqrt' then consider `ceil(srqt(m))`
-            - if 'log2' then consider `ceil(log2(m))`
-            - if None then consider `m`
-        where `m` is the total number of features.
     bootstrap : bool, default=True
         Whether bootstrap samples are used when building trees. If
         False, the whole dataset is used to build each tree.
-    max_samples : int or float or None, default=None
+    max_samples : int | float | None, default=None
         If bootstrap is True, the number of samples to draw from x to
         to train each tree:
             - if None then draw `n` samples
             - if int then draw `max_samples` samples
             - if float then draw `round(max_samples * n)` samples
         where `n` is the total number of sample.
-    tbdt_kwargs : dict or None, default=None
+    tbdt_kwargs : dict | None, default=None
         Keyword arguments for the TBDTs.
 
     Methods
@@ -85,14 +77,12 @@ class TBRF:
         name: str = "TBRF",
         n_estimators: int = 10,
         bootstrap: bool = True,
-        max_samples: int | float | None = None,
         tbdt_kwargs: dict | None = None,
         logger: logging.Logger | None = None,
     ) -> None:
         self.name = name
         self.n_estimators = n_estimators
         self.bootstrap = bootstrap
-        self.max_samples = max_samples
         self.tbdt_kwargs = tbdt_kwargs if tbdt_kwargs is not None else {}
 
         padding = f"0>{len(str(self.n_estimators))}"
@@ -177,8 +167,8 @@ class TBRF:
         Raises
         ------
         TypeError
-            If the attribute `max_sample` is neither an int, float, or
-            None.
+            If the attribute `max_sample` is neither an int, a float,
+            nor a None.
 
         """
         if self.max_samples is None:
@@ -223,7 +213,7 @@ class TBRF:
 
     def to_graphviz(
         self,
-        dir_path: Path,
+        dir_path: Path | str,
         shape: str = "rectangle",
         graph: str = "diagraph",
     ) -> None:
@@ -231,7 +221,7 @@ class TBRF:
 
         Parameters
         ----------
-        dir_path : str or Path
+        dir_path : Path | str
             Directory to which save the tree.
         shape : {'rectangle', 'circle'}, default='rectangle'
             Shape of the nodes.
@@ -239,6 +229,7 @@ class TBRF:
             Type of graph.
 
         """
+        dir_path = Path(dir_path)
         for tree in self.trees:
             tree.to_graphviz(
                 dir_path / f"{tree.name}.dot", shape=shape, graph=graph
