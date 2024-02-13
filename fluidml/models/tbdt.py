@@ -96,7 +96,7 @@ def _timer_debug_log(func):
         t2 = perf_counter()
         logger = kwargs.get("logger")
         try:
-            class_name = f"{args[0].__name__}."
+            class_name = f"{args[0].__class__.__name__}"
         except (IndexError, AttributeError):
             class_name = None
         prefix = f"{class_name}." if class_name is not None else ""

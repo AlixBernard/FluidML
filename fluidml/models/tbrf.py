@@ -13,6 +13,7 @@ __all__ = ["PREDICTION_METHODS", "TBRF"]
 
 import logging
 import multiprocessing as mp
+import functools
 from pathlib import Path
 from time import perf_counter
 
@@ -36,6 +37,28 @@ def _log(
 ) -> None:
     if logger is not None:
         logger.log(level, message, *args, **kwargs)
+
+
+def _timer_debug_log(func):
+    @functools.wraps(func)
+    def wrap_func(*args, **kwargs):
+        t1 = perf_counter()
+        result = func(*args, **kwargs)
+        t2 = perf_counter()
+        logger = kwargs.get("logger")
+        try:
+            class_name = f"{args[0].__class__.__name__}"
+        except (IndexError, AttributeError):
+            class_name = None
+        prefix = f"{class_name}." if class_name is not None else ""
+        _log(
+            logging.DEBUG,
+            f"'{prefix}{func.__name__}' executed in {(t2-t1):.2f}s",
+            logger,
+        )
+        return result
+
+    return wrap_func
 
 
 class TBRF:
@@ -136,22 +159,6 @@ class TBRF:
                 return False
         return True
 
-    def _timer_func(func):
-        def wrap_func(self, *args, **kwargs):
-            t1 = perf_counter()
-            result = func(self, *args, **kwargs)
-            t2 = perf_counter()
-            logger = kwargs.get("logger")
-            _log(
-                logging.DEBUG,
-                f"Method '{self.name}.{func.__name__}()' executed in "
-                f"{(t2-t1):.2f}s",
-                logger,
-            )
-            return result
-
-        return wrap_func
-
     def _get_n_samples(self, n: int) -> int:
         """Compute the number of samples to use from `x` based on
         `self.max_samples`.
@@ -236,7 +243,7 @@ class TBRF:
                 Path(dir_path) / f"{tree.name}.dot", shape=shape, graph=graph
             )
 
-    @_timer_func
+    @_timer_debug_log
     def fit(
         self,
         x: np.ndarray,
@@ -309,7 +316,7 @@ class TBRF:
 
         return self.trees[i_tree]
 
-    @_timer_func
+    @_timer_debug_log
     def predict(
         self,
         x: np.ndarray,
