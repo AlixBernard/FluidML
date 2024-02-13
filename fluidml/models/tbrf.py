@@ -11,9 +11,9 @@ Glossary:
 __all__ = ["PREDICTION_METHODS", "TBRF"]
 
 
+import functools
 import logging
 import multiprocessing as mp
-import functools
 from pathlib import Path
 from time import perf_counter
 
