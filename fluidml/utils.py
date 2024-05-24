@@ -23,6 +23,7 @@ import numpy as np
 # Local packages
 
 __all__ = [
+    "get_k",
     "get_S",
     "get_R",
     "get_Ak",
@@ -43,6 +44,24 @@ __all__ = [
     "make_realizable",
     "make_realizable2",
 ]
+
+
+def get_k(tau: np.ndarray) -> np.ndarray:
+    """Compute tubulent kinetic energy scalars.
+
+    Parameters
+    ----------
+    tau : np.ndarray[shape=(n, 3, 3)]
+        Reynolds stress tensors.
+
+    Returns
+    -------
+    k : np.ndarray[shape=(n)]
+        Turbulent kinetic energy scalars.
+
+    """
+    k = 0.5 * np.einsum("...jj", tau)
+    return k
 
 
 def get_S(gradU: np.ndarray) -> np.ndarray:
