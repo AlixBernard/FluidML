@@ -27,6 +27,7 @@ __all__ = [
     "get_S",
     "get_R",
     "get_Ak",
+    "get_Ap",
     "get_TB10",
     "get_invariants_FS1",
     "get_invariants_FS2",
