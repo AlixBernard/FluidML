@@ -206,7 +206,7 @@ class TBRF:
         Parameters
         ----------
         tbrf_dict : dict
-            The dict representation of the TBDT to create.
+            The dict representation of the TBRF to create.
 
         """
         tbrf_kwargs = {
