@@ -903,7 +903,7 @@ def make_realizable2(b: np.ndarray) -> np.ndarray:
 
 
 def enforce_realizability(bhat: np.ndarray) -> np.ndarray:
-    """Enforce the realizibility of the anisotropy tensors. Each tensor
+    r"""Enforce the realizibility of the anisotropy tensors. Each tensor
     must follow:
     - $\forall i = 1...3 \frac{-1}{3} \leq b_{ii} \geq
     \frac{2}{3}$
