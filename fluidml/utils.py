@@ -189,20 +189,18 @@ def get_TB10(S: np.ndarray, R: np.ndarray) -> np.ndarray:
         T[i, 1] = s @ r - r @ s
         T[i, 2] = s @ s - (1 / 3) * np.eye(3) * np.trace(s @ s)
         T[i, 3] = r @ r - (1 / 3) * np.eye(3) * np.trace(r @ r)
-        T[i, 4] = r @ (s @ s) - s @ (s @ r)
+        T[i, 4] = r @ s @ s - s @ s @ r
         T[i, 5] = (
-            r @ (r @ s)
-            + s @ (r @ r)
-            - (2 / 3) * np.eye(3) * np.trace(s @ (r @ r))
+            r @ r @ s + s @ r @ r - (2 / 3) * np.eye(3) * np.trace(s @ r @ r)
         )
-        T[i, 6] = r @ (s @ (r @ r)) - r @ (r @ (s @ r))
-        T[i, 7] = s @ (r @ (s @ s)) - s @ (s @ (r @ s))
+        T[i, 6] = r @ s @ r @ r - r @ r @ s @ r
+        T[i, 7] = s @ r @ s @ s - s @ s @ r @ s
         T[i, 8] = (
-            r @ (r @ (s @ s))
-            + s @ (s @ (r @ r))
-            - (2 / 3) * np.eye(3) * np.trace(s @ (s @ (r @ r)))
+            r @ r @ s @ s
+            + s @ s @ r @ r
+            - (2 / 3) * np.eye(3) * np.trace(s @ s @ r @ r)
         )
-        T[i, 9] = r @ (s @ (s @ (r @ r))) - r @ (r @ (s @ (s @ r)))
+        T[i, 9] = r @ s @ s @ r @ r - r @ r @ s @ s @ r
 
     return T
 
@@ -230,9 +228,9 @@ def get_invariants_FS1(S: np.ndarray, R: np.ndarray) -> np.ndarray:
         inv[i, 0] = np.trace(S[i] @ S[i])
         inv[i, 1] = np.trace(R[i] @ R[i])
         inv[i, 2] = np.trace(S[i] @ S[i] @ S[i])
-        inv[i, 3] = np.trace(R[i] @ (R[i] @ S[i]))
-        inv[i, 4] = np.trace(R[i] @ (R[i] @ (S[i] @ S[i])))
-        inv[i, 5] = np.trace(R[i] @ (R[i] @ (S[i] @ (R[i] @ (S[i] @ S[i])))))
+        inv[i, 3] = np.trace(R[i] @ R[i] @ S[i])
+        inv[i, 4] = np.trace(R[i] @ R[i] @ S[i] @ S[i])
+        inv[i, 5] = np.trace(R[i] @ R[i] @ S[i] @ R[i] @ S[i] @ S[i])
 
     return inv
 
@@ -264,25 +262,23 @@ def get_invariants_FS2(
     inv = np.zeros([n, 13])
     for i in range(n):
         inv[i, 0] = np.trace(Ak[i] @ Ak[i])
-        inv[i, 1] = np.trace(Ak[i] @ (Ak[i] @ S[i]))
-        inv[i, 2] = np.trace(Ak[i] @ (Ak[i] @ (S[i] @ S[i])))
-        inv[i, 3] = np.trace(
-            Ak[i] @ (Ak[i] @ (S[i] @ (Ak[i] @ (S[i] @ S[i]))))
-        )
+        inv[i, 1] = np.trace(Ak[i] @ Ak[i] @ S[i])
+        inv[i, 2] = np.trace(Ak[i] @ Ak[i] @ S[i] @ S[i])
+        inv[i, 3] = np.trace(Ak[i] @ Ak[i] @ S[i] @ Ak[i] @ S[i] @ S[i])
         inv[i, 4] = np.trace(R[i] @ Ak[i])
-        inv[i, 5] = np.trace(R[i] @ (Ak[i] @ S[i]))
-        inv[i, 6] = np.trace(R[i] @ (Ak[i] @ (S[i] @ S[i])))
-        inv[i, 7] = np.trace(R[i] @ (R[i] @ (Ak[i] @ S[i])))
-        inv[i, 8] = np.trace(Ak[i] @ (Ak[i] @ (R[i] @ S[i])))  # FS2_extra_1
-        inv[i, 9] = np.trace(R[i] @ (R[i] @ (Ak[i] @ (S[i] @ S[i]))))  # FS2_9
+        inv[i, 5] = np.trace(R[i] @ Ak[i] @ S[i])
+        inv[i, 6] = np.trace(R[i] @ Ak[i] @ S[i] @ S[i])
+        inv[i, 7] = np.trace(R[i] @ R[i] @ Ak[i] @ S[i])
+        inv[i, 8] = np.trace(Ak[i] @ Ak[i] @ R[i] @ S[i])  # FS2_extra_1
+        inv[i, 9] = np.trace(R[i] @ R[i] @ Ak[i] @ S[i] @ S[i])  # FS2_9
         inv[i, 10] = np.trace(
-            Ak[i] @ (Ak[i] @ (R[i] @ (S[i] @ S[i])))
+            Ak[i] @ Ak[i] @ R[i] @ S[i] @ S[i]
         )  # FS2_extra_2
         inv[i, 11] = np.trace(
-            R[i] @ (R[i] @ (S[i] @ (Ak[i] @ (S[i] @ S[i]))))
+            R[i] @ R[i] @ S[i] @ Ak[i] @ S[i] @ S[i]
         )  # FS2_10
         inv[i, 12] = np.trace(
-            Ak[i] @ (Ak[i] @ (S[i] @ (R[i] @ (S[i] @ S[i]))))
+            Ak[i] @ Ak[i] @ S[i] @ R[i] @ S[i] @ S[i]
         )  # FS2_extra_3
 
     return inv
@@ -449,7 +445,7 @@ def get_inv1to2(S: np.ndarray) -> np.ndarray:
     inv = np.zeros([n, 2])
     for i in range(n):
         inv[i, 0] = np.trace(S[i] @ S[i])
-        inv[i, 1] = np.trace(S[i] @ (S[i] @ S[i]))
+        inv[i, 1] = np.trace(S[i] @ S[i] @ S[i])
 
     return inv
 
@@ -513,19 +509,15 @@ def get_inv6to14(
 
     inv = np.zeros([n, 9])
     for i in range(n):
-        inv[i, 0] = np.trace(R[i] @ (R[i] @ S[i]))
-        inv[i, 1] = np.trace(R[i] @ (R[i] @ (S[i] @ S[i])))
-        inv[i, 2] = np.trace(R[i] @ (R[i] @ (S[i] @ (R[i] @ (S[i] @ S[i])))))
-        inv[i, 3] = np.trace(Ap[i] @ (Ap[i] @ S[i]))
-        inv[i, 4] = np.trace(Ap[i] @ (Ap[i] @ (S[i] @ S[i])))
-        inv[i, 5] = np.trace(
-            Ap[i] @ (Ap[i] @ (S[i] @ (Ap[i] @ (S[i] @ S[i]))))
-        )
-        inv[i, 6] = np.trace(Ak[i] @ (Ak[i] @ S[i]))
-        inv[i, 7] = np.trace(Ak[i] @ (Ak[i] @ (S[i] @ S[i])))
-        inv[i, 8] = np.trace(
-            Ak[i] @ (Ak[i] @ (S[i] @ (Ak[i] @ (S[i] @ S[i]))))
-        )
+        inv[i, 0] = np.trace(R[i] @ R[i] @ S[i])
+        inv[i, 1] = np.trace(R[i] @ R[i] @ S[i] @ S[i])
+        inv[i, 2] = np.trace(R[i] @ R[i] @ S[i] @ R[i] @ S[i] @ S[i])
+        inv[i, 3] = np.trace(Ap[i] @ Ap[i] @ S[i])
+        inv[i, 4] = np.trace(Ap[i] @ Ap[i] @ S[i] @ S[i])
+        inv[i, 5] = np.trace(Ap[i] @ Ap[i] @ S[i] @ Ap[i] @ S[i] @ S[i])
+        inv[i, 6] = np.trace(Ak[i] @ Ak[i] @ S[i])
+        inv[i, 7] = np.trace(Ak[i] @ Ak[i] @ S[i] @ S[i])
+        inv[i, 8] = np.trace(Ak[i] @ Ak[i] @ S[i] @ Ak[i] @ S[i] @ S[i])
 
     return inv
 
@@ -589,38 +581,32 @@ def get_inv18to41(
 
     inv = np.zeros([n, 24])
     for i in range(n):
-        inv[i, 0] = np.trace(R[i] @ (Ap[i] @ S[i]))
-        inv[i, 1] = np.trace(R[i] @ (Ap[i] @ (S[i] @ S[i])))
-        inv[i, 2] = np.trace(R[i] @ (R[i] @ (Ap[i] @ S[i])))
-        inv[i, 3] = np.trace(Ap[i] @ (Ap[i] @ (R[i] @ S[i])))
-        inv[i, 4] = np.trace(R[i] @ (R[i] @ (Ap[i] @ (S[i] @ S[i]))))
-        inv[i, 5] = np.trace(Ap[i] @ (Ap[i] @ (R[i] @ (S[i] @ S[i]))))
-        inv[i, 6] = np.trace(R[i] @ (R[i] @ (S[i] @ (Ap[i] @ (S[i] @ S[i])))))
-        inv[i, 7] = np.trace(Ap[i] @ (Ap[i] @ (S[i] @ (R[i] @ (S[i] @ S[i])))))
+        inv[i, 0] = np.trace(R[i] @ Ap[i] @ S[i])
+        inv[i, 1] = np.trace(R[i] @ Ap[i] @ S[i] @ S[i])
+        inv[i, 2] = np.trace(R[i] @ R[i] @ Ap[i] @ S[i])
+        inv[i, 3] = np.trace(Ap[i] @ Ap[i] @ R[i] @ S[i])
+        inv[i, 4] = np.trace(R[i] @ R[i] @ Ap[i] @ S[i] @ S[i])
+        inv[i, 5] = np.trace(Ap[i] @ Ap[i] @ R[i] @ S[i] @ S[i])
+        inv[i, 6] = np.trace(R[i] @ R[i] @ S[i] @ Ap[i] @ S[i] @ S[i])
+        inv[i, 7] = np.trace(Ap[i] @ Ap[i] @ S[i] @ R[i] @ S[i] @ S[i])
 
-        inv[i, 8] = np.trace(R[i] @ (Ak[i] @ S[i]))
-        inv[i, 9] = np.trace(R[i] @ (Ak[i] @ (S[i] @ S[i])))
-        inv[i, 10] = np.trace(R[i] @ (R[i] @ (Ak[i] @ S[i])))
-        inv[i, 11] = np.trace(Ak[i] @ (Ak[i] @ (R[i] @ S[i])))
-        inv[i, 12] = np.trace(R[i] @ (R[i] @ (Ak[i] @ (S[i] @ S[i]))))
-        inv[i, 13] = np.trace(Ak[i] @ (Ak[i] @ (R[i] @ (S[i] @ S[i]))))
-        inv[i, 14] = np.trace(R[i] @ (R[i] @ (S[i] @ (Ak[i] @ (S[i] @ S[i])))))
-        inv[i, 15] = np.trace(
-            Ak[i] @ (Ak[i] @ (S[i] @ (R[i] @ (S[i] @ S[i]))))
-        )
+        inv[i, 8] = np.trace(R[i] @ Ak[i] @ S[i])
+        inv[i, 9] = np.trace(R[i] @ Ak[i] @ S[i] @ S[i])
+        inv[i, 10] = np.trace(R[i] @ R[i] @ Ak[i] @ S[i])
+        inv[i, 11] = np.trace(Ak[i] @ Ak[i] @ R[i] @ S[i])
+        inv[i, 12] = np.trace(R[i] @ R[i] @ Ak[i] @ S[i] @ S[i])
+        inv[i, 13] = np.trace(Ak[i] @ Ak[i] @ R[i] @ S[i] @ S[i])
+        inv[i, 14] = np.trace(R[i] @ R[i] @ S[i] @ Ak[i] @ S[i] @ S[i])
+        inv[i, 15] = np.trace(Ak[i] @ Ak[i] @ S[i] @ R[i] @ S[i] @ S[i])
 
-        inv[i, 16] = np.trace(Ap[i] @ (Ak[i] @ S[i]))
-        inv[i, 17] = np.trace(Ap[i] @ (Ak[i] @ (S[i] @ S[i])))
-        inv[i, 18] = np.trace(Ap[i] @ (Ap[i] @ (Ak[i] @ S[i])))
-        inv[i, 19] = np.trace(Ak[i] @ (Ak[i] @ (Ap[i] @ S[i])))
-        inv[i, 20] = np.trace(Ap[i] @ (Ap[i] @ (Ak[i] @ (S[i] @ S[i]))))
-        inv[i, 21] = np.trace(Ak[i] @ (Ak[i] @ (Ap[i] @ (S[i] @ S[i]))))
-        inv[i, 22] = np.trace(
-            Ap[i] @ (Ap[i] @ (S[i] @ (Ak[i] @ (S[i] @ S[i]))))
-        )
-        inv[i, 23] = np.trace(
-            Ak[i] @ (Ak[i] @ (S[i] @ (Ap[i] @ (S[i] @ S[i]))))
-        )
+        inv[i, 16] = np.trace(Ap[i] @ Ak[i] @ S[i])
+        inv[i, 17] = np.trace(Ap[i] @ Ak[i] @ S[i] @ S[i])
+        inv[i, 18] = np.trace(Ap[i] @ Ap[i] @ Ak[i] @ S[i])
+        inv[i, 19] = np.trace(Ak[i] @ Ak[i] @ Ap[i] @ S[i])
+        inv[i, 20] = np.trace(Ap[i] @ Ap[i] @ Ak[i] @ S[i] @ S[i])
+        inv[i, 21] = np.trace(Ak[i] @ Ak[i] @ Ap[i] @ S[i] @ S[i])
+        inv[i, 22] = np.trace(Ap[i] @ Ap[i] @ S[i] @ Ak[i] @ S[i] @ S[i])
+        inv[i, 23] = np.trace(Ak[i] @ Ak[i] @ S[i] @ Ap[i] @ S[i] @ S[i])
 
     return inv
 
@@ -651,7 +637,7 @@ def get_inv42(Ak: np.ndarray, Ap: np.ndarray, R: np.ndarray) -> np.ndarray:
 
     inv = np.zeros([n])
     for i in range(n):
-        inv[i] = np.trace(R[i] @ (Ap[i] @ Ak[i]))
+        inv[i] = np.trace(R[i] @ Ap[i] @ Ak[i])
 
     return inv
 
@@ -684,11 +670,11 @@ def get_inv43to47(
 
     inv = np.zeros([n, 5])
     for i in range(n):
-        inv[i, 0] = np.trace(R[i] @ (Ap[i] @ (Ak[i] @ S[i])))
-        inv[i, 1] = np.trace(R[i] @ (Ak[i] @ (Ap[i] @ S[i])))
-        inv[i, 2] = np.trace(R[i] @ (Ap[i] @ (Ak[i] @ (S[i] @ S[i]))))
-        inv[i, 3] = np.trace(R[i] @ (Ak[i] @ (Ap[i] @ (S[i] @ S[i]))))
-        inv[i, 4] = np.trace(R[i] @ (Ap[i] @ (S[i] @ (Ak[i] @ (S[i] @ S[i])))))
+        inv[i, 0] = np.trace(R[i] @ Ap[i] @ Ak[i] @ S[i])
+        inv[i, 1] = np.trace(R[i] @ Ak[i] @ Ap[i] @ S[i])
+        inv[i, 2] = np.trace(R[i] @ Ap[i] @ Ak[i] @ S[i] @ S[i])
+        inv[i, 3] = np.trace(R[i] @ Ak[i] @ Ap[i] @ S[i] @ S[i])
+        inv[i, 4] = np.trace(R[i] @ Ap[i] @ S[i] @ Ak[i] @ S[i] @ S[i])
 
     return inv
 
@@ -889,7 +875,7 @@ def make_realizable2(b: np.ndarray) -> np.ndarray:
                 * (3 * np.abs(evals_sorted[1]) - evals_sorted[1])
                 / (2 * evals_max)
             )
-            A = (evecs @ np.diag(evals)) @ np.linalg.inv(evecs)
+            A = evecs @ np.diag(evals) @ np.linalg.inv(evecs)
             for j in range(3):
                 b[i, 0, j] = A[j, j]
             b[i, 0, 1] = A[0, 1]
@@ -994,7 +980,7 @@ def enforce_realizability(bhat: np.ndarray) -> np.ndarray:
                 * (3 * np.abs(evals_sorted[1]) - evals_sorted[1])
                 / (2 * evals_max)
             )
-            A = (evecs @ np.diag(evals)) @ np.linalg.inv(evecs)
+            A = evecs @ np.diag(evals) @ np.linalg.inv(evecs)
             for j in range(3):
                 # Equivalent to `b[i, 0, 0] = A[0, 0]` as `b[i, 0, 1]`
                 # and `b[i, 0, 2]` get overwritten below
