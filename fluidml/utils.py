@@ -22,7 +22,9 @@ import numpy as np
 
 # Local packages
 
+
 __all__ = [
+    "I_3",
     "get_k",
     "get_S",
     "get_R",
@@ -45,6 +47,8 @@ __all__ = [
     "make_realizable",
     "make_realizable2",
 ]
+
+I_3 = np.identity(3)
 
 
 def get_k(tau: np.ndarray) -> np.ndarray:
@@ -125,7 +129,7 @@ def get_Ak(gradk: np.ndarray) -> np.ndarray:
     eijk[0, 1, 2] = eijk[1, 2, 0] = eijk[2, 0, 1] = 1
     eijk[0, 2, 1] = eijk[2, 1, 0] = eijk[1, 0, 2] = -1
 
-    u, v = gradk, np.eye(3)
+    u, v = gradk, I_3
     Ak = np.einsum("iuk,vk->uvi", np.einsum("ijk,uj->iuk", eijk, u), v)
 
     return Ak
@@ -154,7 +158,7 @@ def get_Ap(gradp: np.ndarray) -> np.ndarray:
     eijk[0, 1, 2] = eijk[1, 2, 0] = eijk[2, 0, 1] = 1
     eijk[0, 2, 1] = eijk[2, 1, 0] = eijk[1, 0, 2] = -1
 
-    u, v = gradp, np.eye(3)
+    u, v = gradp, I_3
     Ap = np.einsum("iuk,vk->uvi", np.einsum("ijk,uj->iuk", eijk, u), v)
 
     return Ap
@@ -189,18 +193,16 @@ def get_TB10(S: np.ndarray, R: np.ndarray) -> np.ndarray:
     for i, (s, r) in enumerate(zip(S, R)):
         T[i, 0] = s
         T[i, 1] = s @ r - r @ s
-        T[i, 2] = s @ s - (1 / 3) * np.eye(3) * np.trace(s @ s)
-        T[i, 3] = r @ r - (1 / 3) * np.eye(3) * np.trace(r @ r)
+        T[i, 2] = s @ s - (1 / 3) * I_3 * np.trace(s @ s)
+        T[i, 3] = r @ r - (1 / 3) * I_3 * np.trace(r @ r)
         T[i, 4] = r @ s @ s - s @ s @ r
-        T[i, 5] = (
-            r @ r @ s + s @ r @ r - (2 / 3) * np.eye(3) * np.trace(s @ r @ r)
-        )
+        T[i, 5] = r @ r @ s + s @ r @ r - (2 / 3) * I_3 * np.trace(s @ r @ r)
         T[i, 6] = r @ s @ r @ r - r @ r @ s @ r
         T[i, 7] = s @ r @ s @ s - s @ s @ r @ s
         T[i, 8] = (
             r @ r @ s @ s
             + s @ s @ r @ r
-            - (2 / 3) * np.eye(3) * np.trace(s @ s @ r @ r)
+            - (2 / 3) * I_3 * np.trace(s @ s @ r @ r)
         )
         T[i, 9] = r @ s @ s @ r @ r - r @ r @ s @ s @ r
 
@@ -421,7 +423,7 @@ def get_tau_BM(k: np.ndarray, nut: np.ndarray, S: np.ndarray) -> np.ndarray:
         Reynolds-stress tensors from the Boussinesq model.
 
     """
-    tau_BM = (2 / 3) * np.einsum("i,jk->ijk", k, np.eye(3)) - 2 * np.einsum(
+    tau_BM = (2 / 3) * np.einsum("i,jk->ijk", k, I_3) - 2 * np.einsum(
         "i,ijk->ijk", nut, S
     )
     return tau_BM
