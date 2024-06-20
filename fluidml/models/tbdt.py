@@ -503,6 +503,8 @@ class TBDT:
         Threshold for which if the number of points is below, brute
         force will be used and optim otherwise, if it is -1 then
         optimization is disabled.
+    tree : Tree
+        The tree structure of the TBDT.
 
     Methods
     -------
