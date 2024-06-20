@@ -82,6 +82,8 @@ class TBRF:
         where `n` is the total number of sample.
     tbdt_kwargs : dict | None, default=None
         Keyword arguments for the TBDTs.
+    trees : list[Tree]
+        The TBDTs of the TBRF.
 
     Methods
     -------
