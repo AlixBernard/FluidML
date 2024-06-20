@@ -161,7 +161,8 @@ def get_Ap(gradp: np.ndarray) -> np.ndarray:
 
 
 def get_TB10(S: np.ndarray, R: np.ndarray) -> np.ndarray:
-    """Compute tensor bases composed of 10 tensors.
+    """Compute tensor bases composed of 10 tensors to compute the
+    Reynolds stress anisotropy tensor.
 
     Parameters
     ----------
@@ -177,6 +178,7 @@ def get_TB10(S: np.ndarray, R: np.ndarray) -> np.ndarray:
 
     Notes
     -----
+    The basis definition is taken from Pope (1975).
     The normalized versions of `S` and `R` should be used, also denoted
     respectively `Shat` and `Rhat`.
 
