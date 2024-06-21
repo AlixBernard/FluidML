@@ -4,6 +4,7 @@ Glossary:
     - `n` is the total number of samples
     - `p` is the total number of features
     - `m` is the number of tensors in the tensor basis
+    - `d` is the number of components of the vector/tensor to predict
     - `s` is the number of TBDTs in the TBRF
 
 """
@@ -262,9 +263,9 @@ class TBRF:
         ----------
         x : np.ndarray[shape=(n, p)]
             Input features.
-        y : np.ndarray[shape=(n, 9)]
+        y : np.ndarray[shape=(n, d)]
             Anisotropy tensors $b_{ij}$ on which to fit the tree.
-        tb : np.ndarray[shape=(n, m, 9)]
+        tb : np.ndarray[shape=(n, m, d)]
             Tensor bases.
         n_jobs : int, default=None
             The number of jobs to run in parallel, None means using all
@@ -335,7 +336,7 @@ class TBRF:
         ----------
         x : np.ndarray[shape=(n, p)]
             Input features.
-        tb : np.ndarray[shape=(n, m, 9)]
+        tb : np.ndarray[shape=(n, m, d)]
             Tensor bases.
         method : str {'mean', 'median'}
             How to compute the TBRF prediction from all the TBDT
@@ -348,9 +349,9 @@ class TBRF:
         -------
         g_trees : np.ndarray[shape=(s, n, m)]
             Tensor bases coefficients for each TBDT in the TBRF.
-        y_trees : np.ndarray[shape=(s, n, 9)]
+        y_trees : np.ndarray[shape=(s, n, d)]
             Anisotropy tensors $b_{ij}$ for each TBDT in the TBRF.
-        y : np.ndarray[shape=(n, 9)]
+        y : np.ndarray[shape=(n, d)]
             Anisotropy tensors.
 
         Raises
@@ -359,10 +360,10 @@ class TBRF:
             If the parameter `method` is not a valid value.
 
         """
-        n, m, _ = tb.shape
+        n, m, d = tb.shape
 
         # Initialize predictions
-        y_trees = np.zeros([len(self), n, 9])
+        y_trees = np.zeros([len(self), n, d])
         g_trees = np.zeros([len(self), n, m])
 
         with mp.Pool(processes=n_jobs) as pool:

@@ -4,6 +4,7 @@ Glossary:
     - `n` is the total number of samples
     - `p` is the total number of features
     - `m` is the number of tensors in the tensor basis
+    - `d` is the number of components of the vector/tensor to predict
     - `s` is the number of TBDTs in the TBRF
 
 """
@@ -127,7 +128,7 @@ def fit_tensor(
         Preconstructed matrix $T^t T$.
     Ty : np.ndarray[shape=(n, m)]
         Preconstructed matrix $T^t y$.
-    tb : np.ndarray[shape=(n, m, 9)]
+    tb : np.ndarray[shape=(n, m, d)]
         Tensor bases.
 
     Returns
@@ -226,9 +227,9 @@ def find_min_cost_sort(
         point.
     x : np.ndarray[shape=(n, p)]
         Input features.
-    y : np.ndarray[shape=(n, 9)]
+    y : np.ndarray[shape=(n, d)]
         Anisotropy tensor `b` (target) on which to fit the tree.
-    tb : np.ndarray[shape=(n, m, 9)]
+    tb : np.ndarray[shape=(n, m, d)]
         Tensor bases.
     TT : np.ndarray[shape=(n, m, m)]
         Preconstructed matrix $transpose(T)*T$.
@@ -306,9 +307,9 @@ def find_min_cost_sort(
 #         Input features with shape `(n, p)`.
 #     y : np.ndarray
 #         Anisotropy tensor `b` (target) on which to fit the tree with
-#         shape `(n, 9)`.
+#         shape `(n, d)`.
 #     tb : np.ndarray
-#         Tensor bases with shape `(n, m, 9)`.
+#         Tensor bases with shape `(n, m, d)`.
 #     TT : np.ndarray
 #         Preconstructed matrix $transpose(T)*T$.
 #     Ty : np.ndarray
@@ -397,9 +398,9 @@ def create_split(
     ----------
     x : np.ndarray[shape=(n, p)]
         Input features.
-    y : np.ndarray[shape=(n, 9)]
+    y : np.ndarray[shape=(n, d)]
         Anisotropy tensors `b` (target) on which to fit the tree.
-    tb : np.ndarray[shape=(n, m, 9)]
+    tb : np.ndarray[shape=(n, m, d)]
         Tensor bases.
     TT : np.ndarray[shape=(n, m, m)]
         Preconstructed matrix $transpose(T)*T$.
@@ -737,9 +738,9 @@ class TBDT:
         ----------
         x : np.ndarray[shape=(n, p)]
             Input features.
-        y : np.ndarray[shape=(n, 9)]
+        y : np.ndarray[shape=(n, d)]
             Anisotropy tensors `b` on which to fit the TBDT.
-        tb : np.ndarray[shape=(n, m, 9)]
+        tb : np.ndarray[shape=(n, m, d)]
             Tensor bases.
         cost_func : Callable[[np.ndarray, np.ndarray], float]
             The cost function to minimize.
@@ -860,14 +861,14 @@ class TBDT:
         ----------
         x : np.ndarray[shape=(n, p)]
             Input features.
-        tb : np.ndarray[shape=(n, m, 9)]
+        tb : np.ndarray[shape=(n, m, d)]
             Tensor basess.
 
         Returns
         -------
         ghat : np.ndarray[shape=(n, m)]
             Tensor bases coefficients.
-        bhat : np.ndarray[shape=(n, 9)]
+        bhat : np.ndarray[shape=(n, d)]
             Anisotropy tensors.
 
         """
