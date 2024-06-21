@@ -188,23 +188,39 @@ def get_TB10(S: np.ndarray, R: np.ndarray) -> np.ndarray:
 
     """
     n = len(S)
+    n_I_3 = np.array([I_3 for _ in range(n)])
 
     T = np.zeros([n, 10, 3, 3])
-    for i, (s, r) in enumerate(zip(S, R)):
-        T[i, 0] = s
-        T[i, 1] = s @ r - r @ s
-        T[i, 2] = s @ s - (1 / 3) * I_3 * np.trace(s @ s)
-        T[i, 3] = r @ r - (1 / 3) * I_3 * np.trace(r @ r)
-        T[i, 4] = r @ s @ s - s @ s @ r
-        T[i, 5] = r @ r @ s + s @ r @ r - (2 / 3) * I_3 * np.trace(s @ r @ r)
-        T[i, 6] = r @ s @ r @ r - r @ r @ s @ r
-        T[i, 7] = s @ r @ s @ s - s @ s @ r @ s
-        T[i, 8] = (
-            r @ r @ s @ s
-            + s @ s @ r @ r
-            - (2 / 3) * I_3 * np.trace(s @ s @ r @ r)
+    T[:, 0] = S
+    T[:, 1] = S @ R - R @ S
+    T[:, 2] = S @ S - (1 / 3) * np.einsum(
+        "...ij,...->...ij", n_I_3, np.trace(S @ S, axis1=-1, axis2=-2)
+    )
+    T[:, 3] = R @ R - (1 / 3) * np.einsum(
+        "...ij,...->...ij", n_I_3, np.trace(R @ R, axis1=-1, axis2=-2)
+    )
+    T[:, 4] = R @ S @ S - S @ S @ R
+    T[:, 5] = (
+        R @ R @ S
+        + S @ R @ R
+        - (2 / 3)
+        * np.einsum(
+            "...ij,...->...ij", n_I_3, np.trace(S @ R @ R, axis1=-1, axis2=-2)
         )
-        T[i, 9] = r @ s @ s @ r @ r - r @ r @ s @ s @ r
+    )
+    T[:, 6] = R @ S @ R @ R - R @ R @ S @ R
+    T[:, 7] = S @ R @ S @ S - S @ S @ R @ S
+    T[:, 8] = (
+        R @ R @ S @ S
+        + S @ S @ R @ R
+        - (2 / 3)
+        * np.einsum(
+            "...ij,...->...ij",
+            n_I_3,
+            np.trace(S @ S @ R @ R, axis1=-1, axis2=-2),
+        )
+    )
+    T[:, 9] = R @ S @ S @ R @ R - R @ R @ S @ S @ R
 
     return T
 
