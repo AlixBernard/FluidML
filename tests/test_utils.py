@@ -23,6 +23,7 @@ from fluidml.utils import (
     get_Ak,
     get_Ap,
     get_b_BM,
+    get_k,
     get_R,
     get_S,
     get_tau_BM,
@@ -34,6 +35,7 @@ from fluidml.utils import (
 # Local packages
 
 __all__ = [
+    "test_get_k",
     "test_get_S",
     "test_get_R",
     "test_get_Ak",
@@ -114,6 +116,13 @@ def bhat1() -> np.ndarray:
     n = 5
     x = np.arange(n * 3 * 3).reshape(n, 3, 3) ** 0.2 - 3
     return x**2 - x - 2
+
+
+def test_get_k(data1):
+    assert_array_almost_equal(
+        get_k(data1["tau_BM"]),
+        0.5 * np.array([np.trace(x) for x in data1["tau_BM"]]),
+    )
 
 
 def test_get_S(data1):

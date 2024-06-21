@@ -8,9 +8,10 @@ Glossary:
 
 """
 
-__all__ = ["TBRF"]
+__all__ = ["PREDICTION_METHODS", "TBRF"]
 
 
+import functools
 import logging
 import multiprocessing as mp
 from pathlib import Path
@@ -38,6 +39,28 @@ def _log(
         logger.log(level, message, *args, **kwargs)
 
 
+def _timer_debug_log(func):
+    @functools.wraps(func)
+    def wrap_func(*args, **kwargs):
+        t1 = perf_counter()
+        result = func(*args, **kwargs)
+        t2 = perf_counter()
+        logger = kwargs.get("logger")
+        try:
+            class_name = f"{args[0].__class__.__name__}"
+        except (IndexError, AttributeError):
+            class_name = None
+        prefix = f"{class_name}." if class_name is not None else ""
+        _log(
+            logging.DEBUG,
+            f"'{prefix}{func.__name__}' executed in {(t2-t1):.2f}s",
+            logger,
+        )
+        return result
+
+    return wrap_func
+
+
 class TBRF:
     """Tensor Basis Random Forest.
 
@@ -47,26 +70,20 @@ class TBRF:
         Name of the forest used as its string representation.
     n_estimators : int, default=10
         Number of trees to build in the forest.
-    max_features : int or float or str or None, default='sqrt'
-        Number of features to consider when looking for the best split:
-            - if int then consider `max_features`
-            - if float then consider `ceil(max_features * m)`
-            - if 'sqrt' then consider `ceil(srqt(m))`
-            - if 'log2' then consider `ceil(log2(m))`
-            - if None then consider `m`
-        where `m` is the total number of features.
     bootstrap : bool, default=True
         Whether bootstrap samples are used when building trees. If
         False, the whole dataset is used to build each tree.
-    max_samples : int or float or None, default=None
+    max_samples : int | float | None, default=None
         If bootstrap is True, the number of samples to draw from x to
         to train each tree:
             - if None then draw `n` samples
             - if int then draw `max_samples` samples
             - if float then draw `round(max_samples * n)` samples
         where `n` is the total number of sample.
-    tbdt_kwargs : dict or None, default=None
+    tbdt_kwargs : dict | None, default=None
         Keyword arguments for the TBDTs.
+    trees : list[Tree]
+        The TBDTs of the TBRF.
 
     Methods
     -------
@@ -144,22 +161,6 @@ class TBRF:
                 return False
         return True
 
-    def _timer_func(func):
-        def wrap_func(self, *args, **kwargs):
-            t1 = perf_counter()
-            result = func(self, *args, **kwargs)
-            t2 = perf_counter()
-            logger = kwargs.get("logger")
-            _log(
-                logging.DEBUG,
-                f"Method '{self.name}.{func.__name__}()' executed in "
-                f"{(t2-t1):.2f}s",
-                logger,
-            )
-            return result
-
-        return wrap_func
-
     def _get_n_samples(self, n: int) -> int:
         """Compute the number of samples to use from `x` based on
         `self.max_samples`.
@@ -177,8 +178,8 @@ class TBRF:
         Raises
         ------
         TypeError
-            If the attribute `max_sample` is neither an int, float, or
-            None.
+            If the attribute `max_sample` is neither an int, a float,
+            nor a None.
 
         """
         if self.max_samples is None:
@@ -189,7 +190,7 @@ class TBRF:
             n_samples = round(self.max_samples * n)
         else:
             raise TypeError(
-                f"The {self.max_samples} is not recognized"
+                f"The value {self.max_samples} is not recognized"
                 f" for the attribute `max_samples`"
             )
         return n_samples
@@ -207,7 +208,7 @@ class TBRF:
         Parameters
         ----------
         tbrf_dict : dict
-            The dict representation of the TBDT to create.
+            The dict representation of the TBRF to create.
 
         """
         tbrf_kwargs = {
@@ -223,7 +224,7 @@ class TBRF:
 
     def to_graphviz(
         self,
-        dir_path: Path,
+        dir_path: Path | str,
         shape: str = "rectangle",
         graph: str = "diagraph",
     ) -> None:
@@ -231,7 +232,7 @@ class TBRF:
 
         Parameters
         ----------
-        dir_path : str or Path
+        dir_path : Path | str
             Directory to which save the tree.
         shape : {'rectangle', 'circle'}, default='rectangle'
             Shape of the nodes.
@@ -241,10 +242,10 @@ class TBRF:
         """
         for tree in self.trees:
             tree.to_graphviz(
-                dir_path / f"{tree.name}.dot", shape=shape, graph=graph
+                Path(dir_path) / f"{tree.name}.dot", shape=shape, graph=graph
             )
 
-    @_timer_func
+    @_timer_debug_log
     def fit(
         self,
         x: np.ndarray,
@@ -255,14 +256,14 @@ class TBRF:
         logger: logging.Logger | None = None,
     ) -> None:
         """Create the TBRF given input features `x`, true response `y`,
-        and tensor basis `tb`.
+        and tensor bases `tb`.
 
         Parameters
         ----------
         x : np.ndarray[shape=(n, p)]
             Input features.
         y : np.ndarray[shape=(n, 9)]
-            Anisotropy tensors `b` on which to fit the tree.
+            Anisotropy tensors $b_{ij}$ on which to fit the tree.
         tb : np.ndarray[shape=(n, m, 9)]
             Tensor bases.
         n_jobs : int, default=None
@@ -271,7 +272,7 @@ class TBRF:
         seed : int | None
 
         """
-        _log(logging.INFO, f"Fitting {self.name}", logger)
+        _log(logging.INFO, f"Fit {self.name}", logger)
         t_start = perf_counter()
 
         rng = default_rng(seed)
@@ -317,7 +318,7 @@ class TBRF:
 
         return self.trees[i_tree]
 
-    @_timer_func
+    @_timer_debug_log
     def predict(
         self,
         x: np.ndarray,
@@ -327,7 +328,7 @@ class TBRF:
         logger: logging.Logger | None = None,
     ) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
         """Tensor Basis Random Forest predictions given input features
-        `x_test` and tensor basis `tb_test`, make predictions for the
+        `x_test` and tensor bases `tb_test`, make predictions for the
         anisotropy tensor `b` using its fitted trees.
 
         Parameters
@@ -345,12 +346,12 @@ class TBRF:
 
         Returns
         -------
-        bhat : np.ndarray[shape=(n, 9)]
+        g_trees : np.ndarray[shape=(s, n, m)]
+            Tensor bases coefficients for each TBDT in the TBRF.
+        y_trees : np.ndarray[shape=(s, n, 9)]
+            Anisotropy tensors $b_{ij}$ for each TBDT in the TBRF.
+        y : np.ndarray[shape=(n, 9)]
             Anisotropy tensors.
-        b : np.ndarray[shape=(s, n, 9)]
-            Anisotropy tensors for each TBDT in the TBRF.
-        g : np.ndarray[shape=(s, n, m)]
-            Tensor basis coefficients for each TBDT in the TBRF.
 
         Raises
         ------
@@ -361,7 +362,7 @@ class TBRF:
         n, m, _ = tb.shape
 
         # Initialize predictions
-        b_trees = np.zeros([len(self), n, 9])
+        y_trees = np.zeros([len(self), n, 9])
         g_trees = np.zeros([len(self), n, m])
 
         with mp.Pool(processes=n_jobs) as pool:
@@ -373,23 +374,23 @@ class TBRF:
 
         # Go through the TBDTs of the TBRF to make predictions
         for i in range(len(self)):
-            g_trees[i], b_trees[i] = data[i]
+            g_trees[i], y_trees[i] = data[i]
 
         try:
-            b = PREDICTION_METHODS[method](b_trees)
+            y = PREDICTION_METHODS[method](y_trees)
         except KeyError:
             raise ValueError(
-                f"The `method` attribute must be one of "
-                f"{{{', '.join([repr(meth) for meth in PREDICTION_METHODS])}}}"
+                "The `method` attribute must be one of "
+                f"{set(PREDICTION_METHODS)}"
             )
 
-        _log(logging.INFO, "Predicted the anysotropy tensor `b`", logger)
+        _log(logging.INFO, "Predicted the anysotropy tensor $b$", logger)
 
-        return g_trees, b_trees, b
+        return g_trees, y_trees, y
 
     def _predict_tree(
         self, i_tree: int, x: np.ndarray, tb: np.ndarray
     ) -> tuple[np.ndarray, np.ndarray]:
         """Predict from the tree specified."""
-        g, b = self.trees[i_tree].predict(x, tb)
-        return g, b
+        g, y = self.trees[i_tree].predict(x, tb)
+        return g, y

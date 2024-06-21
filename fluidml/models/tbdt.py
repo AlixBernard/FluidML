@@ -9,6 +9,8 @@ Glossary:
 """
 
 __all__ = [
+    "COST_FUNCTIONS",
+    "FEAT_SUBSET_SIZES",
     "fit_tensor",
     # "obj_func_J",
     "find_min_cost_sort",
@@ -17,8 +19,8 @@ __all__ = [
     "TBDT",
 ]
 
-
 # Built-in packages
+import functools
 import json
 import logging
 from collections import OrderedDict, deque
@@ -43,6 +45,12 @@ COST_FUNCTIONS = {
     "rmse": lambda y_pred, y_true: float(
         np.sqrt(np.mean((y_pred - y_true) ** 2))
     ),
+}
+FEAT_SUBSET_SIZES = {
+    "sqrt": lambda x: int(np.ceil(np.sqrt(x))),
+    "log": lambda x: int(np.ceil(np.log(x))),
+    "log2": lambda x: int(np.ceil(np.log2(x))),
+    "log10": lambda x: int(np.ceil(np.log10(x))),
 }
 
 
@@ -80,13 +88,34 @@ def _log(
         logger.log(level, message, *args, **kwargs)
 
 
+def _timer_debug_log(func):
+    @functools.wraps(func)
+    def wrap_func(*args, **kwargs):
+        t1 = perf_counter()
+        result = func(*args, **kwargs)
+        t2 = perf_counter()
+        logger = kwargs.get("logger")
+        try:
+            class_name = f"{args[0].__class__.__name__}"
+        except (IndexError, AttributeError):
+            class_name = None
+        prefix = f"{class_name}." if class_name is not None else ""
+        _log(
+            logging.DEBUG,
+            f"'{prefix}{func.__name__}' executed in {(t2-t1):.2f}s",
+            logger,
+        )
+        return result
+
+    return wrap_func
+
+
 def fit_tensor(
     TT: np.ndarray,
     Ty: np.ndarray,
     tb: np.ndarray,
-    y: np.ndarray,
 ) -> tuple[np.ndarray, np.ndarray]:
-    r"""Makes a least square fit on training data `y`, by using the
+    r"""Makes a least square fit on training data by using the
     preconstructed matrices $T^t T$ and $T^t y$.
     Used in the `create_split()` method. The least squares fit is
     done with respect to scalar coefficients $g$ in the tensor basis
@@ -99,9 +128,7 @@ def fit_tensor(
     Ty : np.ndarray[shape=(n, m)]
         Preconstructed matrix $T^t y$.
     tb : np.ndarray[shape=(n, m, 9)]
-        Tensor Basis for each point.
-    y : np.ndarray[shape=(n, 9)]
-        Anisotropy tensor `b` (target) on which to fit the tree.
+        Tensor bases.
 
     Returns
     -------
@@ -111,7 +138,6 @@ def fit_tensor(
         Anysotropy tensor.
 
     """
-    n, m, _ = TT.shape
     lhs = TT.sum(axis=0)
     rhs = Ty.sum(axis=0)
 
@@ -137,12 +163,12 @@ def fit_tensor(
 #     y_sorted : np.ndarray
 #         Sorted output features.
 #     tb_sorted : np.ndarray
-#         Sorted tensor basess.
+#         Sorted tensor basis.
 #     TT_sorted : np.ndarray
 #         Sorted preconstructed matrices $transpose(T)*T$.
 #     Ty_sorted : np.ndarray
 #         Sorted preconstructed matrices $transpose(T)*f$.
-#     i : int or None
+#     i : int | None
 #         If not None, index to use when splitting the data.
 
 #     Returns
@@ -238,10 +264,10 @@ def find_min_cost_sort(
     best_cost = 1e12
     for i in range(1, n):
         ghat_l, bhat_l = fit_tensor(
-            TT_sorted[:i], Ty_sorted[:i], tb_sorted[:i], y_sorted[:i]
+            TT_sorted[:i], Ty_sorted[:i], tb_sorted[:i]
         )
         ghat_r, bhat_r = fit_tensor(
-            TT_sorted[i:], Ty_sorted[i:], tb_sorted[i:], y_sorted[i:]
+            TT_sorted[i:], Ty_sorted[i:], tb_sorted[i:]
         )
         bhat_sorted = np.vstack([bhat_l, bhat_r])
         cost = cost_func(bhat_sorted, y_sorted)
@@ -282,7 +308,7 @@ def find_min_cost_sort(
 #         Anisotropy tensor `b` (target) on which to fit the tree with
 #         shape `(n, 9)`.
 #     tb : np.ndarray
-#         Tensor basis with shape `(n, m, 9)`.
+#         Tensor bases with shape `(n, m, 9)`.
 #     TT : np.ndarray
 #         Preconstructed matrix $transpose(T)*T$.
 #     Ty : np.ndarray
@@ -364,7 +390,7 @@ def create_split(
     strategy: str = "sort",
 ) -> tuple[SplitData, NodeSplitData, NodeSplitData]:
     r"""Creates a split at a node for given input features `x`,
-    training output `y`, tensor basis `tb`, and the preconstruced
+    training outputs `y`, tensor bases `tb`, and the preconstruced
     matrices `TT` and `Ty`.
 
     Parameters
@@ -459,21 +485,22 @@ class TBDT:
         Minimum number of samples required to consider to split a node.
     min_samples_leaf : int
         Minimum number of samples required to be a leaf node.
-    max_features : int or float or str or None, default='sqrt'
+    max_features : int | float | str | None, default=None
         Number of features to consider when looking for the best split:
             - if int then consider `max_features`
             - if float then consider `ceil(max_features * p)`
-            - if 'sqrt' then consider `ceil(srqt(p))`
-            - if 'log2' then consider `ceil(log2(p))`
+            - if str then must be one of {'sqrt', 'log', 'log2',
+              'log10'} and ceil is applied to the result.
             - if None then consider `p`
-        where `p` is the total number of features. If the considered
-        number of feature is not at least 1 then an error is raised.
+        where `p` is the total number of features.
     gamma : float, default=1.0
         The regularization parameter gamma, 1.0 means no regularization.
     optim_threshold : int, default=1_000
         Threshold for which if the number of points is below, brute
         force will be used and optim otherwise, if it is -1 then
         optimization is disabled.
+    tree : Tree
+        The tree structure of the TBDT.
 
     Methods
     -------
@@ -493,7 +520,7 @@ class TBDT:
         max_depth: int = 400,
         min_samples_split: int = 2,
         min_samples_leaf: int = 1,
-        max_features: int | float | str | None = "sqrt",
+        max_features: int | float | str | None = None,
         gamma: float = 1e0,
         optim_threshold: int = 1_000,
     ) -> None:
@@ -526,22 +553,6 @@ class TBDT:
             return False
         return True
 
-    def _timer_func(func):
-        def wrap_func(self, *args, **kwargs):
-            t1 = perf_counter()
-            result = func(self, *args, **kwargs)
-            t2 = perf_counter()
-            logger = kwargs.get("logger")
-            _log(
-                logging.DEBUG,
-                f"Method {self.name}.{func.__name__} executed in "
-                f"{(t2-t1):.2f}s",
-                logger,
-            )
-            return result
-
-        return wrap_func
-
     def _get_n_feats(self, p: int) -> int:
         """Compute the number of features to consider to perform each
         split (cf. attribute `max_features`).
@@ -558,33 +569,28 @@ class TBDT:
 
         Raises
         ------
-        RuntimeError
+        ValueError
             If the value of the attribute `max_features` is not one of
-            {'sqrt', 'log2'}, an int between 1 and `p`, or a float
-            between 0 and 1.
+            {'sqrt', 'log', 'log2', 'log10'}, an int between 1 and `p`,
+            or a float between 0 and 1.
 
 
         """
-        FEAT_SUBSET_SIZES = {
-            None: lambda x: x,
-            "sqrt": lambda x: int(np.ceil(np.sqrt(x))),
-            "log": lambda x: int(np.ceil(np.log(x))),
-            "log2": lambda x: int(np.ceil(np.log2(x))),
-            "log10": lambda x: int(np.ceil(np.log10(x))),
-        }
+        if self.max_features is None:
+            return p
         if isinstance(self.max_features, int):
             if 1 <= self.max_features <= p:
                 return self.max_features
         if isinstance(self.max_features, float):
             if 0.0 < self.max_features <= 1.0:
-                if round(self.max_features * p) >= 1:
-                    return int(np.ceil((self.max_features * p)))
-        try:
-            return FEAT_SUBSET_SIZES[self.max_features](p)
-        except IndexError:
-            pass
+                return max(1, int(np.ceil((self.max_features * p))))
+        if isinstance(self.max_features, str):
+            try:
+                return FEAT_SUBSET_SIZES[self.max_features](p)
+            except IndexError:
+                pass
         raise ValueError(
-            f"The attribute `max_features` (={self.max_features}) has an "
+            f"The attribute `max_features={self.max_features}` has an "
             f"incorrect value."
         )
 
@@ -627,39 +633,39 @@ class TBDT:
             tbdt.tree.add_node(node, parent=parent)
         return tbdt
 
-    def save_to_json(self, fp: Path) -> None:
+    def save_to_json(self, fp: Path | str) -> None:
         """Save the TBDT as a JSON file containing its dict representation.
 
         Parameters
         ----------
-        fp : Path
+        fp : Path | str
 
         """
         tbdt_dict = OrderedDict(self.to_dict())
         tbdt_dict.move_to_end("nodes")
-        fp.write_text(json.dumps(tbdt_dict, indent=4))
+        Path(fp).write_text(json.dumps(tbdt_dict, indent=4))
 
     @classmethod
-    def load_from_json(cls, fp: Path) -> None:
+    def load_from_json(cls, fp: Path | str) -> None:
         """Load the TBDT from a JSON file containing its dict representation.
 
         Parameters
         ----------
-        fp : Path
+        fp : Path | str
 
         """
-        tbdt_dict = json.loads(fp.read_text())
+        tbdt_dict = json.loads(Path(fp).read_text())
         return cls.from_dict(tbdt_dict)
 
     def to_graphviz(
-        self, fp: Path | None = None, shape="rectangle", graph="digraph"
+        self, fp: Path | str | None = None, shape="rectangle", graph="digraph"
     ) -> str:
         """Export the tree to the graphviz dot format, returning it as
         a str. If `fp` is specified, saves it.
 
         Parameters
         ----------
-        fp : Path | None
+        fp : Path | str | None
             File path to which the tree should be saved.
         shape : {'rectangle', 'circle'}, default='rectangle'
             Shape of the nodes.
@@ -708,11 +714,11 @@ class TBDT:
         )
 
         if fp is not None:
-            fp.write_text(dot_str)
+            Path(fp).write_text(dot_str)
 
         return dot_str
 
-    @_timer_func
+    @_timer_debug_log
     def fit(
         self,
         x: np.ndarray,
@@ -754,7 +760,7 @@ class TBDT:
             MSE, n
 
         """
-        _log(logging.DEBUG, f"Fitting {self.name}", logger)
+        _log(logging.DEBUG, f"Fit {self.name}", logger)
         t_start = perf_counter()
 
         rng = default_rng(seed)
@@ -770,7 +776,7 @@ class TBDT:
 
         # Tree construction
         idx = np.arange(n)
-        ghat, bhat = fit_tensor(TT[idx], Ty[idx], tb[idx], y[idx])
+        ghat, bhat = fit_tensor(TT[idx], Ty[idx], tb[idx])
         cost = cost_func(bhat, y)
         nodes2add: deque[
             tuple[
@@ -829,23 +835,24 @@ class TBDT:
 
             _log(
                 logging.DEBUG,
-                f"Fitted node {node.identifier:<35}, "
-                f"{cost_name}={cost:.5e}, n_samples={n_samples:>6,}",
+                f"Fit node {node.identifier:<{self.max_depth}}, "
+                f"{cost_name}={cost:.5e}, "
+                f"n_samples={n_samples:>{int(np.log10(n))+1},}",
                 logger,
             )
 
         t_end = perf_counter()
         t_delta = t_end - t_start
-        _log(logging.INFO, f"Fitted {self.name} in {t_delta: >9.3f}s", logger)
+        _log(logging.INFO, f"Fitted {self.name} in {t_delta:>.3f}s", logger)
 
-    @_timer_func
+    @_timer_debug_log
     def predict(
         self,
         x: np.ndarray,
         tb: np.ndarray,
         logger: logging.Logger | None = None,
     ) -> tuple[np.ndarray, np.ndarray]:
-        """Predict the tensor basis coefficients `g` and use them to
+        """Predict the tensor bases coefficients `g` and use them to
         compute the anisotropy tensor, given the input features `x` and
         the tensor basis `tb`.
 
@@ -859,7 +866,7 @@ class TBDT:
         Returns
         -------
         ghat : np.ndarray[shape=(n, m)]
-            Tensor basis coefficients.
+            Tensor bases coefficients.
         bhat : np.ndarray[shape=(n, 9)]
             Anisotropy tensors.
 
@@ -871,7 +878,7 @@ class TBDT:
             node = self.tree.get_node("R")
             split_i = node.data["split_i"]
             split_v = node.data["split_v"]
-            g = node.data["g"]
+            g_node = node.data["g"]
 
             while split_i is not None:
                 if x[i, split_i] <= split_v:
@@ -880,9 +887,9 @@ class TBDT:
                     node = self.tree.get_node(f"{node.identifier}1")
                 split_i = node.data["split_i"]
                 split_v = node.data["split_v"]
-                g = node.data["g"]
+                g_node = node.data["g"]
 
-            ghat[i] = g
+            ghat[i] = g_node
         bhat = np.einsum("ij,ijk->ik", ghat, tb)
 
         return ghat, bhat
