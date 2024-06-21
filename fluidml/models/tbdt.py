@@ -129,7 +129,7 @@ def fit_tensor(
     Ty : np.ndarray[shape=(n, m)]
         Preconstructed matrix $T^t y$.
     tb : np.ndarray[shape=(n, m, 9)]
-        Tensor Basis for each point.
+        Tensor bases.
     y : np.ndarray[shape=(n, 9)]
         Anisotropy tensor `b` (target) on which to fit the tree.
 
@@ -167,7 +167,7 @@ def fit_tensor(
 #     y_sorted : np.ndarray
 #         Sorted output features.
 #     tb_sorted : np.ndarray
-#         Sorted tensor basess.
+#         Sorted tensor basis.
 #     TT_sorted : np.ndarray
 #         Sorted preconstructed matrices $transpose(T)*T$.
 #     Ty_sorted : np.ndarray
@@ -312,7 +312,7 @@ def find_min_cost_sort(
 #         Anisotropy tensor `b` (target) on which to fit the tree with
 #         shape `(n, 9)`.
 #     tb : np.ndarray
-#         Tensor basis with shape `(n, m, 9)`.
+#         Tensor bases with shape `(n, m, 9)`.
 #     TT : np.ndarray
 #         Preconstructed matrix $transpose(T)*T$.
 #     Ty : np.ndarray
@@ -394,7 +394,7 @@ def create_split(
     strategy: str = "sort",
 ) -> tuple[SplitData, NodeSplitData, NodeSplitData]:
     r"""Creates a split at a node for given input features `x`,
-    training output `y`, tensor basis `tb`, and the preconstruced
+    training outputs `y`, tensor bases `tb`, and the preconstruced
     matrices `TT` and `Ty`.
 
     Parameters
@@ -856,7 +856,7 @@ class TBDT:
         tb: np.ndarray,
         logger: logging.Logger | None = None,
     ) -> tuple[np.ndarray, np.ndarray]:
-        """Predict the tensor basis coefficients `g` and use them to
+        """Predict the tensor bases coefficients `g` and use them to
         compute the anisotropy tensor, given the input features `x` and
         the tensor basis `tb`.
 
@@ -870,7 +870,7 @@ class TBDT:
         Returns
         -------
         ghat : np.ndarray[shape=(n, m)]
-            Tensor basis coefficients.
+            Tensor bases coefficients.
         bhat : np.ndarray[shape=(n, 9)]
             Anisotropy tensors.
 

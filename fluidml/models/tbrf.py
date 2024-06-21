@@ -256,7 +256,7 @@ class TBRF:
         logger: logging.Logger | None = None,
     ) -> None:
         """Create the TBRF given input features `x`, true response `y`,
-        and tensor basis `tb`.
+        and tensor bases `tb`.
 
         Parameters
         ----------
@@ -328,7 +328,7 @@ class TBRF:
         logger: logging.Logger | None = None,
     ) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
         """Tensor Basis Random Forest predictions given input features
-        `x_test` and tensor basis `tb_test`, make predictions for the
+        `x_test` and tensor bases `tb_test`, make predictions for the
         anisotropy tensor `b` using its fitted trees.
 
         Parameters
@@ -346,12 +346,12 @@ class TBRF:
 
         Returns
         -------
-        bhat : np.ndarray[shape=(n, 9)]
-            Anisotropy tensors.
+        g : np.ndarray[shape=(s, n, m)]
+            Tensor bases coefficients for each TBDT in the TBRF.
         b : np.ndarray[shape=(s, n, 9)]
             Anisotropy tensors for each TBDT in the TBRF.
-        g : np.ndarray[shape=(s, n, m)]
-            Tensor basis coefficients for each TBDT in the TBRF.
+        bhat : np.ndarray[shape=(n, 9)]
+            Anisotropy tensors.
 
         Raises
         ------
