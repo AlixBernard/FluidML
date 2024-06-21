@@ -114,9 +114,8 @@ def fit_tensor(
     TT: np.ndarray,
     Ty: np.ndarray,
     tb: np.ndarray,
-    y: np.ndarray,
 ) -> tuple[np.ndarray, np.ndarray]:
-    r"""Makes a least square fit on training data `y`, by using the
+    r"""Makes a least square fit on training data by using the
     preconstructed matrices $T^t T$ and $T^t y$.
     Used in the `create_split()` method. The least squares fit is
     done with respect to scalar coefficients $g$ in the tensor basis
@@ -130,8 +129,6 @@ def fit_tensor(
         Preconstructed matrix $T^t y$.
     tb : np.ndarray[shape=(n, m, 9)]
         Tensor bases.
-    y : np.ndarray[shape=(n, 9)]
-        Anisotropy tensor `b` (target) on which to fit the tree.
 
     Returns
     -------
@@ -141,7 +138,6 @@ def fit_tensor(
         Anysotropy tensor.
 
     """
-    n, m, _ = TT.shape
     lhs = TT.sum(axis=0)
     rhs = Ty.sum(axis=0)
 
@@ -268,10 +264,10 @@ def find_min_cost_sort(
     best_cost = 1e12
     for i in range(1, n):
         ghat_l, bhat_l = fit_tensor(
-            TT_sorted[:i], Ty_sorted[:i], tb_sorted[:i], y_sorted[:i]
+            TT_sorted[:i], Ty_sorted[:i], tb_sorted[:i]
         )
         ghat_r, bhat_r = fit_tensor(
-            TT_sorted[i:], Ty_sorted[i:], tb_sorted[i:], y_sorted[i:]
+            TT_sorted[i:], Ty_sorted[i:], tb_sorted[i:]
         )
         bhat_sorted = np.vstack([bhat_l, bhat_r])
         cost = cost_func(bhat_sorted, y_sorted)
@@ -764,7 +760,7 @@ class TBDT:
             MSE, n
 
         """
-        _log(logging.DEBUG, f"Fitting {self.name}", logger)
+        _log(logging.DEBUG, f"Fit {self.name}", logger)
         t_start = perf_counter()
 
         rng = default_rng(seed)
@@ -780,7 +776,7 @@ class TBDT:
 
         # Tree construction
         idx = np.arange(n)
-        ghat, bhat = fit_tensor(TT[idx], Ty[idx], tb[idx], y[idx])
+        ghat, bhat = fit_tensor(TT[idx], Ty[idx], tb[idx])
         cost = cost_func(bhat, y)
         nodes2add: deque[
             tuple[
@@ -839,9 +835,9 @@ class TBDT:
 
             _log(
                 logging.DEBUG,
-                f"Fitted node {node.identifier:<{self.max_depth}}, "
+                f"Fit node {node.identifier:<{self.max_depth}}, "
                 f"{cost_name}={cost:.5e}, "
-                f"n_samples={n_samples:>{int(np.log10(n))+2},}",
+                f"n_samples={n_samples:>{int(np.log10(n))+1},}",
                 logger,
             )
 
@@ -882,7 +878,7 @@ class TBDT:
             node = self.tree.get_node("R")
             split_i = node.data["split_i"]
             split_v = node.data["split_v"]
-            g = node.data["g"]
+            g_node = node.data["g"]
 
             while split_i is not None:
                 if x[i, split_i] <= split_v:
@@ -891,9 +887,9 @@ class TBDT:
                     node = self.tree.get_node(f"{node.identifier}1")
                 split_i = node.data["split_i"]
                 split_v = node.data["split_v"]
-                g = node.data["g"]
+                g_node = node.data["g"]
 
-            ghat[i] = g
+            ghat[i] = g_node
         bhat = np.einsum("ij,ijk->ik", ghat, tb)
 
         return ghat, bhat
