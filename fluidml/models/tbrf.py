@@ -190,7 +190,7 @@ class TBRF:
             n_samples = round(self.max_samples * n)
         else:
             raise TypeError(
-                f"The {self.max_samples} is not recognized"
+                f"The value {self.max_samples} is not recognized"
                 f" for the attribute `max_samples`"
             )
         return n_samples
@@ -263,7 +263,7 @@ class TBRF:
         x : np.ndarray[shape=(n, p)]
             Input features.
         y : np.ndarray[shape=(n, 9)]
-            Anisotropy tensors `b` on which to fit the tree.
+            Anisotropy tensors $b_{ij}$ on which to fit the tree.
         tb : np.ndarray[shape=(n, m, 9)]
             Tensor bases.
         n_jobs : int, default=None
@@ -272,7 +272,7 @@ class TBRF:
         seed : int | None
 
         """
-        _log(logging.INFO, f"Fitting {self.name}", logger)
+        _log(logging.INFO, f"Fit {self.name}", logger)
         t_start = perf_counter()
 
         rng = default_rng(seed)
@@ -346,11 +346,11 @@ class TBRF:
 
         Returns
         -------
-        g : np.ndarray[shape=(s, n, m)]
+        g_trees : np.ndarray[shape=(s, n, m)]
             Tensor bases coefficients for each TBDT in the TBRF.
-        b : np.ndarray[shape=(s, n, 9)]
-            Anisotropy tensors for each TBDT in the TBRF.
-        bhat : np.ndarray[shape=(n, 9)]
+        y_trees : np.ndarray[shape=(s, n, 9)]
+            Anisotropy tensors $b_{ij}$ for each TBDT in the TBRF.
+        y : np.ndarray[shape=(n, 9)]
             Anisotropy tensors.
 
         Raises
@@ -362,7 +362,7 @@ class TBRF:
         n, m, _ = tb.shape
 
         # Initialize predictions
-        b_trees = np.zeros([len(self), n, 9])
+        y_trees = np.zeros([len(self), n, 9])
         g_trees = np.zeros([len(self), n, m])
 
         with mp.Pool(processes=n_jobs) as pool:
@@ -374,23 +374,23 @@ class TBRF:
 
         # Go through the TBDTs of the TBRF to make predictions
         for i in range(len(self)):
-            g_trees[i], b_trees[i] = data[i]
+            g_trees[i], y_trees[i] = data[i]
 
         try:
-            b = PREDICTION_METHODS[method](b_trees)
+            y = PREDICTION_METHODS[method](y_trees)
         except KeyError:
             raise ValueError(
-                f"The `method` attribute must be one of "
-                f"{{{', '.join([repr(meth) for meth in PREDICTION_METHODS])}}}"
+                "The `method` attribute must be one of "
+                f"{set(PREDICTION_METHODS)}"
             )
 
-        _log(logging.INFO, "Predicted the anysotropy tensor `b`", logger)
+        _log(logging.INFO, "Predicted the anysotropy tensor $b$", logger)
 
-        return g_trees, b_trees, b
+        return g_trees, y_trees, y
 
     def _predict_tree(
         self, i_tree: int, x: np.ndarray, tb: np.ndarray
     ) -> tuple[np.ndarray, np.ndarray]:
         """Predict from the tree specified."""
-        g, b = self.trees[i_tree].predict(x, tb)
-        return g, b
+        g, y = self.trees[i_tree].predict(x, tb)
+        return g, y
