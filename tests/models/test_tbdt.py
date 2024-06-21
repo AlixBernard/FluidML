@@ -201,8 +201,8 @@ def tbdt1_as_graphviz():
 }"""
 
 
-def test_fit_tensor(TT, Ty, tb, targets):
-    ghat, bhat = fit_tensor(TT, Ty, tb, targets)
+def test_fit_tensor(TT, Ty, tb):
+    ghat, bhat = fit_tensor(TT, Ty, tb)
     expected_ghat = np.array([0.42508692, 0.07988004])
     expected_bhat = np.array(
         [
