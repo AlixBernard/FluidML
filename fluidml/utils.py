@@ -334,6 +334,8 @@ def get_invariants_FS3(data: dict) -> np.ndarray:
     nu = data["nu"]
     S = data["S"]
     R = data["R"]
+    Shat = data["Shat"]
+    Rhat = data["Rhat"]
     tau = data["tau"]
     U = data["U"]
     wallDistance = data["wallDistance"]
@@ -344,7 +346,7 @@ def get_invariants_FS3(data: dict) -> np.ndarray:
     inv = np.zeros([n, 9])
     for i in range(n):
         raw[i, 0] = 0.5 * (
-            np.linalg.norm(R[i]) ** 2 - np.linalg.norm(S[i]) ** 2
+            np.linalg.norm(Rhat[i]) ** 2 - np.linalg.norm(Shat[i]) ** 2
         )
         raw[i, 1] = k[i]
         raw[i, 2] = 1.0  # Ignore, `wang_inv[i, 2]` defined at the end
@@ -355,7 +357,7 @@ def get_invariants_FS3(data: dict) -> np.ndarray:
         raw[i, 7] = np.sum(U[i] * gradk[i])  # FS3_7
         raw[i, 8] = np.linalg.norm(tau[i])  # FS3_8
 
-        norm[i, 0] = np.linalg.norm(S[i]) ** 2
+        norm[i, 0] = np.linalg.norm(Shat[i]) ** 2
         norm[i, 1] = 0.5 * (U[i, 0] ** 2 + U[i, 1] ** 2 + U[i, 2] ** 2)
         norm[i, 2] = 1.0  # Ignore, `wang_inv[i, 2]` defined at the end
         norm[i, 3] = np.sqrt(
@@ -375,7 +377,7 @@ def get_invariants_FS3(data: dict) -> np.ndarray:
         norm[i, 8] = k[i]
 
         inv[i] = raw[i] / (np.abs(raw[i]) + np.abs(norm[i]))
-        inv[i, 2] = min(np.sqrt(k[i]) * wallDistance[i] / (50 * nu), 2.0)
+        inv[i, 2] = min(np.sqrt(k[i]) * wallDistance[i] / (50 * nu[i]), 2.0)
 
     return inv
 
