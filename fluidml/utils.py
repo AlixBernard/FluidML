@@ -349,9 +349,11 @@ def get_invariants_FS3(data: dict) -> np.ndarray:
     wallDistance = data["wallDistance"]
 
     n = len(S)
-    raw = np.zeros([n, 9])
-    norm = np.zeros([n, 9])
-    inv = np.zeros([n, 9])
+    raw = np.zeros((n, 9))
+    norm = np.zeros((n, 9))
+    div = np.ones((n, 9))
+    non_zero_div = np.ones((n, 9))
+    inv = np.zeros((n, 9))
     for i in range(n):
         raw[i, 0] = 0.5 * (
             np.linalg.norm(Rhat[i]) ** 2 - np.linalg.norm(Shat[i]) ** 2
@@ -384,7 +386,9 @@ def get_invariants_FS3(data: dict) -> np.ndarray:
         norm[i, 7] = np.abs(np.sum(tau[i] * S[i]))
         norm[i, 8] = k[i]
 
-        inv[i] = raw[i] / (np.abs(raw[i]) + np.abs(norm[i]))
+        div[i] = np.abs(raw[i]) + np.abs(norm[i])
+        non_zero_div[i] = np.where(div[i] == 0, 1e-30, div[i])
+        inv[i] = raw[i] / non_zero_div[i]
         inv[i, 2] = min(np.sqrt(k[i]) * wallDistance[i] / (50 * nu[i]), 2.0)
 
     return inv
