@@ -1,11 +1,3 @@
-#!/usr/bin/env python
-# coding: utf-8
-# @Author: AlixBernard
-# @Email: alix.bernard9@gmail.com
-# @Date: 2022-01-29 16:30:32
-# @Last modified by: AlixBernard
-# @Last modified time: 2022-06-22 16:52:11
-
 """Utilities for the tbrf package.
 
 Glossary:
