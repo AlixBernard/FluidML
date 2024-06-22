@@ -16,7 +16,6 @@ import numpy as np
 
 
 __all__ = [
-    "I_3",
     "get_k",
     "get_S",
     "get_R",
