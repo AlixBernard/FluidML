@@ -1,4 +1,4 @@
-"""Utilities for the tbrf package.
+"""Functions helping to compute features.
 
 Glossary:
     - `n` is the total number of samples

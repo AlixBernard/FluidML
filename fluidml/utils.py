@@ -1,4 +1,4 @@
-"""Utilities for the tbrf package.
+"""Utilities.
 
 Glossary:
     - `n` is the total number of samples
