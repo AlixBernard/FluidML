@@ -2,8 +2,6 @@
 
 Glossary:
     - `n` is the total number of samples
-    - `p` is the total number of features
-    - `m` is the number of tensors in the tensor basis
 
 """
 
