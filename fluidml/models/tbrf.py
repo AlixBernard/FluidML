@@ -360,6 +360,9 @@ class TBRF:
             If the parameter `method` is not a valid value.
 
         """
+        _log(logging.INFO, f"Predict via {self.name}", logger)
+        t_start = perf_counter()
+
         n, m, d = tb.shape
 
         # Initialize predictions
@@ -368,7 +371,7 @@ class TBRF:
 
         with mp.Pool(processes=n_jobs) as pool:
             res = [
-                pool.apply_async(self._predict_tree, (i, x, tb))
+                pool.apply_async(self._predict_tree, (i, x, tb, logger))
                 for i in range(len(self))
             ]
             data = [r.get() for r in res]
@@ -385,13 +388,23 @@ class TBRF:
                 f"{set(PREDICTION_METHODS)}"
             )
 
-        _log(logging.INFO, "Predicted the anysotropy tensor $b$", logger)
+        t_end = perf_counter()
+        t_delta = t_end - t_start
+        _log(
+            logging.INFO,
+            f"Predicted via {self.name} in {t_delta:>.3f}s",
+            logger,
+        )
 
         return g_trees, y_trees, y
 
     def _predict_tree(
-        self, i_tree: int, x: np.ndarray, tb: np.ndarray
+        self,
+        i_tree: int,
+        x: np.ndarray,
+        tb: np.ndarray,
+        logger: logging.Logger | None = None,
     ) -> tuple[np.ndarray, np.ndarray]:
         """Predict from the tree specified."""
-        g, y = self.trees[i_tree].predict(x, tb)
+        g, y = self.trees[i_tree].predict(x, tb, logger=logger)
         return g, y

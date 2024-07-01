@@ -872,6 +872,9 @@ class TBDT:
             Anisotropy tensors.
 
         """
+        _log(logging.DEBUG, f"Predict via {self.name}", logger)
+        t_start = perf_counter()
+
         n, m, _ = tb.shape
         ghat = np.zeros([n, m])
 
@@ -892,5 +895,13 @@ class TBDT:
 
             ghat[i] = g_node
         bhat = np.einsum("ij,ijk->ik", ghat, tb)
+
+        t_end = perf_counter()
+        t_delta = t_end - t_start
+        _log(
+            logging.INFO,
+            f"Predicted via {self.name} in {t_delta:>.3f}s",
+            logger,
+        )
 
         return ghat, bhat
