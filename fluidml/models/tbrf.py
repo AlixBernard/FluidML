@@ -14,7 +14,9 @@ __all__ = ["PREDICTION_METHODS", "TBRF"]
 
 import functools
 import logging
+import more_itertools as mit
 import multiprocessing as mp
+import os
 from pathlib import Path
 from time import perf_counter
 
@@ -343,7 +345,7 @@ class TBRF:
             predictions, possible values are 'mean' and 'median'.
         n_jobs : int, default=None
             The number of jobs to run in parallel, None means using all
-            processors.
+            processors. Using 1 may be faster.
 
         Returns
         -------
@@ -360,22 +362,31 @@ class TBRF:
             If the parameter `method` is not a valid value.
 
         """
+        _log(logging.INFO, f"Predict via {self.name}", logger)
+        t_start = perf_counter()
+
         n, m, d = tb.shape
 
         # Initialize predictions
-        y_trees = np.zeros([len(self), n, d])
         g_trees = np.zeros([len(self), n, m])
+        y_trees = np.zeros([len(self), n, d])
 
         with mp.Pool(processes=n_jobs) as pool:
+            n_chunks = n_jobs if n_jobs is not None else os.cpu_count()
             res = [
-                pool.apply_async(self._predict_tree, (i, x, tb))
-                for i in range(len(self))
+                pool.apply_async(
+                    self._predict_chunk_trees,
+                    (list(chunk_trees), x, tb, logger),
+                )
+                for chunk_trees in mit.divide(n_chunks, self.trees)
             ]
             data = [r.get() for r in res]
 
-        # Go through the TBDTs of the TBRF to make predictions
-        for i in range(len(self)):
-            g_trees[i], y_trees[i] = data[i]
+        i0, i1 = 0, 0
+        for g_chunk, y_chunk in data:
+            i0 = i1
+            i1 += len(g_chunk)
+            g_trees[i0:i1], y_trees[i0:i1] = g_chunk, y_chunk
 
         try:
             y = PREDICTION_METHODS[method](y_trees)
@@ -385,13 +396,30 @@ class TBRF:
                 f"{set(PREDICTION_METHODS)}"
             )
 
-        _log(logging.INFO, "Predicted the anysotropy tensor $b$", logger)
+        t_end = perf_counter()
+        t_delta = t_end - t_start
+        _log(
+            logging.INFO,
+            f"Predicted via {self.name} in {t_delta:>.3f}s",
+            logger,
+        )
 
         return g_trees, y_trees, y
 
-    def _predict_tree(
-        self, i_tree: int, x: np.ndarray, tb: np.ndarray
+    def _predict_chunk_trees(
+        self,
+        chunk_trees: list[TBDT],
+        x: np.ndarray,
+        tb: np.ndarray,
+        logger: logging.Logger | None = None,
     ) -> tuple[np.ndarray, np.ndarray]:
-        """Predict from the tree specified."""
-        g, y = self.trees[i_tree].predict(x, tb)
-        return g, y
+        """Predict using the chunk of chunk_TBDTs specified."""
+        chunk_size = len(chunk_trees)
+        n, m, d = tb.shape
+        y_chunk_trees = np.zeros([chunk_size, n, d])
+        g_chunk_trees = np.zeros([chunk_size, n, m])
+
+        for i, tree in enumerate(chunk_trees):
+            g_chunk_trees[i], y_chunk_trees[i] = tree.predict(x, tb, logger)
+
+        return g_chunk_trees, y_chunk_trees

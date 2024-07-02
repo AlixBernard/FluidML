@@ -16,6 +16,7 @@ description = "Implementation of machine learning algorithms for fluid dynamics"
 readme = "README.md"
 requires-python = ">=3.10"
 dependencies = [
+    "more-itertools>=10.3.0",
     "numpy>=1.26",
     "treelib>=1.7",
 ]
@@ -38,7 +39,6 @@ test = [
     "pytest-cov>=2.0",
 ]
 dev = [
-    "mypy",
     "ruff",
     "ruff-lsp",
     "pyright",
@@ -46,7 +46,7 @@ dev = [
 examples = [
     "matplotlib>=2.0",
     "scipy",
-    "sklearn",
+    "scikit-learn",
 ]
 
 
