@@ -13,7 +13,9 @@ __all__ = ["__version__"]
 
 
 from fluidml import features
+from fluidml import openfoam
 from fluidml import utils
 
 __all__ += features.__all__
+__all__ += openfoam.__all__
 __all__ += utils.__all__
